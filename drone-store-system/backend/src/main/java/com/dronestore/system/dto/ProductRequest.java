@@ -1,6 +1,7 @@
 package com.dronestore.system.dto;
 
 import com.dronestore.system.entity.ProductStatus;
+import com.dronestore.system.entity.ProductType;
 
 import javax.validation.constraints.*;
 import java.math.BigDecimal;
@@ -13,16 +14,17 @@ public class ProductRequest {
 
     private String description;
 
-    @NotNull(message = "Price is required")
     @DecimalMin(value = "0.00", message = "Price must be non-negative")
     private BigDecimal price;
 
-    @NotNull(message = "Quantity is required")
     @Min(value = 0, message = "Quantity must be non-negative")
     private Integer quantity;
 
     @NotNull(message = "Product status is required")
     private ProductStatus status;
+
+    @NotNull(message = "Product type is required (STANDALONE, PARENT, CHILD)")
+    private ProductType productType;
 
     private Long parentId;
 
@@ -71,6 +73,14 @@ public class ProductRequest {
 
     public void setStatus(ProductStatus status) {
         this.status = status;
+    }
+
+    public ProductType getProductType() {
+        return productType;
+    }
+
+    public void setProductType(ProductType productType) {
+        this.productType = productType;
     }
 
     public Long getParentId() {

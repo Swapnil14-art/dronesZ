@@ -4,6 +4,7 @@ import com.dronestore.system.dto.PageResponse;
 import com.dronestore.system.dto.ProductDto;
 import com.dronestore.system.dto.ProductRequest;
 import com.dronestore.system.entity.ProductStatus;
+import com.dronestore.system.entity.ProductType;
 import com.dronestore.system.service.ProductService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,11 +32,12 @@ public class AdminProductController {
             @RequestParam(name = "status", required = false) ProductStatus status,
             @RequestParam(name = "categoryId", required = false) Long categoryId,
             @RequestParam(name = "parentId", required = false) Long parentId,
+            @RequestParam(name = "productType", required = false) ProductType productType,
             @RequestParam(name = "sortBy", defaultValue = "createdAt") String sortBy,
             @RequestParam(name = "sortDir", defaultValue = "desc") String sortDir) {
 
         PageResponse<ProductDto> response = productService.getProducts(
-                page, size, search, status, categoryId, parentId, sortBy, sortDir);
+                page, size, search, status, categoryId, parentId, productType, sortBy, sortDir);
         return ResponseEntity.ok(response);
     }
 

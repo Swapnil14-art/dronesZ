@@ -134,7 +134,6 @@ public class SwaggerUiController {
                 "                <div class=\"title\">Drones<span>Z</span> Interactive API Explorer</div>\n" +
                 "                <div style=\"color: var(--muted); font-size: 0.85rem; margin-top: 0.2rem;\">Live Spring Boot REST API Documentation (Supabase PostgreSQL)</div>\n" +
                 "            </div>\n" +
-                "            <a href=\"http://localhost:3000\" style=\"color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem;\">Open Admin UI (Port 3000) &rarr;</a>\n" +
                 "        </header>\n" +
                 "\n" +
                 "        <div class=\"auth-box\">\n" +
@@ -144,14 +143,39 @@ public class SwaggerUiController {
                 "            <span id=\"tokenStatus\" style=\"font-size: 0.8rem; color: var(--muted);\"></span>\n" +
                 "        </div>\n" +
                 "\n" +
-                "        <h2 style=\"font-size: 1.2rem; color: var(--muted); margin-bottom: 1rem;\">1. AUTHENTICATION APIs</h2>\n" +
+                "        <h2 style=\"font-size: 1.2rem; color: var(--muted); margin-bottom: 1rem;\">1. PUBLIC STOREFRONT APIs</h2>\n" +
+                "\n" +
+                "        <div class=\"api-card\">\n" +
+                "            <div class=\"api-header\" onclick=\"toggle('store-prods')\">\n" +
+                "                <div><span class=\"method GET\">GET</span> <code>/api/products</code> - Public Main Storefront Catalog (STANDALONE & PARENT products only)</div>\n" +
+                "            </div>\n" +
+                "            <div id=\"store-prods\" class=\"api-body\">\n" +
+                "                <button onclick=\"executeGet('/api/products', 'storeProdsResult')\">Execute Public Products Request</button>\n" +
+                "                <pre id=\"storeProdsResult\">Result will appear here...</pre>\n" +
+                "            </div>\n" +
+                "        </div>\n" +
+                "\n" +
+                "        <div class=\"api-card\">\n" +
+                "            <div class=\"api-header\" onclick=\"toggle('store-children')\">\n" +
+                "                <div><span class=\"method GET\">GET</span> <code>/api/products/{id}/children</code> - Public Parent Product Child Variants</div>\n" +
+                "            </div>\n" +
+                "            <div id=\"store-children\" class=\"api-body\">\n" +
+                "                <div style=\"display: flex; gap: 0.5rem; margin-bottom: 1rem;\">\n" +
+                "                    <input type=\"text\" id=\"parentIdInput\" placeholder=\"Parent Product ID\" value=\"1\">\n" +
+                "                    <button onclick=\"executeGet('/api/products/' + document.getElementById('parentIdInput').value + '/children', 'storeChildrenResult')\">Fetch Child Variants</button>\n" +
+                "                </div>\n" +
+                "                <pre id=\"storeChildrenResult\">Result will appear here...</pre>\n" +
+                "            </div>\n" +
+                "        </div>\n" +
+                "\n" +
+                "        <h2 style=\"font-size: 1.2rem; color: var(--muted); margin-top: 2rem; margin-bottom: 1rem;\">2. ADMIN AUTHENTICATION APIs</h2>\n" +
                 "\n" +
                 "        <div class=\"api-card\">\n" +
                 "            <div class=\"api-header\" onclick=\"toggle('auth-login')\">\n" +
                 "                <div><span class=\"method POST\">POST</span> <code>/api/auth/admin/login</code> - Admin Login</div>\n" +
                 "            </div>\n" +
                 "            <div id=\"auth-login\" class=\"api-body\">\n" +
-                "                <p style=\"font-size: 0.85rem; color: var(--muted);\">Authenticates initial admin user and acquires JWT Bearer token.</p>\n" +
+                "                <p style=\"font-size: 0.85rem; color: var(--muted);\">Authenticates admin user and acquires JWT Bearer token.</p>\n" +
                 "                <div style=\"display: flex; gap: 0.5rem; margin-bottom: 1rem;\">\n" +
                 "                    <input type=\"email\" id=\"loginEmail\" value=\"admin@example.com\" placeholder=\"Email\">\n" +
                 "                    <input type=\"password\" id=\"loginPassword\" value=\"AdminPassword123!\" placeholder=\"Password\">\n" +
@@ -171,11 +195,11 @@ public class SwaggerUiController {
                 "            </div>\n" +
                 "        </div>\n" +
                 "\n" +
-                "        <h2 style=\"font-size: 1.2rem; color: var(--muted); margin-top: 2rem; margin-bottom: 1rem;\">2. CATEGORIES APIs</h2>\n" +
+                "        <h2 style=\"font-size: 1.2rem; color: var(--muted); margin-top: 2rem; margin-bottom: 1rem;\">3. ADMIN MANAGEMENT APIs</h2>\n" +
                 "\n" +
                 "        <div class=\"api-card\">\n" +
                 "            <div class=\"api-header\" onclick=\"toggle('cat-get-all')\">\n" +
-                "                <div><span class=\"method GET\">GET</span> <code>/api/admin/categories</code> - Get All Categories</div>\n" +
+                "                <div><span class=\"method GET\">GET</span> <code>/api/admin/categories</code> - Get All Categories (Admin)</div>\n" +
                 "            </div>\n" +
                 "            <div id=\"cat-get-all\" class=\"api-body\">\n" +
                 "                <button onclick=\"executeGet('/api/admin/categories', 'catGetAllResult')\">Execute GET Categories</button>\n" +
@@ -184,45 +208,12 @@ public class SwaggerUiController {
                 "        </div>\n" +
                 "\n" +
                 "        <div class=\"api-card\">\n" +
-                "            <div class=\"api-header\" onclick=\"toggle('cat-create')\">\n" +
-                "                <div><span class=\"method POST\">POST</span> <code>/api/admin/categories</code> - Create Category</div>\n" +
-                "            </div>\n" +
-                "            <div id=\"cat-create\" class=\"api-body\">\n" +
-                "                <textarea id=\"catPostPayload\" style=\"width: 100%; height: 80px; margin-bottom: 1rem;\">{\n  \"name\": \"Gimbals\",\n  \"description\": \"3-Axis FPV Gimbals\"\n}</textarea>\n" +
-                "                <button onclick=\"executePost('/api/admin/categories', 'catPostPayload', 'catPostResult')\">Execute POST Category</button>\n" +
-                "                <pre id=\"catPostResult\">Result will appear here...</pre>\n" +
-                "            </div>\n" +
-                "        </div>\n" +
-                "\n" +
-                "        <h2 style=\"font-size: 1.2rem; color: var(--muted); margin-top: 2rem; margin-bottom: 1rem;\">3. PRODUCTS APIs</h2>\n" +
-                "\n" +
-                "        <div class=\"api-card\">\n" +
                 "            <div class=\"api-header\" onclick=\"toggle('prod-get-all')\">\n" +
-                "                <div><span class=\"method GET\">GET</span> <code>/api/admin/products</code> - Get Products Catalog (Filtered)</div>\n" +
+                "                <div><span class=\"method GET\">GET</span> <code>/api/admin/products</code> - Get Products Catalog (Admin)</div>\n" +
                 "            </div>\n" +
                 "            <div id=\"prod-get-all\" class=\"api-body\">\n" +
-                "                <div style=\"display: flex; gap: 0.5rem; margin-bottom: 1rem;\">\n" +
-                "                    <input type=\"text\" id=\"prodSearch\" placeholder=\"Search term...\">\n" +
-                "                    <select id=\"prodStatus\">\n" +
-                "                        <option value=\"\">All Statuses</option>\n" +
-                "                        <option value=\"AVAILABLE\">AVAILABLE</option>\n" +
-                "                        <option value=\"OUT_OF_STOCK\">OUT_OF_STOCK</option>\n" +
-                "                        <option value=\"COMING_SOON\">COMING_SOON</option>\n" +
-                "                    </select>\n" +
-                "                    <button onclick=\"fetchFilteredProducts()\">Execute GET Products</button>\n" +
-                "                </div>\n" +
+                "                <button onclick=\"executeGet('/api/admin/products', 'prodGetAllResult')\">Execute GET Products</button>\n" +
                 "                <pre id=\"prodGetAllResult\">Result will appear here...</pre>\n" +
-                "            </div>\n" +
-                "        </div>\n" +
-                "\n" +
-                "        <div class=\"api-card\">\n" +
-                "            <div class=\"api-header\" onclick=\"toggle('prod-create')\">\n" +
-                "                <div><span class=\"method POST\">POST</span> <code>/api/admin/products</code> - Create Product</div>\n" +
-                "            </div>\n" +
-                "            <div id=\"prod-create\" class=\"api-body\">\n" +
-                "                <textarea id=\"prodPostPayload\" style=\"width: 100%; height: 160px; margin-bottom: 1rem;\">{\n  \"name\": \"Apex FPV Drone Motor 2207\",\n  \"description\": \"6S FPV Motor\",\n  \"price\": 1899.99,\n  \"quantity\": 50,\n  \"status\": \"AVAILABLE\"\n}</textarea>\n" +
-                "                <button onclick=\"executePost('/api/admin/products', 'prodPostPayload', 'prodPostResult')\">Execute POST Product</button>\n" +
-                "                <pre id=\"prodPostResult\">Result will appear here...</pre>\n" +
                 "            </div>\n" +
                 "        </div>\n" +
                 "    </div>\n" +
@@ -269,28 +260,6 @@ public class SwaggerUiController {
                 "            const res = await fetch(url, { headers });\n" +
                 "            const data = await res.json().catch(() => ({ status: res.status, text: 'No JSON' }));\n" +
                 "            document.getElementById(targetId).innerText = JSON.stringify(data, null, 2);\n" +
-                "        }\n" +
-                "\n" +
-                "        async function executePost(url, payloadId, targetId) {\n" +
-                "            const headers = { 'Content-Type': 'application/json' };\n" +
-                "            if (jwtToken) headers['Authorization'] = 'Bearer ' + jwtToken;\n" +
-                "            const bodyText = document.getElementById(payloadId).value;\n" +
-                "            const res = await fetch(url, {\n" +
-                "                method: 'POST',\n" +
-                "                headers,\n" +
-                "                body: bodyText\n" +
-                "            });\n" +
-                "            const data = await res.json().catch(() => ({ status: res.status }));\n" +
-                "            document.getElementById(targetId).innerText = JSON.stringify(data, null, 2);\n" +
-                "        }\n" +
-                "\n" +
-                "        async function fetchFilteredProducts() {\n" +
-                "            const search = document.getElementById('prodSearch').value;\n" +
-                "            const status = document.getElementById('prodStatus').value;\n" +
-                "            const params = new URLSearchParams();\n" +
-                "            if (search) params.append('search', search);\n" +
-                "            if (status) params.append('status', status);\n" +
-                "            await executeGet('/api/admin/products?' + params.toString(), 'prodGetAllResult');\n" +
                 "        }\n" +
                 "    </script>\n" +
                 "</body>\n" +

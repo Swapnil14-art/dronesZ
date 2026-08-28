@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   ProductDto,
   ProductRequest,
+  ProductType,
   CategoryDto,
   ProductStatus,
   fetchProducts,
@@ -18,7 +19,7 @@ interface Props {
 export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
-  const [candidateParents, setCandidateParents] = useState<ProductDto[]>([]);
+  const [parentProducts, setParentProducts] = useState<ProductDto[]>([]);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +32,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [search, setSearch] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string>('');
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -40,7 +42,8 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   // Form state
   const [formName, setFormName] = useState<string>('');
   const [formDescription, setFormDescription] = useState<string>('');
-  const [formPrice, setFormPrice] = useState<string>('');
+  const [formProductType, setFormProductType] = useState<ProductType>('STANDALONE');
+  const [formPrice, setFormPrice] = useState<string>('0');
   const [formQuantity, setFormQuantity] = useState<string>('0');
   const [formStatus, setFormStatus] = useState<ProductStatus>('AVAILABLE');
   const [formCategoryId, setFormCategoryId] = useState<string>('');
@@ -56,14 +59,14 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
   useEffect(() => {
     loadProductsList();
-  }, [token, page, search, statusFilter, categoryFilter]);
+  }, [token, page, search, statusFilter, categoryFilter, typeFilter]);
 
   const loadCategoriesList = async () => {
     try {
       const catData = await fetchCategories(token);
       setCategories(catData);
     } catch (err) {
-      console.error('Failed to load categories for dropdown filters', err);
+      console.error('Failed to load categories', err);
     }
   };
 
@@ -77,15 +80,16 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         search: search.trim() || undefined,
         status: statusFilter || undefined,
         categoryId: categoryFilter ? Number(categoryFilter) : undefined,
+        productType: typeFilter ? (typeFilter as ProductType) : undefined,
       });
 
       setProducts(res.content);
       setTotalPages(res.totalPages);
       setTotalElements(res.totalElements);
 
-      // Load all candidate parent products (standalone products without parents)
-      const allParentsRes = await fetchProducts(token, { size: 100 });
-      setCandidateParents(allParentsRes.content.filter((p) => !p.parentId));
+      // Load all candidate PARENT products
+      const allParentsRes = await fetchProducts(token, { size: 100, productType: 'PARENT' });
+      setParentProducts(allParentsRes.content);
     } catch (err: any) {
       setError(err.message || 'Failed to load products list');
     } finally {
@@ -97,7 +101,8 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setEditingProduct(null);
     setFormName('');
     setFormDescription('');
-    setFormPrice('');
+    setFormProductType('STANDALONE');
+    setFormPrice('0');
     setFormQuantity('0');
     setFormStatus('AVAILABLE');
     setFormCategoryId('');
@@ -111,6 +116,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setEditingProduct(product);
     setFormName(product.name);
     setFormDescription(product.description || '');
+    setFormProductType(product.productType || 'STANDALONE');
     setFormPrice(product.price.toString());
     setFormQuantity(product.quantity.toString());
     setFormStatus(product.status);
@@ -133,15 +139,37 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       setFormError('Product name is required');
       return;
     }
-    const priceNum = parseFloat(formPrice);
-    if (isNaN(priceNum) || priceNum < 0) {
-      setFormError('Valid non-negative price is required');
-      return;
+
+    // Rules validation
+    if (formProductType === 'STANDALONE' || formProductType === 'PARENT') {
+      if (formParentId) {
+        setFormError(`${formProductType} products cannot have a parent product.`);
+        return;
+      }
     }
-    const qtyNum = parseInt(formQuantity, 10);
-    if (isNaN(qtyNum) || qtyNum < 0) {
-      setFormError('Valid non-negative quantity is required');
-      return;
+
+    if (formProductType === 'CHILD') {
+      if (!formParentId) {
+        setFormError('CHILD products must select a valid PARENT product.');
+        return;
+      }
+    }
+
+    let priceNum = parseFloat(formPrice);
+    let qtyNum = parseInt(formQuantity, 10);
+
+    if (formProductType === 'PARENT') {
+      priceNum = 0;
+      qtyNum = 0;
+    } else {
+      if (isNaN(priceNum) || priceNum < 0) {
+        setFormError('Valid non-negative price is required for ' + formProductType + ' products.');
+        return;
+      }
+      if (isNaN(qtyNum) || qtyNum < 0) {
+        setFormError('Valid non-negative quantity is required for ' + formProductType + ' products.');
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -150,11 +178,12 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     const payload: ProductRequest = {
       name: formName.trim(),
       description: formDescription.trim() || undefined,
+      productType: formProductType,
       price: priceNum,
       quantity: qtyNum,
       status: formStatus,
       categoryId: formCategoryId ? Number(formCategoryId) : null,
-      parentId: formParentId ? Number(formParentId) : null,
+      parentId: formProductType === 'CHILD' && formParentId ? Number(formParentId) : null,
       image: formImage.trim() || undefined,
     };
 
@@ -196,14 +225,14 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
   return (
     <div>
-      {/* Top Action & Title Bar */}
+      {/* Header Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-ink-primary)' }}>
-            Product Catalog Management
+            Product Catalog & Hierarchy Management
           </h2>
           <p style={{ fontSize: '0.88rem', color: 'var(--color-ink-muted)' }}>
-            Manage drone inventory, pricing, availability states, and product variants
+            Manage STANDALONE, PARENT (Series), and CHILD (Variant) products with system validation
           </p>
         </div>
         <button onClick={openAddModal} className="btn-dronesz-primary">
@@ -226,8 +255,23 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             setSearch(e.target.value);
             setPage(0);
           }}
-          style={{ flex: '1 1 250px' }}
+          style={{ flex: '1 1 220px' }}
         />
+
+        <select
+          className="input-field"
+          value={typeFilter}
+          onChange={(e) => {
+            setTypeFilter(e.target.value);
+            setPage(0);
+          }}
+          style={{ width: '180px' }}
+        >
+          <option value="">All Product Types</option>
+          <option value="STANDALONE">STANDALONE</option>
+          <option value="PARENT">PARENT (Series)</option>
+          <option value="CHILD">CHILD (Variant)</option>
+        </select>
 
         <select
           className="input-field"
@@ -236,7 +280,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             setStatusFilter(e.target.value);
             setPage(0);
           }}
-          style={{ width: '180px' }}
+          style={{ width: '160px' }}
         >
           <option value="">All Statuses</option>
           <option value="AVAILABLE">Available</option>
@@ -251,7 +295,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             setCategoryFilter(e.target.value);
             setPage(0);
           }}
-          style={{ width: '200px' }}
+          style={{ width: '180px' }}
         >
           <option value="">All Categories</option>
           {categories.map((c) => (
@@ -262,14 +306,14 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         </select>
       </div>
 
-      {/* Products Table */}
+      {/* Products Data Table */}
       {loading ? (
         <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
           Loading product catalog...
         </div>
       ) : products.length === 0 ? (
         <div className="dronesz-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
-          No products found matching your filters. Click <strong>+ Add New Product</strong> to add items.
+          No products found matching your filter criteria.
         </div>
       ) : (
         <>
@@ -277,9 +321,10 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Product</th>
+                  <th>Product Name</th>
+                  <th>Product Type</th>
+                  <th>Hierarchy / Parent</th>
                   <th>Category</th>
-                  <th>Hierarchy / Type</th>
                   <th>Price</th>
                   <th>Stock Qty</th>
                   <th>Status</th>
@@ -288,15 +333,36 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               </thead>
               <tbody>
                 {products.map((p) => {
-                  const parentProduct = candidateParents.find((cp) => cp.id === p.parentId);
+                  const parentProduct = parentProducts.find((cp) => cp.id === p.parentId);
                   return (
                     <tr key={p.id}>
                       <td>
-                        <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{p.name}</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{p.name}</div>
                         {p.description && (
-                          <div style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {p.description}
                           </div>
+                        )}
+                      </td>
+                      <td>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          padding: '0.25rem 0.6rem',
+                          borderRadius: '4px',
+                          background: p.productType === 'PARENT' ? '#6b21a8' : p.productType === 'CHILD' ? '#0369a1' : '#374151',
+                          color: '#ffffff'
+                        }}>
+                          {p.productType}
+                        </span>
+                      </td>
+                      <td>
+                        {p.productType === 'CHILD' ? (
+                          <span className="hierarchy-pill">
+                            Parent: #{p.parentId} {parentProduct ? `(${parentProduct.name})` : ''}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>None (Top Level)</span>
                         )}
                       </td>
                       <td>
@@ -307,26 +373,23 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                         )}
                       </td>
                       <td>
-                        {p.parentId ? (
-                          <span className="hierarchy-pill">
-                            Child of #{p.parentId} {parentProduct ? `(${parentProduct.name})` : ''}
-                          </span>
+                        {p.productType === 'PARENT' ? (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)', fontStyle: 'italic' }}>N/A (Parent)</span>
                         ) : (
-                          <span style={{ fontSize: '0.78rem', color: '#6b7280', background: '#f3f4f6', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                            Standalone
-                          </span>
+                          <strong style={{ color: 'var(--color-ink-primary)' }}>₹{p.price.toFixed(2)}</strong>
                         )}
                       </td>
                       <td>
-                        <strong style={{ color: 'var(--color-ink-primary)' }}>₹{p.price.toFixed(2)}</strong>
-                      </td>
-                      <td>
-                        <span style={{
-                          fontWeight: 600,
-                          color: p.quantity === 0 ? '#dc2626' : p.quantity <= 5 ? '#d97706' : '#10b981'
-                        }}>
-                          {p.quantity} units
-                        </span>
+                        {p.productType === 'PARENT' ? (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)', fontStyle: 'italic' }}>N/A (Parent)</span>
+                        ) : (
+                          <span style={{
+                            fontWeight: 600,
+                            color: p.quantity === 0 ? '#dc2626' : p.quantity <= 5 ? '#d97706' : '#10b981'
+                          }}>
+                            {p.quantity} units
+                          </span>
+                        )}
                       </td>
                       <td>
                         <span className={`status-badge ${p.status}`}>
@@ -357,7 +420,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             </table>
           </div>
 
-          {/* Pagination Controls */}
+          {/* Pagination */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem' }}>
             <span style={{ fontSize: '0.88rem', color: 'var(--color-ink-muted)' }}>
               Showing {products.length} of {totalElements} product(s) (Page {page + 1} of {totalPages || 1})
@@ -385,7 +448,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       {/* Add / Edit Product Modal */}
       {(isAddModalOpen || editingProduct) && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ maxWidth: '580px' }}>
             <h3 style={{ fontSize: '1.25rem', marginBottom: '1.25rem', color: 'var(--color-ink-primary)' }}>
               {editingProduct ? `Edit Product #${editingProduct.id}` : 'Create New Product'}
             </h3>
@@ -398,7 +461,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="e.g. Motor Model 2207 1850KV"
+                  placeholder="e.g. Motors Series or Motor 2207 1850KV"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   maxLength={255}
@@ -406,34 +469,81 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="input-group">
-                  <label className="input-label">Price (₹) *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    className="input-field"
-                    placeholder="0.00"
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="input-group">
-                  <label className="input-label">Inventory Quantity *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    className="input-field"
-                    placeholder="0"
-                    value={formQuantity}
-                    onChange={(e) => setFormQuantity(e.target.value)}
-                    required
-                  />
-                </div>
+              {/* Product Type Selector */}
+              <div className="input-group">
+                <label className="input-label">Product Type *</label>
+                <select
+                  className="input-field"
+                  value={formProductType}
+                  onChange={(e) => {
+                    const newType = e.target.value as ProductType;
+                    setFormProductType(newType);
+                    if (newType !== 'CHILD') {
+                      setFormParentId('');
+                    }
+                  }}
+                >
+                  <option value="STANDALONE">STANDALONE (Independent Product)</option>
+                  <option value="PARENT">PARENT (Product Series / Category Header)</option>
+                  <option value="CHILD">CHILD (Variant belonging to PARENT)</option>
+                </select>
               </div>
+
+              {/* Rules: CHILD requires PARENT selection */}
+              {formProductType === 'CHILD' && (
+                <div className="input-group" style={{ background: 'rgba(3, 105, 161, 0.08)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(3, 105, 161, 0.2)' }}>
+                  <label className="input-label" style={{ color: '#0369a1', fontWeight: 700 }}>
+                    Select Parent Product Series *
+                  </label>
+                  <select
+                    className="input-field"
+                    value={formParentId}
+                    onChange={(e) => setFormParentId(e.target.value)}
+                    required
+                  >
+                    <option value="">-- Select Parent Series --</option>
+                    {parentProducts
+                      .filter((p) => !editingProduct || p.id !== editingProduct.id)
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          #{p.id}: {p.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Rules: PARENT products do not have price/quantity */}
+              {formProductType !== 'PARENT' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="input-group">
+                    <label className="input-label">Price (₹) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      className="input-field"
+                      placeholder="0.00"
+                      value={formPrice}
+                      onChange={(e) => setFormPrice(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label className="input-label">Inventory Quantity *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className="input-field"
+                      placeholder="0"
+                      value={formQuantity}
+                      onChange={(e) => setFormQuantity(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="input-group">
@@ -467,27 +577,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               </div>
 
               <div className="input-group">
-                <label className="input-label">Parent Product (Variant Series)</label>
-                <select
-                  className="input-field"
-                  value={formParentId}
-                  onChange={(e) => setFormParentId(e.target.value)}
-                >
-                  <option value="">None (Standalone Product)</option>
-                  {candidateParents
-                    .filter((p) => !editingProduct || p.id !== editingProduct.id)
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        #{p.id}: {p.name}
-                      </option>
-                    ))}
-                </select>
-                <span style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)' }}>
-                  Assigning a parent product configures this item as a child variant.
-                </span>
-              </div>
-
-              <div className="input-group">
                 <label className="input-label">Image Asset URL (Optional)</label>
                 <input
                   type="text"
@@ -502,7 +591,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                 <label className="input-label">Description (Optional)</label>
                 <textarea
                   className="input-field"
-                  placeholder="Enter detailed product description..."
+                  placeholder="Enter detailed description..."
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                 />
@@ -529,7 +618,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               Confirm Product Deletion
             </h3>
             <p style={{ color: 'var(--color-ink-muted)', marginBottom: '1.25rem', fontSize: '0.92rem' }}>
-              Are you sure you want to delete product <strong>"{deletingProduct.name}"</strong>? Parent products with child variants cannot be deleted until child variants are reassigned or removed.
+              Are you sure you want to delete product <strong>"{deletingProduct.name}"</strong>? PARENT products with child variants cannot be deleted until child variants are reassigned or removed.
             </p>
 
             {formError && <div className="error-banner">{formError}</div>}

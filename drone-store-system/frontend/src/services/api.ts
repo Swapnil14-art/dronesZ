@@ -21,6 +21,7 @@ export interface ErrorResponse {
 }
 
 export type ProductStatus = 'AVAILABLE' | 'OUT_OF_STOCK' | 'COMING_SOON';
+export type ProductType = 'STANDALONE' | 'PARENT' | 'CHILD';
 
 export interface CategoryDto {
   id: number;
@@ -42,6 +43,7 @@ export interface ProductDto {
   price: number;
   quantity: number;
   status: ProductStatus;
+  productType: ProductType;
   parentId?: number | null;
   categoryId?: number | null;
   categoryName?: string | null;
@@ -56,6 +58,7 @@ export interface ProductRequest {
   price: number;
   quantity: number;
   status: ProductStatus;
+  productType: ProductType;
   parentId?: number | null;
   categoryId?: number | null;
   image?: string;
@@ -71,6 +74,7 @@ export interface PageResponse<T> {
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '';
 
+/* Admin Login Route */
 export async function loginAdmin(email: String, password: String): Promise<LoginResponse> {
   const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
     method: 'POST',
@@ -93,6 +97,73 @@ export async function loginAdmin(email: String, password: String): Promise<Login
   return response.json();
 }
 
+/* Public Storefront Read-Only APIs (No Auth Header) */
+export async function fetchPublicCategories(): Promise<CategoryDto[]> {
+  const response = await fetch(`${API_BASE_URL}/api/categories`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to load store categories');
+  }
+
+  return response.json();
+}
+
+export async function fetchPublicProducts(
+  params?: {
+    page?: number;
+    size?: number;
+    search?: string;
+    status?: string;
+  }
+): Promise<PageResponse<ProductDto>> {
+  const queryParams = new URLSearchParams();
+  if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+  if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+  if (params?.search) queryParams.append('search', params.search);
+  if (params?.status) queryParams.append('status', params.status);
+
+  const response = await fetch(`${API_BASE_URL}/api/products?${queryParams.toString()}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to load store products');
+  }
+
+  return response.json();
+}
+
+export async function fetchPublicProductById(id: number): Promise<ProductDto> {
+  const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error('Product not found');
+  }
+
+  return response.json();
+}
+
+export async function fetchPublicChildProducts(parentId: number): Promise<ProductDto[]> {
+  const response = await fetch(`${API_BASE_URL}/api/products/${parentId}/children`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to load product variants');
+  }
+
+  return response.json();
+}
+
+/* Protected Admin APIs (Require JWT Header) */
 export async function fetchAdminProfile(token: string): Promise<AdminDto> {
   const response = await fetch(`${API_BASE_URL}/api/admin/me`, {
     method: 'GET',
@@ -109,23 +180,6 @@ export async function fetchAdminProfile(token: string): Promise<AdminDto> {
   return response.json();
 }
 
-export async function fetchAdminDashboardData(token: string): Promise<any> {
-  const response = await fetch(`${API_BASE_URL}/api/admin/dashboard`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Unauthorized access to admin dashboard');
-  }
-
-  return response.json();
-}
-
-/* Category APIs */
 export async function fetchCategories(token: string): Promise<CategoryDto[]> {
   const response = await fetch(`${API_BASE_URL}/api/admin/categories`, {
     method: 'GET',
@@ -194,7 +248,6 @@ export async function deleteCategory(token: string, id: number): Promise<void> {
   }
 }
 
-/* Product APIs */
 export async function fetchProducts(
   token: string,
   params?: {
@@ -204,6 +257,7 @@ export async function fetchProducts(
     status?: string;
     categoryId?: number | string;
     parentId?: number | string;
+    productType?: ProductType;
   }
 ): Promise<PageResponse<ProductDto>> {
   const queryParams = new URLSearchParams();
@@ -213,6 +267,7 @@ export async function fetchProducts(
   if (params?.status) queryParams.append('status', params.status);
   if (params?.categoryId) queryParams.append('categoryId', params.categoryId.toString());
   if (params?.parentId) queryParams.append('parentId', params.parentId.toString());
+  if (params?.productType) queryParams.append('productType', params.productType);
 
   const response = await fetch(`${API_BASE_URL}/api/admin/products?${queryParams.toString()}`, {
     method: 'GET',

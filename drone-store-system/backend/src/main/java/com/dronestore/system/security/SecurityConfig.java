@@ -56,8 +56,10 @@ public class SecurityConfig {
             .authorizeRequests()
                 // Public root & Swagger UI endpoints
                 .antMatchers("/", "/api/info", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
-                // Public authentication endpoints
+                // Public authentication endpoints (Obscured admin login path)
                 .antMatchers("/api/auth/**").permitAll()
+                // Public storefront read-only product and category APIs
+                .antMatchers("/api/products/**", "/api/categories/**").permitAll()
                 // Protected admin endpoints require ADMIN role
                 .antMatchers("/api/admin/**").hasRole("ADMIN")
                 // All other requests require authentication

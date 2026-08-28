@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, fetchCategories, fetchAdminDashboardData, ProductDto, CategoryDto } from '../services/api';
+import { fetchProducts, fetchCategories, ProductDto, CategoryDto } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 interface Props {

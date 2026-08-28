@@ -28,6 +28,10 @@ public class Product {
     @Column(nullable = false, length = 20)
     private ProductStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type", length = 20)
+    private ProductType productType = ProductType.STANDALONE;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Product parent;
@@ -53,11 +57,17 @@ public class Product {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
+        if (this.productType == null) {
+            this.productType = ProductType.STANDALONE;
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+        if (this.productType == null) {
+            this.productType = ProductType.STANDALONE;
+        }
     }
 
     public Long getId() {
@@ -106,6 +116,14 @@ public class Product {
 
     public void setStatus(ProductStatus status) {
         this.status = status;
+    }
+
+    public ProductType getProductType() {
+        return productType;
+    }
+
+    public void setProductType(ProductType productType) {
+        this.productType = productType;
     }
 
     public Product getParent() {

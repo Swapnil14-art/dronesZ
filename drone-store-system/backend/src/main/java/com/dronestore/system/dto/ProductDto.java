@@ -1,6 +1,7 @@
 package com.dronestore.system.dto;
 
 import com.dronestore.system.entity.ProductStatus;
+import com.dronestore.system.entity.ProductType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ public class ProductDto {
     private BigDecimal price;
     private Integer quantity;
     private ProductStatus status;
+    private ProductType productType;
     private Long parentId;
     private Long categoryId;
     private String categoryName;
@@ -69,6 +71,14 @@ public class ProductDto {
 
     public void setStatus(ProductStatus status) {
         this.status = status;
+    }
+
+    public ProductType getProductType() {
+        return productType;
+    }
+
+    public void setProductType(ProductType productType) {
+        this.productType = productType;
     }
 
     public Long getParentId() {
