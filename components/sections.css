@@ -1,0 +1,152 @@
+/* Shared section scaffolding for the home spine. Chapter-specific styles co-locate per component. */
+
+.section {
+  position: relative;
+  padding-block: var(--space-section);
+  padding-inline: var(--space-gutter);
+}
+
+.section--breather {
+  background: var(--color-breather);
+  color: var(--color-breather-ink);
+}
+
+.section__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 60ch;
+  margin-bottom: var(--space-4);
+}
+.section__title {
+  font-size: var(--text-2xl);
+}
+
+/* ---- Pillars (light breather) ---- */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+.pillar {
+  padding: var(--space-3);
+  border-top: 2px solid var(--color-brand-red);
+  background: oklch(99% 0 0);
+}
+.pillar__title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-1);
+}
+.pillar__body {
+  color: oklch(40% 0.01 268);
+}
+
+/* ---- Frames (Coming Soon) ---- */
+.frames {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 22px,
+      color-mix(in oklch, var(--color-line) 30%, transparent) 22px 23px
+    ),
+    var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.5rem, 1rem + 3vw, 4rem);
+}
+.frames__badge {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-brand-red-hi);
+  border: 1px solid var(--color-brand-red-dim);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  margin-bottom: var(--space-2);
+}
+.frames__title {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-2);
+}
+.frames__body {
+  color: var(--color-muted);
+  max-width: 44ch;
+}
+
+/* ---- Contact teaser ---- */
+.contact-teaser {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.contact-teaser__title {
+  font-size: var(--text-hero);
+  line-height: 0.96;
+  max-width: 18ch;
+}
+
+/* ---- Footer ---- */
+.footer {
+  background: var(--color-canvas-deep);
+  border-top: 1px solid var(--color-line);
+  padding: var(--space-4) var(--space-gutter) var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-xl);
+}
+.footer__brand-mark {
+  height: 1.5em;
+  width: auto;
+}
+.footer__brand .accent {
+  color: var(--color-brand-red);
+  /* Optical correction — mirrors the nav wordmark (see nav.css .nav__brand .accent). */
+  display: inline-block;
+  transform: translateY(0.8px);
+}
+.footer__blurb {
+  color: var(--color-muted);
+  margin-top: var(--space-1);
+  max-width: 32ch;
+}
+.footer__meta {
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+  text-align: right;
+}
+.footer__meta a:hover {
+  color: var(--color-brand-red-hi);
+}
+
+@media (max-width: 768px) {
+  .frames {
+    grid-template-columns: 1fr;
+  }
+  .footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .footer__meta {
+    text-align: left;
+  }
+}

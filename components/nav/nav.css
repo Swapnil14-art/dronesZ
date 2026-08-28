@@ -1,0 +1,134 @@
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem var(--space-gutter);
+  background: color-mix(in oklch, var(--color-canvas) 70%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-line);
+  transition:
+    background var(--duration-normal) var(--ease-out-expo),
+    border-color var(--duration-normal) var(--ease-out-expo);
+}
+
+/* Over the dark hero: dissolve the light bar, flip type to light. */
+.nav[data-over-hero] {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom-color: transparent;
+}
+.nav[data-over-hero] .nav__brand,
+.nav[data-over-hero] .nav__link:hover,
+.nav[data-over-hero] .nav__link[aria-current="page"] {
+  color: var(--color-on-dark);
+}
+.nav[data-over-hero] .nav__link {
+  color: oklch(84% 0.008 268);
+}
+
+.nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  letter-spacing: -0.01em;
+  color: var(--color-white);
+  transition: color var(--duration-normal) var(--ease-out-expo);
+}
+/* Sized in em so the mark tracks the wordmark's cap height across the fluid scale. */
+.nav__brand-mark {
+  height: 1.55em;
+  width: auto;
+}
+.nav__brand .accent {
+  color: var(--color-brand-red);
+  /* Optical correction: the saturated red cap "Z" reads slightly high against the white
+     lowercase-ending wordmark on dark; a sub-pixel drop settles it onto the shared baseline.
+     inline-block so the transform applies; the wordmark never wraps so flow is unaffected. */
+  display: inline-block;
+  transform: translateY(0.8px);
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
+  list-style: none;
+}
+
+.nav__link {
+  position: relative;
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+  padding: 0.25rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: color var(--duration-fast) var(--ease-out-expo);
+}
+.nav__link:hover {
+  color: var(--color-white);
+}
+/* Invisible expanded hit area → tap target ≥44px tall without shifting layout
+   or detaching the underline (::after). Horizontal inset stays under the nav gap. */
+.nav__link::before {
+  content: "";
+  position: absolute;
+  inset: -11px -4px;
+}
+
+/* red underline grows from left on hover + active */
+.nav__link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  background: var(--color-brand-red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-normal) var(--ease-out-expo);
+}
+.nav__link:hover::after,
+.nav__link[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+.nav__link[aria-current="page"] {
+  color: var(--color-white);
+}
+
+@media (max-width: 600px) {
+  .nav__links {
+    gap: 1rem;
+  }
+  .nav__link {
+    font-size: var(--text-xs);
+  }
+}
+
+/* Narrow phones: logo + 4 links overlap and clip "Contact". Tighten the gutter and drop the
+   redundant "Home" item — the brand logo already links home. First <li> maps to NAV[0] = Home. */
+@media (max-width: 380px) {
+  .nav {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .nav__links {
+    gap: 0.85rem;
+  }
+  .nav__links li:first-child {
+    display: none;
+  }
+}

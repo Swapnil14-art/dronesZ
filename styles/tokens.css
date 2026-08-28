@@ -1,0 +1,70 @@
+/* Design tokens — DronesZ cinematic. OKLCH throughout. Values refined by the /design brief before Phase 6. */
+@theme {
+  /* ---- Color: LIGHT preview — white canvas, ink type, single red accent ---- */
+  /* (dark original lives in git history — same token names; revert by restoring from a prior commit) */
+  --color-canvas: oklch(98% 0.002 268); /* near-white base */
+  --color-canvas-deep: oklch(
+    94.5% 0.006 25
+  ); /* footer / deepest wells, faint warm grey */
+  --color-surface: oklch(100% 0 0); /* raised cards (white) */
+  --color-surface-hi: oklch(96.5% 0.004 268); /* hover/elevated */
+  --color-line: oklch(87% 0.008 268); /* hairline borders */
+
+  --color-white: oklch(
+    23% 0.018 268
+  ); /* primary type (now ink — name kept for compat) */
+  --color-muted: oklch(46% 0.015 268); /* secondary type */
+  --color-faint: oklch(
+    53% 0.012 268
+  ); /* tertiary / captions — 53% L → 4.99:1 on canvas (WCAG AA) */
+
+  --color-on-dark: oklch(
+    98% 0 0
+  ); /* light text on dark/accent surfaces (hero, nav-over-hero, red fills) */
+  --color-void: oklch(
+    14% 0.006 268
+  ); /* deep matte void behind footage / specimens */
+
+  --color-brand-red: oklch(
+    55% 0.224 27
+  ); /* brand accent, tuned for AA on white */
+  --color-brand-red-hi: oklch(61% 0.232 27); /* hover / active */
+  --color-brand-red-dim: oklch(48% 0.17 27); /* pressed / subtle fills */
+
+  /* "breather" sections — now soft warm-red tinted bands against the white canvas */
+  --color-breather: oklch(95.5% 0.022 22);
+  --color-breather-ink: oklch(24% 0.02 25);
+
+  /* ---- Type: fluid clamp scale ---- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    var(--font-display), var(--font-inter), ui-sans-serif, sans-serif;
+
+  --text-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.85rem);
+  --text-sm: clamp(0.875rem, 0.84rem + 0.18vw, 0.95rem);
+  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-lg: clamp(1.2rem, 1.1rem + 0.5vw, 1.5rem);
+  --text-xl: clamp(1.6rem, 1.3rem + 1.4vw, 2.4rem);
+  --text-2xl: clamp(2.2rem, 1.6rem + 2.8vw, 4rem);
+  --text-hero: clamp(2.8rem, 1rem + 8vw, 9rem);
+
+  /* ---- Spacing rhythm ---- */
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.75rem;
+  --space-4: 3rem;
+  --space-section: clamp(5rem, 3rem + 8vw, 12rem);
+  --space-gutter: clamp(1.25rem, 0.5rem + 3vw, 4rem);
+
+  /* ---- Motion ---- */
+  --duration-fast: 160ms;
+  --duration-normal: 320ms;
+  --duration-slow: 640ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ---- Radii ---- */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+}

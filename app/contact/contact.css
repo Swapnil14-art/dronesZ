@@ -1,0 +1,109 @@
+.contact-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+/* Selected-path indicator — carries the fork choice through from the home page. */
+.contact-page__chip {
+  display: inline-block;
+  margin-top: var(--space-2);
+  padding: 0.35rem 0.75rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(
+    --color-brand-red-dim
+  ); /* 48% L → AA contrast for small uppercase text */
+  background: color-mix(in oklch, var(--color-brand-red) 10%, transparent);
+  border: 1px solid color-mix(in oklch, var(--color-brand-red) 32%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.contact-page__title {
+  font-size: var(--text-2xl);
+  margin: var(--space-2) 0;
+}
+.contact-page__lead {
+  color: var(--color-muted);
+  max-width: 42ch;
+  margin-bottom: var(--space-4);
+}
+.contact-page__details {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.contact-page__details li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-line);
+}
+.contact-page__details span {
+  font-size: var(--text-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.contact-page__details a:hover {
+  color: var(--color-brand-red-hi);
+}
+
+.contact-page__form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  min-height: 12rem;
+}
+
+.contact-panel__eyebrow {
+  font-size: var(--text-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+  margin-bottom: var(--space-2);
+}
+.contact-panel__checklist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: var(--space-3);
+}
+.contact-panel__checklist li {
+  position: relative;
+  padding-left: 1.4rem;
+  color: var(--color-muted);
+}
+/* Small red diamond marker — echoes the brand accent, not a generic bullet. */
+.contact-panel__checklist li::before {
+  content: "";
+  position: absolute;
+  left: 0.1rem;
+  top: 0.55em;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--color-brand-red);
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+.contact-panel__cta {
+  width: 100%;
+  justify-content: center;
+}
+.contact-panel__note {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-faint);
+}
+
+@media (max-width: 860px) {
+  .contact-page {
+    grid-template-columns: 1fr;
+  }
+}
