@@ -1,146 +1,90 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { fetchAdminDashboardData } from '../services/api';
+import { DashboardOverview } from '../components/DashboardOverview';
+import { ProductManagement } from '../components/ProductManagement';
+import { CategoryManagement } from '../components/CategoryManagement';
+
+type TabType = 'overview' | 'products' | 'categories';
 
 export const ProtectedAdminDashboard: React.FC = () => {
   const { admin, token, logout } = useAuth();
-  const [dashboardData, setDashboardData] = useState<any>(null);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [loadingApi, setLoadingApi] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<TabType>('products');
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [token]);
-
-  const loadDashboardData = async () => {
-    if (!token) return;
-    setLoadingApi(true);
-    setApiError(null);
-    try {
-      const data = await fetchAdminDashboardData(token);
-      setDashboardData(data);
-    } catch (err: any) {
-      setApiError(err.message || 'Failed to authorize protected admin request');
-    } finally {
-      setLoadingApi(false);
-    }
-  };
+  if (!token) {
+    return null;
+  }
 
   return (
-    <div style={{ maxWidth: '1080px', width: '100%', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
-      {/* Top Navbar Header */}
-      <header className="dronesz-card" style={{
-        padding: '1.5rem 2rem',
-        marginBottom: '2rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '1rem'
-      }}>
+    <div className="admin-dashboard-container">
+      {/* Sidebar Navigation */}
+      <aside className="admin-sidebar">
         <div>
-          <h2 className="brand-wordmark" style={{ fontSize: '1.5rem' }}>
-            Drones<span className="accent">Z</span> Admin System
-          </h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--color-ink-muted)' }}>
-            Protected Administrative Control Center
-          </p>
+          {/* Brand Identity Header */}
+          <div style={{ padding: '0.5rem 0.5rem 1.5rem 0.5rem', borderBottom: '1px solid var(--color-line)', marginBottom: '1.5rem' }}>
+            <h2 className="brand-wordmark" style={{ fontSize: '1.4rem' }}>
+              Drones<span className="accent">Z</span> Admin
+            </h2>
+            <p style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', marginTop: '0.2rem' }}>
+              Store Management Portal
+            </p>
+          </div>
+
+          {/* Navigation Items */}
+          <nav>
+            <div
+              className={`sidebar-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+              onClick={() => setActiveTab('overview')}
+            >
+              <span style={{ fontSize: '1.1rem' }}>📊</span> Overview
+            </div>
+
+            <div
+              className={`sidebar-nav-item ${activeTab === 'products' ? 'active' : ''}`}
+              onClick={() => setActiveTab('products')}
+            >
+              <span style={{ fontSize: '1.1rem' }}>📦</span> Products
+            </div>
+
+            <div
+              className={`sidebar-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
+              onClick={() => setActiveTab('categories')}
+            >
+              <span style={{ fontSize: '1.1rem' }}>🏷️</span> Categories
+            </div>
+          </nav>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{admin?.email}</div>
-            <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
-              <span className="dronesz-badge" style={{ padding: '0.15rem 0.5rem', fontSize: '0.7rem' }}>
+        {/* Footer Admin User Profile & Sign Out */}
+        <div style={{ borderTop: '1px solid var(--color-line)', paddingTop: '1.25rem' }}>
+          <div style={{ marginBottom: '0.75rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {admin?.email || 'admin@example.com'}
+            </div>
+            <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.25rem' }}>
+              <span className="dronesz-badge" style={{ padding: '0.1rem 0.4rem', fontSize: '0.68rem' }}>
                 {admin?.role || 'ADMIN'}
-              </span>
-              <span className="dronesz-badge-active" style={{ padding: '0.15rem 0.5rem', fontSize: '0.7rem' }}>
-                Authenticated
               </span>
             </div>
           </div>
-          <button onClick={logout} className="btn-dronesz-secondary">
+
+          <button
+            onClick={logout}
+            className="btn-dronesz-secondary"
+            style={{ width: '100%', padding: '0.6rem', fontSize: '0.85rem' }}
+          >
             Sign Out
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* Main Content Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-        
-        {/* Card 1: Auth Status */}
-        <div className="dronesz-card" style={{ padding: '1.75rem' }}>
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--color-ink-primary)' }}>
-            Authentication State
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem' }}>
-            <div>
-              <span style={{ color: 'var(--color-ink-muted)' }}>Admin ID: </span>
-              <strong>#{admin?.id}</strong>
-            </div>
-            <div>
-              <span style={{ color: 'var(--color-ink-muted)' }}>Email: </span>
-              <strong>{admin?.email}</strong>
-            </div>
-            <div>
-              <span style={{ color: 'var(--color-ink-muted)' }}>Role Authority: </span>
-              <span className="dronesz-badge" style={{ padding: '0.15rem 0.5rem', fontSize: '0.7rem' }}>{admin?.role}</span>
-            </div>
-            <div>
-              <span style={{ color: 'var(--color-ink-muted)' }}>JWT Header: </span>
-              <code style={{
-                background: 'var(--color-canvas-deep)',
-                padding: '0.25rem 0.5rem',
-                borderRadius: '6px',
-                color: 'var(--color-brand-red-dim)',
-                fontSize: '0.8rem',
-                wordBreak: 'break-all',
-                display: 'block',
-                marginTop: '0.3rem'
-              }}>
-                Authorization: Bearer {token ? `${token.substring(0, 28)}...` : 'None'}
-              </code>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Protected Backend API Test */}
-        <div className="dronesz-card" style={{ padding: '1.75rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ fontSize: '1.1rem', color: 'var(--color-ink-primary)' }}>
-              Protected API Validation
-            </h3>
-            <button onClick={loadDashboardData} className="btn-dronesz-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-              Re-test JWT API
-            </button>
-          </div>
-
-          {loadingApi && (
-            <div style={{ color: 'var(--color-ink-muted)', fontSize: '0.85rem' }}>Validating Bearer Token with Spring Security...</div>
-          )}
-
-          {apiError && (
-            <div className="error-banner" style={{ fontSize: '0.85rem' }}>
-              {apiError}
-            </div>
-          )}
-
-          {dashboardData && !loadingApi && (
-            <pre style={{
-              background: 'var(--color-canvas-deep)',
-              border: '1px solid var(--color-line)',
-              borderRadius: '10px',
-              padding: '1rem',
-              color: '#059669',
-              fontSize: '0.82rem',
-              overflowX: 'auto'
-            }}>
-              {JSON.stringify(dashboardData, null, 2)}
-            </pre>
-          )}
-        </div>
-
-      </div>
+      {/* Main View Area */}
+      <main className="admin-main-content">
+        {activeTab === 'overview' && (
+          <DashboardOverview token={token} onNavigateTab={(tab) => setActiveTab(tab)} />
+        )}
+        {activeTab === 'products' && <ProductManagement token={token} />}
+        {activeTab === 'categories' && <CategoryManagement token={token} />}
+      </main>
     </div>
   );
 };

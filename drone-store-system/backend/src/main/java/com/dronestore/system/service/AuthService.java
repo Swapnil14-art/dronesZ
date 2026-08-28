@@ -14,6 +14,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 public class AuthService {
 
@@ -66,10 +68,19 @@ public class AuthService {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void seedInitialAdminAccount() {
-        if (!adminRepository.findByEmailIgnoreCase(initialAdminEmail).isPresent()) {
-            String hash = passwordEncoder.encode(initialAdminPassword);
+        Optional<Admin> existing = adminRepository.findByEmailIgnoreCase(initialAdminEmail);
+        String hash = passwordEncoder.encode(initialAdminPassword);
+
+        if (!existing.isPresent()) {
             Admin defaultAdmin = new Admin(initialAdminEmail, hash, "ADMIN", true);
             adminRepository.save(defaultAdmin);
+        } else {
+            Admin admin = existing.get();
+            if (!passwordEncoder.matches(initialAdminPassword, admin.getPasswordHash())) {
+                admin.setPasswordHash(hash);
+                admin.setEnabled(true);
+                adminRepository.save(admin);
+            }
         }
     }
 }
