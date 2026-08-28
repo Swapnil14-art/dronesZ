@@ -54,6 +54,8 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
             .authorizeRequests()
+                // Public root & Swagger UI endpoints
+                .antMatchers("/", "/api/info", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                 // Public authentication endpoints
                 .antMatchers("/api/auth/**").permitAll()
                 // Protected admin endpoints require ADMIN role
