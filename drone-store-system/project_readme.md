@@ -15,10 +15,18 @@ The complete system will eventually include:
 - Hierarchical and standalone product catalog management.
 - Inventory quantity management, dynamic pricing, and item availability states.
 
-### Current Milestone Scope
-The **current implementation phase is strictly limited to Admin-side Authentication**.
+### Current Implementation & Specification Status
+
+| Feature / Module | API / Entity Status | Implementation Phase |
+| :--- | :--- | :--- |
+| **Admin Authentication** | Planned Specification | Phase 1 (Current Milestone) |
+| **Admin Product APIs** | Planned Specification | Phase 3 (Planned Specification) |
+| **Admin Category APIs** | Planned Specification | Phase 3 (Planned Specification) |
+| **Storefront & Public APIs** | Future Specification | Phase 4 (Future Phase) |
+| **User Authentication** | Future Specification | Phase 5 (Future Phase) |
+
 - User authentication is **not** to be implemented in this phase.
-- Product catalog and store management features are **not** to be implemented until explicitly requested.
+- Product catalog and category APIs documented herein are **planned specifications** for future implementation.
 - The architectural design must remain flexible and forward-compatible for future phases.
 
 ---
@@ -140,42 +148,7 @@ Frontend Application
 
 ---
 
-## 9. Initial Admin API Specification
-
-### Endpoint
-`POST /api/auth/admin/login`
-
-### Request Body
-```json
-{
-  "email": "admin@example.com",
-  "password": "SecurePassword123!"
-}
-```
-
-### Success Response (200 OK)
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "tokenType": "Bearer",
-  "expiresIn": 86400,
-  "admin": {
-    "id": 1,
-    "email": "admin@example.com",
-    "role": "ADMIN"
-  }
-}
-```
-
-### Error Responses & Handling
-- **400 Bad Request**: Missing or malformed credentials.
-- **401 Unauthorized**: Invalid email/password combination, expired JWT, or invalid JWT signature.
-- **403 Forbidden**: Inactive/disabled admin account or insufficient permissions.
-- **Information Leak Protection**: Error responses must be generic (e.g., "Invalid email or password") to prevent username enumeration. Password hashes and JWT secrets must never appear in responses or server logs.
-
----
-
-## 10. Admin Database Entity Model
+## 9. Admin Database Entity Model
 
 ```text
 Admin Entity
@@ -193,31 +166,52 @@ Admin Entity
 
 ---
 
-## 11. Future Product Architecture (Specification Only — Do Not Implement Yet)
+## 10. Data Models: Product & Category Architecture
 
-The product catalog architecture must support both **hierarchical (parent-child)** and **standalone** products.
+The product catalog architecture supports both **hierarchical (parent-child)** and **standalone** products, linked to stable store categories.
 
-### Categories & Relationships
-1. **Hierarchical Products**: Products that belong under a parent category or motor/frame series.
-   - *Example*: `Motors` -> `Motor Model A`, `Motor Model B`.
-2. **Standalone Products**: Independent products requiring no parent.
-   - *Example*: `Drone Frame X`.
+### Category Entity Model
+```text
+Category Entity
+├── id          : BigInt / UUID (Primary Key, Auto-generated)
+├── name        : String (Unique, Not Null, Length: 1-100)
+├── description : Text (Nullable)
+├── createdAt   : Timestamp (Auto-set on creation, Not Null)
+└── updatedAt   : Timestamp (Auto-set on update, Not Null)
+```
 
-### Product Entity Model Draft
+### Product Entity Model
 ```text
 Product Entity
-├── id          : BigInt / UUID (Primary Key)
-├── name        : String (Not Null)
-├── description : Text
-├── price       : BigDecimal (Not Null, Scale: 2)
+├── id          : BigInt / UUID (Primary Key, Auto-generated)
+├── name        : String (Not Null, Length: 1-255)
+├── description : Text (Nullable)
+├── price       : BigDecimal (Not Null, Precision: 10, Scale: 2)
 ├── quantity    : Integer (Not Null, Default: 0)
-├── status      : Enum (AVAILABLE, OUT_OF_STOCK, COMING_SOON)
-├── parentId    : BigInt / UUID (Nullable, Self-referential FK)
-├── category    : String
-├── image       : String (URL / Asset path)
-├── createdAt   : Timestamp
-└── updatedAt   : Timestamp
+├── status      : Enum (AVAILABLE, OUT_OF_STOCK, COMING_SOON, Not Null)
+├── parentId    : BigInt / UUID (Nullable, Self-referential Foreign Key)
+├── categoryId  : BigInt / UUID (Nullable / Foreign Key to Category Entity)
+├── image       : String (Nullable, Asset Path / Image URL)
+├── createdAt   : Timestamp (Auto-set on creation, Not Null)
+└── updatedAt   : Timestamp (Auto-set on update, Not Null)
 ```
+
+---
+
+## 11. Category & Product Relationship Rules
+
+### Category vs. Product Hierarchy Distinction
+Two independent relationships exist in the domain model and must not be confused:
+
+1. **Category Assignment (`categoryId`)**:
+   - Categorizes products into logical store sections (e.g., *Motors, Frames, Propellers, ESCs, Flight Controllers, Batteries, Accessories*).
+   - Foreign key relationship targeting `Category.id`.
+   - String category names must **never** be hardcoded inside product records.
+
+2. **Product Hierarchy (`parentId`)**:
+   - Represents parent-child variants or product series relationships:
+     - *Standalone Product*: `parentId` is `null` (e.g., *Drone Frame X*).
+     - *Child Variant Product*: `parentId` points to a parent Product ID (e.g., *Motors* parent -> *Motor Model A*, *Motor Model B*).
 
 ---
 
@@ -239,7 +233,260 @@ Inventory quantity and availability status must operate as distinct fields:
 
 ---
 
-## 13. Mandatory Security Rules
+## 13. Comprehensive API Specifications
+
+All protected admin endpoints require authentication header:
+```http
+Authorization: Bearer <JWT>
+```
+and `ADMIN` role permission.
+
+```text
+Admin Authentication & Management Endpoint Map
+
+POST   /api/auth/admin/login         --> Admin Authentication (Login & JWT issuance)
+
+GET    /api/admin/categories         --> List all categories
+POST   /api/admin/categories         --> Create category
+GET    /api/admin/categories/{id}    --> Get single category details
+PUT    /api/admin/categories/{id}    --> Update category
+DELETE /api/admin/categories/{id}    --> Delete category (Blocked if products assigned)
+
+GET    /api/admin/products           --> List products (Supports pagination, search & filtering)
+POST   /api/admin/products           --> Create product (Standalone or Child variant)
+GET    /api/admin/products/{id}      --> Get single product details
+PUT    /api/admin/products/{id}      --> Update product & parent/category relationship
+DELETE /api/admin/products/{id}      --> Delete product (Blocked if children exist)
+```
+
+---
+
+### 13.1 Admin Authentication API
+
+#### Endpoint
+`POST /api/auth/admin/login`
+
+#### Request Body
+```json
+{
+  "email": "admin@example.com",
+  "password": "SecurePassword123!"
+}
+```
+
+#### Success Response (200 OK)
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "tokenType": "Bearer",
+  "expiresIn": 86400,
+  "admin": {
+    "id": 1,
+    "email": "admin@example.com",
+    "role": "ADMIN"
+  }
+}
+```
+
+---
+
+### 13.2 Admin Category APIs
+
+#### GET `/api/admin/categories`
+Returns all store categories.
+- **Status**: `200 OK`
+- **Response**:
+```json
+[
+  {
+    "id": 1,
+    "name": "Motors",
+    "description": "Brushless and brushed drone motors",
+    "createdAt": "2026-08-28T10:00:00Z",
+    "updatedAt": "2026-08-28T10:00:00Z"
+  },
+  {
+    "id": 2,
+    "name": "Frames",
+    "description": "Carbon fiber drone frames",
+    "createdAt": "2026-08-28T10:05:00Z",
+    "updatedAt": "2026-08-28T10:05:00Z"
+  }
+]
+```
+
+#### POST `/api/admin/categories`
+Creates a new category.
+- **Status**: `201 Created`
+- **Validation**:
+  - `name`: Required, non-blank, max 100 chars, must be unique (case-insensitive).
+- **Request**:
+```json
+{
+  "name": "Propellers",
+  "description": "2-blade and 3-blade propellers"
+}
+```
+- **Response**: `201 Created` with created Category object.
+- **Error**: `409 Conflict` if duplicate category name exists.
+
+#### GET `/api/admin/categories/{id}`
+Fetches details of a specific category by ID.
+- **Status**: `200 OK`
+- **Error**: `404 Not Found` if category ID does not exist.
+
+#### PUT `/api/admin/categories/{id}`
+Updates an existing category.
+- **Status**: `200 OK`
+- **Validation**: Name uniqueness check excluding current category ID.
+- **Request**:
+```json
+{
+  "name": "FPV Propellers",
+  "description": "High performance racing and freestyle props"
+}
+```
+- **Error**: `404 Not Found` if ID does not exist, `409 Conflict` if target name duplicates another existing category.
+
+#### DELETE `/api/admin/categories/{id}`
+Deletes a category.
+- **Status**: `204 No Content`
+- **Safety Boundary & Deletion Rule**:
+  > **Strict Constraint**: A category cannot be deleted while products are assigned to it (`categoryId == id`).
+- **Error**: Returns `409 Conflict` if products are linked to the category. The administrator must reassign or remove products first. No silent cascade deletion or orphan category references allowed.
+
+---
+
+### 13.3 Admin Product APIs
+
+#### GET `/api/admin/products`
+Retrieves products for the administration interface. Designed with query parameters to support filtering and pagination seamlessly without breaking changes:
+- **Query Parameters**:
+  - `page` (default: 0)
+  - `size` (default: 20)
+  - `search` (optional string search in name/description)
+  - `status` (optional enum filter: `AVAILABLE`, `OUT_OF_STOCK`, `COMING_SOON`)
+  - `categoryId` (optional filter by Category ID)
+  - `parentId` (optional filter by Parent Product ID)
+  - `sortBy` (default: `createdAt`)
+  - `sortDir` (default: `desc`)
+- **Status**: `200 OK`
+- **Response**:
+```json
+{
+  "content": [
+    {
+      "id": 10,
+      "name": "Motor Model A",
+      "description": "High KV racing motor",
+      "price": 1499.00,
+      "quantity": 20,
+      "status": "AVAILABLE",
+      "parentId": 1,
+      "categoryId": 1,
+      "image": "/assets/products/motor-a.jpg",
+      "createdAt": "2026-08-28T11:00:00Z",
+      "updatedAt": "2026-08-28T11:00:00Z"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
+
+#### POST `/api/admin/products`
+Creates a new standalone or child product.
+- **Status**: `201 Created`
+- **Request**:
+```json
+{
+  "name": "Motor Model A",
+  "description": "High KV brushless motor",
+  "price": 1499.00,
+  "quantity": 20,
+  "status": "AVAILABLE",
+  "parentId": 1,
+  "categoryId": 1,
+  "image": "/assets/products/motor-a.jpg"
+}
+```
+- **Validation Rules**:
+  - `name`: Required, non-blank, max 255 chars.
+  - `price`: Required, non-negative decimal (`>= 0.00`).
+  - `quantity`: Required, non-negative integer (`>= 0`).
+  - `status`: Required valid enum (`AVAILABLE`, `OUT_OF_STOCK`, `COMING_SOON`).
+  - `categoryId`: Optional, must reference existing Category ID if provided.
+  - `parentId`: Optional. If specified, backend must validate:
+    1. Referenced parent product exists (`404 Not Found`).
+    2. Parent product itself is not a child (limit hierarchy depth to prevent deep tree complexities).
+
+#### GET `/api/admin/products/{id}`
+Fetches full details of a specific product by ID.
+- **Status**: `200 OK`
+- **Error**: `404 Not Found` if product ID does not exist.
+
+#### PUT `/api/admin/products/{id}`
+Updates an existing product.
+- **Status**: `200 OK`
+- **Hierarchy Validation Rules**:
+  - Target product must exist (`404 Not Found`).
+  - Self-parenting check: `parentId` cannot equal target product's `id`.
+  - Circular hierarchy prevention: Cannot set `parentId` to an ID that is currently a direct or indirect child of this product.
+  - Category existence check if `categoryId` is changed.
+
+#### DELETE `/api/admin/products/{id}`
+Deletes a product.
+- **Status**: `204 No Content`
+- **Safety Boundary & Deletion Rule**:
+  > **Strict Constraint**: A parent product cannot be deleted while child products still reference it (`parentId == id`).
+- **Error**: Returns `409 Conflict` if child products reference this item. The administrator must delete or reassign child products first. Silent cascade deletion of products is strictly forbidden.
+
+---
+
+## 14. Standardized Error Response Format
+
+All APIs must utilize a standardized JSON error format across all endpoints:
+
+```json
+{
+  "status": 409,
+  "error": "Conflict",
+  "message": "Cannot delete product ID 1 because 3 child products are associated with it. Reassign or delete child products first.",
+  "timestamp": "2026-08-28T13:45:00Z"
+}
+```
+
+### Standard HTTP Status Code Map
+
+| HTTP Code | Condition / Meaning |
+| :--- | :--- |
+| **`200 OK`** | Successful retrieval, modification, or authentication request. |
+| **`201 Created`** | Successful creation of a new Category or Product resource. |
+| **`204 No Content`** | Successful deletion of a resource. |
+| **`400 Bad Request`** | Validation failure (e.g. negative price, blank name, invalid status enum). |
+| **`401 Unauthorized`** | Missing, expired, or invalid JWT bearer token. |
+| **`403 Forbidden`** | Authenticated user lacks `ADMIN` authority. |
+| **`404 Not Found`** | Resource (Product/Category ID or Parent ID) does not exist. |
+| **`409 Conflict`** | Business rule conflict (e.g. deleting parent with children, category with products, or duplicate category name). |
+
+---
+
+## 15. API Versioning & Separation Strategy
+
+### Path Boundary Separation
+Admin administrative APIs are explicitly isolated under the `/api/admin/` prefix:
+- **Admin Endpoints**: `/api/admin/products`, `/api/admin/categories` (Requires JWT & `ADMIN` role).
+- **Authentication Endpoints**: `/api/auth/admin/login` (Public authentication entry point).
+- **Future Public Endpoints**: `/api/products`, `/api/categories` (Read-only public storefront APIs to be created in Phase 4).
+
+### API Versioning Decision
+No URL versioning prefix (e.g., `/v1/`) is introduced at this stage to keep REST paths clean and straightforward while maintaining separation between Admin security boundaries and future public storefront endpoints.
+
+---
+
+## 16. Mandatory Security Rules
 
 All implementation code must adhere strictly to the following 16 security rules:
 
@@ -262,7 +509,7 @@ All implementation code must adhere strictly to the following 16 security rules:
 
 ---
 
-## 14. Backend Layered Architecture
+## 17. Backend Layered Architecture
 
 Backend code should maintain a clean, layered RESTful architecture:
 
@@ -270,11 +517,11 @@ Backend code should maintain a clean, layered RESTful architecture:
 HTTP Request
      │
      ▼
-Controller Layer (`/api/auth/**`, `/api/admin/**`, `/api/products/**`)
+Controller Layer (`/api/auth/**`, `/api/admin/**`)
      │ (Maps HTTP requests, validates DTO inputs)
      ▼
 Service Layer
-     │ (Implements core business logic, hashing, JWT generation)
+     │ (Implements core business logic, validation, hashing, JWT generation)
      ▼
 Repository Layer (Spring Data JPA)
      │ (Database abstractions & queries)
@@ -283,11 +530,11 @@ Database (PostgreSQL)
 ```
 
 - **Separation of Concerns**: Keep Spring Security configuration classes isolated from business service logic.
-- **REST Conventions**: Use standard HTTP methods (`GET`, `POST`, `PUT`, `DELETE`) and standard status codes (`200`, `201`, `400`, `401`, `403`, `404`, `500`).
+- **REST Conventions**: Use standard HTTP methods (`GET`, `POST`, `PUT`, `DELETE`) and standard status codes (`200`, `201`, `400`, `401`, `403`, `404`, `409`, `500`).
 
 ---
 
-## 15. Frontend Architecture & Auth Redirection
+## 18. Frontend Architecture & Auth Redirection
 
 ```text
 Admin Login Page
@@ -296,7 +543,7 @@ Admin Login Page
 Authentication State Manager
       │ (Stores JWT in memory / secure storage)
       ▼
-Protected Admin Dashboard Route
+Protected Admin Dashboard Route (/admin/*)
 ```
 
 - **Client Guarding**: Unauthenticated users attempting to access `/admin/*` routes must be automatically redirected to `/admin/login`.
@@ -304,7 +551,7 @@ Protected Admin Dashboard Route
 
 ---
 
-## 16. Development Roadmap / Phase Breakdown
+## 19. Development Roadmap / Phase Breakdown
 
 ### Phase 1 — Admin Authentication (CURRENT MILESTONE)
 - Setup backend project structure inside `drone-store-system/backend/`.
@@ -319,13 +566,14 @@ Protected Admin Dashboard Route
 - Admin dashboard shell and navigation layout.
 - Admin management utilities.
 
-### Phase 3 — Product Management (Future)
-- Product CRUD operations (Create, Read, Update, Delete).
-- Parent-child hierarchy management & standalone product options.
+### Phase 3 — Category & Product Management (Planned Specification)
+- Category CRUD operations (`/api/admin/categories`).
+- Product CRUD operations (`/api/admin/products`).
+- Parent-child hierarchy validation & standalone product options.
 - Inventory quantity, pricing, and availability status controls.
 
 ### Phase 4 — Storefront (Future)
-- Public product catalog, category tree, product details page.
+- Public product catalog, category tree, product details page (`/api/products`, `/api/categories`).
 - Availability status UI badges ("Available", "Out of Stock", "Coming Soon").
 
 ### Phase 5 — User Authentication (Future)
@@ -333,7 +581,7 @@ Protected Admin Dashboard Route
 
 ---
 
-## 17. Version Control & Change Process Rules
+## 20. Version Control & Change Process Rules
 
 1. **Directory Boundary**: All newly created implementation files must remain inside `/drone-store-system/`.
 2. **External Modification Protocol**: Before modifying any pre-existing files outside `/drone-store-system/`:
@@ -344,7 +592,7 @@ Protected Admin Dashboard Route
 
 ---
 
-## 18. Core Implementation Principles
+## 21. Core Implementation Principles
 
 1. **Security First**: Absolute protection of credentials, tokens, and backend boundaries.
 2. **Maintainability & Clean Architecture**: Strict separation of concerns (Controller, Service, Repository).
