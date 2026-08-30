@@ -7,6 +7,8 @@ import {
 } from '../services/api';
 import { useUserAuth } from '../context/UserAuthContext';
 import { UserAuthModal } from '../components/UserAuthModal';
+import { StitchHeader } from '../components/StitchHeader';
+import { StitchFooter } from '../components/StitchFooter';
 
 function slugify(name: string): string {
   return name
@@ -17,7 +19,7 @@ function slugify(name: string): string {
 }
 
 export const PublicStore: React.FC = () => {
-  const { user, isAuthenticated, cartItemCount, addToCart, logout } = useUserAuth();
+  const { isAuthenticated, addToCart } = useUserAuth();
 
   // Main catalog products (STANDALONE & PARENT)
   const [products, setProducts] = useState<ProductDto[]>([]);
@@ -172,113 +174,8 @@ export const PublicStore: React.FC = () => {
   return (
     <div className="blueprint-bg min-h-screen flex flex-col pt-24" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       
-      {/* Stitch Fixed Top Navigation Bar */}
-      <nav className="stitch-nav">
-        <div className="stitch-nav-inner">
-          <div
-            onClick={navigateToMainStore}
-            style={{
-              cursor: 'pointer',
-              fontSize: '1.5rem',
-              fontWeight: 900,
-              letterSpacing: '-0.025em',
-              textTransform: 'uppercase',
-              color: 'var(--color-on-surface)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.2rem'
-            }}
-          >
-            DRONES<span style={{ color: 'var(--color-primary)' }}>Z</span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-            <span
-              onClick={navigateToMainStore}
-              style={{
-                fontSize: '0.95rem',
-                fontWeight: 600,
-                color: 'var(--color-primary)',
-                borderBottom: '2px solid var(--color-primary)',
-                paddingBottom: '0.25rem',
-                cursor: 'pointer'
-              }}
-            >
-              Store Catalog
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {/* Cart Button */}
-            <button
-              onClick={() => navigateTo('/cart')}
-              className="btn-stitch-ghost"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-            >
-              🛒 Cart
-              {cartItemCount > 0 && (
-                <span
-                  style={{
-                    background: 'var(--color-primary)',
-                    color: '#fff',
-                    borderRadius: '999px',
-                    padding: '2px 7px',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  {cartItemCount}
-                </span>
-              )}
-            </button>
-
-            {isAuthenticated ? (
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <button
-                  onClick={() => navigateTo('/orders')}
-                  className="btn-stitch-ghost"
-                >
-                  📦 Orders
-                </button>
-                <button
-                  onClick={() => navigateTo('/dashboard')}
-                  className="btn-stitch-ghost"
-                >
-                  👤 {user?.fullName.split(' ')[0]}
-                </button>
-                <button
-                  onClick={logout}
-                  className="btn-stitch-ghost"
-                  style={{ color: 'var(--color-muted)' }}
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  onClick={() => {
-                    setUserAuthMode('login');
-                    setIsUserAuthOpen(true);
-                  }}
-                  className="btn-stitch-ghost"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => {
-                    setUserAuthMode('signup');
-                    setIsUserAuthOpen(true);
-                  }}
-                  className="btn-stitch-primary"
-                >
-                  Register
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
+      {/* Shared Stitch Header Navigation */}
+      <StitchHeader activePage="store" />
 
       {/* Cart Feedback Toast */}
       {cartFeedbackMsg && (
@@ -294,9 +191,13 @@ export const PublicStore: React.FC = () => {
             fontWeight: 700,
             boxShadow: '0 12px 30px rgba(0,0,0,0.2)',
             zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}
         >
-          ✅ {cartFeedbackMsg}
+          <span className="material-symbols-outlined">check_circle</span>
+          {cartFeedbackMsg}
         </div>
       )}
 
@@ -359,8 +260,10 @@ export const PublicStore: React.FC = () => {
                 <button
                   onClick={navigateToMainStore}
                   className="btn-stitch-ghost"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                 >
-                  ← Back to Store Catalog
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_back</span>
+                  Back to Store Catalog
                 </button>
               </div>
             </div>
@@ -377,7 +280,7 @@ export const PublicStore: React.FC = () => {
               />
 
               <select
-                className="stitch-input"
+                className="stitch-select"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 style={{ width: '200px' }}
@@ -446,8 +349,9 @@ export const PublicStore: React.FC = () => {
                           disabled={child.status !== 'AVAILABLE' || addingToCartId === child.id}
                           onClick={() => handleAddToCart(child)}
                           className="btn-stitch-primary"
-                          style={{ flex: 1 }}
+                          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                         >
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>shopping_cart</span>
                           {addingToCartId === child.id ? 'Adding...' : (child.status === 'AVAILABLE' ? 'Add to Cart' : 'Out of Stock')}
                         </button>
                         <button
@@ -479,7 +383,7 @@ export const PublicStore: React.FC = () => {
               />
 
               <select
-                className="stitch-input"
+                className="stitch-select"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 style={{ width: '200px' }}
@@ -536,8 +440,10 @@ export const PublicStore: React.FC = () => {
                       <button
                         onClick={() => navigateToParentSeries(parent)}
                         className="btn-stitch-secondary-link"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                       >
-                        Explore Variant Series ➔
+                        Explore Variant Series
+                        <span className="material-symbols-outlined text-sm" style={{ fontSize: '16px' }}>arrow_forward</span>
                       </button>
                     </div>
                   ))}
@@ -606,8 +512,9 @@ export const PublicStore: React.FC = () => {
                             disabled={p.status !== 'AVAILABLE' || addingToCartId === p.id}
                             onClick={() => handleAddToCart(p)}
                             className="btn-stitch-primary"
-                            style={{ flex: 1 }}
+                            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                           >
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>shopping_cart</span>
                             {addingToCartId === p.id ? 'Adding...' : (p.status === 'AVAILABLE' ? 'Add to Cart' : 'Out of Stock')}
                           </button>
                           <button
@@ -699,7 +606,9 @@ export const PublicStore: React.FC = () => {
                   handleAddToCart(p);
                 }}
                 className="btn-stitch-primary"
+                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>shopping_cart</span>
                 {selectedDetailProduct.status === 'AVAILABLE' ? (addingToCartId === selectedDetailProduct.id ? 'Adding...' : 'Add to Cart') : 'Out of Stock'}
               </button>
             </div>
@@ -714,39 +623,8 @@ export const PublicStore: React.FC = () => {
         onClose={() => setIsUserAuthOpen(false)}
       />
 
-      {/* Stitch Footer */}
-      <footer style={{
-        marginTop: 'auto',
-        backgroundColor: 'var(--color-surface-container-low)',
-        borderTop: '1px solid var(--color-outline)',
-        padding: '3rem 2rem'
-      }}>
-        <div style={{
-          maxWidth: 'var(--max-width)',
-          margin: '0 auto',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1.5rem'
-        }}>
-          <div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em' }}>
-              DRONES<span style={{ color: 'var(--color-primary)' }}>Z</span>
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginTop: '0.4rem' }}>
-              © 2024 DronesZ Cinematic Precision. All rights reserved.
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '1.5rem', fontSize: '12px', fontWeight: 600, color: 'var(--color-on-surface-variant)' }}>
-            <span style={{ cursor: 'pointer' }}>Support</span>
-            <span style={{ cursor: 'pointer' }}>Newsletter</span>
-            <span style={{ cursor: 'pointer' }}>Terms of Service</span>
-            <span style={{ cursor: 'pointer' }}>Privacy Policy</span>
-          </div>
-        </div>
-      </footer>
+      {/* Shared Stitch Footer */}
+      <StitchFooter />
     </div>
   );
 };
