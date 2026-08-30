@@ -5,6 +5,8 @@ import {
   fetchPublicChildProducts,
   fetchPublicProductById
 } from '../services/api';
+import { useUserAuth } from '../context/UserAuthContext';
+import { UserAuthModal } from '../components/UserAuthModal';
 
 function slugify(name: string): string {
   return name
@@ -15,6 +17,8 @@ function slugify(name: string): string {
 }
 
 export const PublicStore: React.FC = () => {
+  const { user, isAuthenticated, cartItemCount, addToCart, logout } = useUserAuth();
+
   // Main catalog products (STANDALONE & PARENT)
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,10 +38,14 @@ export const PublicStore: React.FC = () => {
 
   // Customer Auth Modal State
   const [isUserAuthOpen, setIsUserAuthOpen] = useState<boolean>(false);
-  const [userAuthTab, setUserAuthTab] = useState<'signin' | 'signup'>('signin');
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [userPassword, setUserPassword] = useState<string>('');
-  const [userAuthMessage, setUserAuthMessage] = useState<string | null>(null);
+  const [userAuthMode, setUserAuthMode] = useState<'login' | 'signup'>('login');
+  const [addingToCartId, setAddingToCartId] = useState<number | null>(null);
+  const [cartFeedbackMsg, setCartFeedbackMsg] = useState<string | null>(null);
+
+  const navigateTo = (path: string) => {
+    window.history.pushState({}, '', path);
+    window.dispatchEvent(new Event('popstate'));
+  };
 
   // Sync state with browser address bar
   useEffect(() => {
@@ -56,12 +64,10 @@ export const PublicStore: React.FC = () => {
   const handleUrlRouting = async () => {
     const pathname = window.location.pathname;
 
-    // Check if URL matches /store/:slug or /store/parent-name
     if (pathname.startsWith('/store/') && pathname.length > 7) {
-      const param = pathname.substring(7); // e.g. "high-performance-motors-series" or "motors"
+      const param = pathname.substring(7);
       await loadParentSeriesPage(param);
     } else {
-      // Root store page: / or /store
       setActiveParent(null);
       await loadMainCatalog();
     }
@@ -88,7 +94,6 @@ export const PublicStore: React.FC = () => {
     setLoadingChildren(true);
     setError(null);
     try {
-      // Fetch all products to match parent by slug or ID
       const parentRes = await fetchPublicProducts({ size: 100 });
       const parents = parentRes.content.filter((p) => p.productType === 'PARENT');
 
@@ -128,24 +133,34 @@ export const PublicStore: React.FC = () => {
     setActiveParent(null);
     setSearch('');
     setSelectedStatus('');
-    window.history.pushState({}, '', '/store');
-    loadMainCatalog();
+    navigateTo('/store');
   };
 
   const navigateToParentSeries = (parentProduct: ProductDto) => {
     const slug = slugify(parentProduct.name);
-    const targetUrl = `/store/${slug}`;
-    window.history.pushState({}, '', targetUrl);
-    setActiveParent(parentProduct);
-    loadParentSeriesPage(slug);
+    navigateTo(`/store/${slug}`);
   };
 
-  const handleUserAuthSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setUserAuthMessage('Customer account portal authentication will be enabled in Phase 5.');
+  const handleAddToCart = async (product: ProductDto) => {
+    setCartFeedbackMsg(null);
+    if (!isAuthenticated) {
+      setUserAuthMode('login');
+      setIsUserAuthOpen(true);
+      return;
+    }
+
+    try {
+      setAddingToCartId(product.id);
+      await addToCart(product.id, 1);
+      setCartFeedbackMsg(`Added "${product.name}" to cart!`);
+      setTimeout(() => setCartFeedbackMsg(null), 3000);
+    } catch (err: any) {
+      alert(err.message || 'Failed to add item to cart');
+    } finally {
+      setAddingToCartId(null);
+    }
   };
 
-  // Filter child products for parent series view if local search/status applied
   const filteredChildProducts = childProducts.filter((c) => {
     const matchesSearch = !search || c.name.toLowerCase().includes(search.toLowerCase()) || (c.description && c.description.toLowerCase().includes(search.toLowerCase()));
     const matchesStatus = !selectedStatus || c.status === selectedStatus;
@@ -183,7 +198,6 @@ export const PublicStore: React.FC = () => {
               </p>
             </div>
 
-            {/* Back Button displayed when viewing a Parent Series webpage */}
             {activeParent && (
               <button
                 onClick={navigateToMainStore}
@@ -195,32 +209,109 @@ export const PublicStore: React.FC = () => {
             )}
           </div>
 
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            {/* Cart Button */}
             <button
-              onClick={() => {
-                setUserAuthTab('signin');
-                setUserAuthMessage(null);
-                setIsUserAuthOpen(true);
-              }}
-              className="btn-dronesz-primary"
-              style={{ fontSize: '0.88rem', padding: '0.65rem 1.25rem' }}
+              onClick={() => navigateTo('/cart')}
+              className="btn-dronesz-secondary"
+              style={{ fontSize: '0.88rem', padding: '0.6rem 1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative' }}
             >
-              Customer Sign In / Register
+              🛒 Cart
+              {cartItemCount > 0 && (
+                <span
+                  style={{
+                    background: '#e52b31',
+                    color: '#fff',
+                    borderRadius: '50%',
+                    padding: '2px 7px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                  }}
+                >
+                  {cartItemCount}
+                </span>
+              )}
             </button>
+
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => navigateTo('/orders')}
+                  className="btn-dronesz-secondary"
+                  style={{ fontSize: '0.88rem', padding: '0.6rem 1.1rem' }}
+                >
+                  📦 My Orders
+                </button>
+                <button
+                  onClick={() => navigateTo('/dashboard')}
+                  className="btn-dronesz-secondary"
+                  style={{ fontSize: '0.88rem', padding: '0.6rem 1.1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  👤 Hi, {user?.fullName.split(' ')[0]}
+                </button>
+                <button
+                  onClick={logout}
+                  className="btn-dronesz-secondary"
+                  style={{ fontSize: '0.85rem', padding: '0.6rem 0.9rem' }}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => {
+                    setUserAuthMode('login');
+                    setIsUserAuthOpen(true);
+                  }}
+                  className="btn-dronesz-secondary"
+                  style={{ fontSize: '0.88rem', padding: '0.65rem 1rem' }}
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setUserAuthMode('signup');
+                    setIsUserAuthOpen(true);
+                  }}
+                  className="btn-dronesz-primary"
+                  style={{ fontSize: '0.88rem', padding: '0.65rem 1.1rem' }}
+                >
+                  Register
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
+
+      {/* Cart Feedback Toast */}
+      {cartFeedbackMsg && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            background: '#10b981',
+            color: '#fff',
+            padding: '1rem 1.5rem',
+            borderRadius: '8px',
+            fontWeight: 700,
+            boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+            zIndex: 1000,
+          }}
+        >
+          ✅ {cartFeedbackMsg}
+        </div>
+      )}
 
       {/* Main Page Container */}
       <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '2rem 1.5rem' }}>
         {error && <div className="error-banner" style={{ marginBottom: '1.5rem' }}>{error}</div>}
 
-        {/* ------------------------------------------------------------- */}
         {/* VIEW 1: DEDICATED PARENT SERIES WEBPAGE (/store/parent_name) */}
-        {/* ------------------------------------------------------------- */}
         {activeParent ? (
           <div>
-            {/* Series Page Banner Header */}
             <div className="dronesz-card" style={{ padding: '2rem', marginBottom: '2rem', borderLeft: '4px solid var(--color-brand-red)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
@@ -247,7 +338,6 @@ export const PublicStore: React.FC = () => {
               </div>
             </div>
 
-            {/* Filter / Search Bar for Series Variants */}
             <div className="dronesz-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '2rem' }}>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <input
@@ -273,7 +363,6 @@ export const PublicStore: React.FC = () => {
               </div>
             </div>
 
-            {/* Children Grid Listing - Same Layout as Root Store Listing */}
             <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-ink-primary)', marginBottom: '1.25rem' }}>
               Series Variant Models ({filteredChildProducts.length})
             </h3>
@@ -365,13 +454,23 @@ export const PublicStore: React.FC = () => {
                         </span>
                       </div>
 
-                      <button
-                        onClick={() => setSelectedDetailProduct(child)}
-                        className="btn-dronesz-primary"
-                        style={{ width: '100%', padding: '0.7rem', fontSize: '0.85rem' }}
-                      >
-                        View Specs & Details
-                      </button>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => setSelectedDetailProduct(child)}
+                          className="btn-dronesz-secondary"
+                          style={{ padding: '0.65rem', fontSize: '0.8rem' }}
+                        >
+                          Specs
+                        </button>
+                        <button
+                          disabled={child.status !== 'AVAILABLE' || addingToCartId === child.id}
+                          onClick={() => handleAddToCart(child)}
+                          className="btn-dronesz-primary"
+                          style={{ padding: '0.65rem', fontSize: '0.8rem' }}
+                        >
+                          {addingToCartId === child.id ? 'Adding...' : 'Add to Cart'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -379,11 +478,8 @@ export const PublicStore: React.FC = () => {
             )}
           </div>
         ) : (
-          /* ------------------------------------------------------------- */
-          /* VIEW 2: ROOT STORE CATALOG WEBPAGE (/ or /store)              */
-          /* ------------------------------------------------------------- */
+          /* VIEW 2: ROOT STORE CATALOG WEBPAGE (/ or /store) */
           <div>
-            {/* Filter Bar */}
             <div className="dronesz-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '2rem' }}>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <input
@@ -409,7 +505,6 @@ export const PublicStore: React.FC = () => {
               </div>
             </div>
 
-            {/* Catalog Listing: PARENT and STANDALONE Products Only */}
             {loading ? (
               <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
                 Loading DronesZ storefront catalog...
@@ -494,7 +589,6 @@ export const PublicStore: React.FC = () => {
                       </div>
 
                       <div style={{ borderTop: '1px solid var(--color-line)', paddingTop: '1rem', marginTop: '0.5rem' }}>
-                        {/* Rules: PARENT products show NO price and NO quantity */}
                         {!isParent && (
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.85rem' }}>
                             <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>Price</span>
@@ -513,13 +607,23 @@ export const PublicStore: React.FC = () => {
                             Explore Variant Series →
                           </button>
                         ) : (
-                          <button
-                            onClick={() => setSelectedDetailProduct(p)}
-                            className="btn-dronesz-secondary"
-                            style={{ width: '100%', padding: '0.7rem', fontSize: '0.85rem' }}
-                          >
-                            View Details
-                          </button>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                            <button
+                              onClick={() => setSelectedDetailProduct(p)}
+                              className="btn-dronesz-secondary"
+                              style={{ padding: '0.65rem', fontSize: '0.8rem' }}
+                            >
+                              Details
+                            </button>
+                            <button
+                              disabled={p.status !== 'AVAILABLE' || addingToCartId === p.id}
+                              onClick={() => handleAddToCart(p)}
+                              className="btn-dronesz-primary"
+                              style={{ padding: '0.65rem', fontSize: '0.8rem' }}
+                            >
+                              {addingToCartId === p.id ? 'Adding...' : 'Add to Cart'}
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -531,7 +635,7 @@ export const PublicStore: React.FC = () => {
         )}
       </main>
 
-      {/* Standalone / Child Detail Modal */}
+      {/* Detail Modal */}
       {selectedDetailProduct && (
         <div className="modal-overlay" onClick={() => setSelectedDetailProduct(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -600,11 +704,15 @@ export const PublicStore: React.FC = () => {
               </div>
 
               <button
-                disabled={selectedDetailProduct.status !== 'AVAILABLE'}
-                onClick={() => alert('Added ' + selectedDetailProduct.name + ' to cart!')}
+                disabled={selectedDetailProduct.status !== 'AVAILABLE' || addingToCartId === selectedDetailProduct.id}
+                onClick={() => {
+                  const p = selectedDetailProduct;
+                  setSelectedDetailProduct(null);
+                  handleAddToCart(p);
+                }}
                 className="btn-dronesz-primary"
               >
-                {selectedDetailProduct.status === 'AVAILABLE' ? 'Add to Cart' : 'Currently Unavailable'}
+                {selectedDetailProduct.status === 'AVAILABLE' ? (addingToCartId === selectedDetailProduct.id ? 'Adding...' : 'Add to Cart') : 'Currently Unavailable'}
               </button>
             </div>
           </div>
@@ -612,88 +720,11 @@ export const PublicStore: React.FC = () => {
       )}
 
       {/* Customer Account Modal */}
-      {isUserAuthOpen && (
-        <div className="modal-overlay" onClick={() => setIsUserAuthOpen(false)}>
-          <div className="modal-content" style={{ maxWidth: '420px' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                Customer Account Portal
-              </h3>
-              <button
-                onClick={() => setIsUserAuthOpen(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--color-line)', marginBottom: '1.25rem' }}>
-              <button
-                onClick={() => setUserAuthTab('signin')}
-                style={{
-                  flex: 1,
-                  background: 'none',
-                  border: 'none',
-                  borderBottom: userAuthTab === 'signin' ? '2px solid var(--color-brand-red)' : 'none',
-                  fontWeight: userAuthTab === 'signin' ? 700 : 500,
-                  color: userAuthTab === 'signin' ? 'var(--color-brand-red)' : 'var(--color-ink-muted)',
-                  padding: '0.6rem',
-                  cursor: 'pointer'
-                }}
-              >
-                User Sign In
-              </button>
-              <button
-                onClick={() => setUserAuthTab('signup')}
-                style={{
-                  flex: 1,
-                  background: 'none',
-                  border: 'none',
-                  borderBottom: userAuthTab === 'signup' ? '2px solid var(--color-brand-red)' : 'none',
-                  fontWeight: userAuthTab === 'signup' ? 700 : 500,
-                  color: userAuthTab === 'signup' ? 'var(--color-brand-red)' : 'var(--color-ink-muted)',
-                  padding: '0.6rem',
-                  cursor: 'pointer'
-                }}
-              >
-                Register Account
-              </button>
-            </div>
-
-            {userAuthMessage && <div className="success-banner">{userAuthMessage}</div>}
-
-            <form onSubmit={handleUserAuthSubmit}>
-              <div className="input-group">
-                <label className="input-label">Customer Email Address</label>
-                <input
-                  type="email"
-                  className="input-field"
-                  placeholder="user@example.com"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="input-group">
-                <label className="input-label">Password</label>
-                <input
-                  type="password"
-                  className="input-field"
-                  placeholder="••••••••"
-                  value={userPassword}
-                  onChange={(e) => setUserPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <button type="submit" className="btn-dronesz-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
-                {userAuthTab === 'signin' ? 'Sign In to Store' : 'Create Customer Account'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      <UserAuthModal
+        isOpen={isUserAuthOpen}
+        initialMode={userAuthMode}
+        onClose={() => setIsUserAuthOpen(false)}
+      />
     </div>
   );
 };

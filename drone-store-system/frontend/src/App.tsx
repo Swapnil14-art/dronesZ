@@ -1,22 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { UserAuthProvider } from './context/UserAuthContext';
 import { PublicStore } from './pages/PublicStore';
+import { CartPage } from './pages/CartPage';
+import { CheckoutPage } from './pages/CheckoutPage';
+import { UserDashboard } from './pages/UserDashboard';
 import { AdminLogin } from './pages/AdminLogin';
 import { ProtectedAdminDashboard } from './pages/ProtectedAdminDashboard';
 
-function getInitialView(): 'store' | 'admin-login' | 'admin-dashboard' {
+type ViewRoute = 'store' | 'cart' | 'checkout' | 'dashboard' | 'orders' | 'admin-login' | 'admin-dashboard';
+
+function getInitialView(): ViewRoute {
   const path = window.location.pathname.toLowerCase();
   const hash = window.location.hash.toLowerCase();
 
   if (path.includes('/admin') || hash.includes('admin')) {
     return 'admin-login';
   }
+  if (path.startsWith('/cart')) return 'cart';
+  if (path.startsWith('/checkout')) return 'checkout';
+  if (path.startsWith('/dashboard')) return 'dashboard';
+  if (path.startsWith('/orders')) return 'orders';
+  
   return 'store';
 }
 
 const MainRouter: React.FC = () => {
   const { isAuthenticated } = useAuth();
-  const [currentView, setCurrentView] = useState<'store' | 'admin-login' | 'admin-dashboard'>(getInitialView);
+  const [currentView, setCurrentView] = useState<ViewRoute>(getInitialView);
 
   // Sync state with browser address bar
   useEffect(() => {
@@ -27,10 +38,18 @@ const MainRouter: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigateTo = (view: 'store' | 'admin-login' | 'admin-dashboard') => {
+  const navigateTo = (view: ViewRoute) => {
     setCurrentView(view);
     if (view === 'store') {
-      window.history.pushState({}, '', '/');
+      window.history.pushState({}, '', '/store');
+    } else if (view === 'cart') {
+      window.history.pushState({}, '', '/cart');
+    } else if (view === 'checkout') {
+      window.history.pushState({}, '', '/checkout');
+    } else if (view === 'dashboard') {
+      window.history.pushState({}, '', '/dashboard');
+    } else if (view === 'orders') {
+      window.history.pushState({}, '', '/orders');
     } else if (view === 'admin-login') {
       window.history.pushState({}, '', '/admin/login');
     } else if (view === 'admin-dashboard') {
@@ -38,7 +57,7 @@ const MainRouter: React.FC = () => {
     }
   };
 
-  // Dedicated Admin Gateway (accessible via direct URL /admin or /admin/login)
+  // Dedicated Admin Gateway
   if (currentView === 'admin-dashboard' || (isAuthenticated && currentView === 'admin-login')) {
     return (
       <div>
@@ -79,6 +98,22 @@ const MainRouter: React.FC = () => {
     );
   }
 
+  if (currentView === 'cart') {
+    return <CartPage />;
+  }
+
+  if (currentView === 'checkout') {
+    return <CheckoutPage />;
+  }
+
+  if (currentView === 'dashboard') {
+    return <UserDashboard initialTab="profile" />;
+  }
+
+  if (currentView === 'orders') {
+    return <UserDashboard initialTab="orders" />;
+  }
+
   // Public Customer Storefront (URL: http://localhost:3000/)
   return <PublicStore />;
 };
@@ -86,7 +121,9 @@ const MainRouter: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <MainRouter />
+      <UserAuthProvider>
+        <MainRouter />
+      </UserAuthProvider>
     </AuthProvider>
   );
 };
