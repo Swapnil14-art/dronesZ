@@ -23,52 +23,53 @@ export const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem 1.25rem',
-      background: 'var(--color-canvas)'
-    }}>
-      <div className="dronesz-card" style={{
-        maxWidth: '440px',
-        width: '100%',
-        padding: '2.75rem 2.25rem'
-      }}>
-        {/* DronesZ Header & Wordmark */}
-        <div style={{ textAlign: 'center', marginBottom: '2.25rem' }}>
-          <div className="dronesz-badge" style={{ marginBottom: '1rem' }}>
-            System Administration
+    <div
+      className="blueprint-bg"
+      style={{
+        display: 'flex',
+        minHeight: 'calc(100vh - 42px)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem 1.25rem',
+      }}
+    >
+      <div
+        className="stitch-card"
+        style={{
+          maxWidth: '440px',
+          width: '100%',
+          padding: '2.5rem 2rem',
+          borderTop: '4px solid var(--color-primary)',
+        }}
+      >
+        {/* Header & Branding */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div className="badge-parent" style={{ marginBottom: '0.75rem', background: '#fee2e2', color: 'var(--color-primary)' }}>
+            SECURE ADMIN GATEWAY
           </div>
-          <h1 className="brand-wordmark" style={{ fontSize: '2rem', marginBottom: '0.4rem' }}>
-            Drones<span className="accent">Z</span> Portal
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
+            DRONES<span style={{ color: 'var(--color-primary)' }}>Z</span> PORTAL
           </h1>
-          <p style={{ color: 'var(--color-ink-muted)', fontSize: '0.9rem' }}>
-            Sign in with administrative credentials
+          <p style={{ color: 'var(--color-muted)', fontSize: '13px', marginTop: '0.3rem' }}>
+            Sign in with administrative authorization credentials
           </p>
         </div>
 
         {/* Error Alert */}
         {errorMessage && (
-          <div className="error-banner">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <span>{errorMessage}</span>
+          <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.5rem', fontSize: '13px' }}>
+            {errorMessage}
           </div>
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="input-group">
-            <label className="input-label" htmlFor="admin-email">Admin Email</label>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="stitch-form-group">
+            <label className="stitch-label" htmlFor="admin-email">Admin Email</label>
             <input
               id="admin-email"
               type="email"
-              className="input-field"
+              className="stitch-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="admin@example.com"
@@ -77,12 +78,12 @@ export const AdminLogin: React.FC = () => {
             />
           </div>
 
-          <div className="input-group">
-            <label className="input-label" htmlFor="admin-password">Password</label>
+          <div className="stitch-form-group">
+            <label className="stitch-label" htmlFor="admin-password">Password</label>
             <input
               id="admin-password"
               type="password"
-              className="input-field"
+              className="stitch-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
@@ -93,23 +94,23 @@ export const AdminLogin: React.FC = () => {
 
           <button
             type="submit"
-            className="btn-dronesz-primary"
-            style={{ width: '100%', marginTop: '1rem' }}
+            className="btn-stitch-primary"
+            style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem' }}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Authenticating...' : 'Sign In to Admin Portal'}
+            {isSubmitting ? 'Authenticating Gateway...' : 'Sign In to Admin Portal'}
           </button>
         </form>
 
         <div style={{
           marginTop: '2rem',
           paddingTop: '1.25rem',
-          borderTop: '1px solid var(--color-line)',
-          fontSize: '0.8rem',
-          color: 'var(--color-ink-faint)',
+          borderTop: '1px solid var(--color-outline)',
+          fontSize: '11px',
+          color: 'var(--color-muted)',
           textAlign: 'center'
         }}>
-          Protected Endpoint — Restricted to <span className="dronesz-badge" style={{ padding: '0.15rem 0.5rem', fontSize: '0.7rem' }}>ADMIN</span> authority
+          Protected Endpoint — Restricted to <span className="badge-parent" style={{ fontSize: '10px' }}>ADMIN</span> authority
         </div>
       </div>
     </div>

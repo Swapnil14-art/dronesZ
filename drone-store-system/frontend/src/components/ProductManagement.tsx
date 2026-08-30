@@ -140,7 +140,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       return;
     }
 
-    // Rules validation
     if (formProductType === 'STANDALONE' || formProductType === 'PARENT') {
       if (formParentId) {
         setFormError(`${formProductType} products cannot have a parent product.`);
@@ -226,30 +225,38 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   return (
     <div>
       {/* Header Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-ink-primary)' }}>
-            Product Catalog & Hierarchy Management
-          </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--color-ink-muted)' }}>
-            Manage STANDALONE, PARENT (Series), and CHILD (Variant) products with system validation
-          </p>
+          <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+            CATALOG MANAGEMENT
+          </div>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
+            3-Tier Multirotor Products
+          </h1>
         </div>
-        <button onClick={openAddModal} className="btn-dronesz-primary">
+        <button onClick={openAddModal} className="btn-stitch-primary">
           + Add New Product
         </button>
       </div>
 
       {/* Alert Banners */}
-      {successMsg && <div className="success-banner">{successMsg}</div>}
-      {error && <div className="error-banner">{error}</div>}
+      {successMsg && (
+        <div style={{ background: '#e6f4ea', border: '1px solid #a7f3d0', color: 'var(--color-tertiary)', padding: '1rem', borderRadius: '0.375rem', marginBottom: '1.5rem', fontWeight: 600 }}>
+          {successMsg}
+        </div>
+      )}
+      {error && (
+        <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.375rem', marginBottom: '1.5rem' }}>
+          {error}
+        </div>
+      )}
 
       {/* Filter / Search Bar */}
-      <div className="dronesz-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="stitch-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           type="text"
-          className="input-field"
-          placeholder="Search products by name or keyword..."
+          className="stitch-input"
+          placeholder="Search products by name..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -259,7 +266,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         />
 
         <select
-          className="input-field"
+          className="stitch-select"
           value={typeFilter}
           onChange={(e) => {
             setTypeFilter(e.target.value);
@@ -274,7 +281,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         </select>
 
         <select
-          className="input-field"
+          className="stitch-select"
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value);
@@ -289,7 +296,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         </select>
 
         <select
-          className="input-field"
+          className="stitch-select"
           value={categoryFilter}
           onChange={(e) => {
             setCategoryFilter(e.target.value);
@@ -308,17 +315,17 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
       {/* Products Data Table */}
       {loading ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
+        <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
           Loading product catalog...
         </div>
       ) : products.length === 0 ? (
-        <div className="dronesz-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
+        <div className="stitch-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
           No products found matching your filter criteria.
         </div>
       ) : (
         <>
-          <div className="data-table-container">
-            <table className="data-table">
+          <div className="stitch-table-wrapper">
+            <table className="stitch-table">
               <thead>
                 <tr>
                   <th>Product Name</th>
@@ -337,78 +344,69 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                   return (
                     <tr key={p.id}>
                       <td>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{p.name}</div>
+                        <div style={{ fontWeight: 700, color: 'var(--color-on-surface)' }}>{p.name}</div>
                         {p.description && (
-                          <div style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontSize: '12px', color: 'var(--color-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {p.description}
                           </div>
                         )}
                       </td>
                       <td>
-                        <span style={{
-                          fontSize: '0.75rem',
-                          fontWeight: 700,
-                          padding: '0.25rem 0.6rem',
-                          borderRadius: '4px',
-                          background: p.productType === 'PARENT' ? '#6b21a8' : p.productType === 'CHILD' ? '#0369a1' : '#374151',
-                          color: '#ffffff'
-                        }}>
+                        <span className={p.productType === 'PARENT' ? 'badge-parent' : p.productType === 'CHILD' ? 'badge-category' : 'badge-category'}
+                          style={{
+                            background: p.productType === 'PARENT' ? '#f3e8ff' : p.productType === 'CHILD' ? '#e0f2fe' : '#f1f5f9',
+                            color: p.productType === 'PARENT' ? '#6b21a8' : p.productType === 'CHILD' ? '#0369a1' : '#334155',
+                          }}
+                        >
                           {p.productType}
                         </span>
                       </td>
                       <td>
                         {p.productType === 'CHILD' ? (
-                          <span className="hierarchy-pill">
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: '#0369a1' }}>
                             Parent: #{p.parentId} {parentProduct ? `(${parentProduct.name})` : ''}
                           </span>
                         ) : (
-                          <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>None (Top Level)</span>
+                          <span style={{ fontSize: '12px', color: 'var(--color-muted)' }}>Top Level</span>
                         )}
                       </td>
                       <td>
                         {p.categoryName ? (
-                          <span className="category-pill">{p.categoryName}</span>
+                          <span className="badge-category">{p.categoryName}</span>
                         ) : (
-                          <span style={{ fontSize: '0.8rem', color: '#9ca3af' }}>Uncategorized</span>
+                          <span style={{ fontSize: '12px', color: 'var(--color-muted)' }}>Uncategorized</span>
                         )}
                       </td>
                       <td>
                         {p.productType === 'PARENT' ? (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)', fontStyle: 'italic' }}>N/A (Parent)</span>
+                          <span style={{ fontSize: '12px', color: 'var(--color-muted)', fontStyle: 'italic' }}>N/A (Parent)</span>
                         ) : (
-                          <strong style={{ color: 'var(--color-ink-primary)' }}>₹{p.price.toFixed(2)}</strong>
+                          <strong style={{ color: 'var(--color-on-surface)' }}>₹{p.price.toFixed(2)}</strong>
                         )}
                       </td>
                       <td>
                         {p.productType === 'PARENT' ? (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)', fontStyle: 'italic' }}>N/A (Parent)</span>
+                          <span style={{ fontSize: '12px', color: 'var(--color-muted)', fontStyle: 'italic' }}>N/A (Parent)</span>
                         ) : (
                           <span style={{
-                            fontWeight: 600,
-                            color: p.quantity === 0 ? '#dc2626' : p.quantity <= 5 ? '#d97706' : '#10b981'
+                            fontWeight: 700,
+                            color: p.quantity === 0 ? 'var(--color-error)' : p.quantity <= 5 ? 'var(--color-amber)' : 'var(--color-tertiary)'
                           }}>
                             {p.quantity} units
                           </span>
                         )}
                       </td>
                       <td>
-                        <span className={`status-badge ${p.status}`}>
+                        <span className={p.status === 'AVAILABLE' ? 'badge-tertiary' : p.status === 'OUT_OF_STOCK' ? 'badge-error' : 'badge-amber'}>
                           {p.status.replace('_', ' ')}
                         </span>
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
-                          <button
-                            onClick={() => openEditModal(p)}
-                            className="btn-dronesz-secondary btn-sm"
-                          >
+                          <button onClick={() => openEditModal(p)} className="btn-stitch-ghost" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
                             Edit
                           </button>
-                          <button
-                            onClick={() => setDeletingProduct(p)}
-                            className="btn-danger btn-sm"
-                            style={{ padding: '0.4rem 0.8rem' }}
-                          >
+                          <button onClick={() => setDeletingProduct(p)} className="btn-stitch-danger" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
                             Delete
                           </button>
                         </div>
@@ -421,22 +419,22 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
           </div>
 
           {/* Pagination */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem' }}>
-            <span style={{ fontSize: '0.88rem', color: 'var(--color-ink-muted)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
+            <span style={{ fontSize: '13px', color: 'var(--color-muted)' }}>
               Showing {products.length} of {totalElements} product(s) (Page {page + 1} of {totalPages || 1})
             </span>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
                 disabled={page === 0}
                 onClick={() => setPage(page - 1)}
-                className="btn-dronesz-secondary btn-sm"
+                className="btn-stitch-ghost"
               >
                 Previous Page
               </button>
               <button
                 disabled={page + 1 >= totalPages}
                 onClick={() => setPage(page + 1)}
-                className="btn-dronesz-secondary btn-sm"
+                className="btn-stitch-ghost"
               >
                 Next Page
               </button>
@@ -447,20 +445,24 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
       {/* Add / Edit Product Modal */}
       {(isAddModalOpen || editingProduct) && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '580px' }}>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '1.25rem', color: 'var(--color-ink-primary)' }}>
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--color-on-surface)' }}>
               {editingProduct ? `Edit Product #${editingProduct.id}` : 'Create New Product'}
             </h3>
 
-            {formError && <div className="error-banner">{formError}</div>}
+            {formError && (
+              <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.25rem', fontSize: '13px' }}>
+                {formError}
+              </div>
+            )}
 
-            <form onSubmit={handleSaveProduct}>
-              <div className="input-group">
-                <label className="input-label">Product Name *</label>
+            <form onSubmit={handleSaveProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="stitch-form-group">
+                <label className="stitch-label">Product Name *</label>
                 <input
                   type="text"
-                  className="input-field"
+                  className="stitch-input"
                   placeholder="e.g. Motors Series or Motor 2207 1850KV"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
@@ -470,10 +472,10 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               </div>
 
               {/* Product Type Selector */}
-              <div className="input-group">
-                <label className="input-label">Product Type *</label>
+              <div className="stitch-form-group">
+                <label className="stitch-label">Product Type *</label>
                 <select
-                  className="input-field"
+                  className="stitch-select"
                   value={formProductType}
                   onChange={(e) => {
                     const newType = e.target.value as ProductType;
@@ -491,12 +493,12 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
               {/* Rules: CHILD requires PARENT selection */}
               {formProductType === 'CHILD' && (
-                <div className="input-group" style={{ background: 'rgba(3, 105, 161, 0.08)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(3, 105, 161, 0.2)' }}>
-                  <label className="input-label" style={{ color: '#0369a1', fontWeight: 700 }}>
+                <div className="stitch-form-group" style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '0.375rem', border: '1px solid #bae6fd' }}>
+                  <label className="stitch-label" style={{ color: '#0369a1' }}>
                     Select Parent Product Series *
                   </label>
                   <select
-                    className="input-field"
+                    className="stitch-select"
                     value={formParentId}
                     onChange={(e) => setFormParentId(e.target.value)}
                     required
@@ -516,13 +518,13 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               {/* Rules: PARENT products do not have price/quantity */}
               {formProductType !== 'PARENT' && (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="input-group">
-                    <label className="input-label">Price (₹) *</label>
+                  <div className="stitch-form-group">
+                    <label className="stitch-label">Price (₹) *</label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
-                      className="input-field"
+                      className="stitch-input"
                       placeholder="0.00"
                       value={formPrice}
                       onChange={(e) => setFormPrice(e.target.value)}
@@ -530,12 +532,12 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                     />
                   </div>
 
-                  <div className="input-group">
-                    <label className="input-label">Inventory Quantity *</label>
+                  <div className="stitch-form-group">
+                    <label className="stitch-label">Inventory Quantity *</label>
                     <input
                       type="number"
                       min="0"
-                      className="input-field"
+                      className="stitch-input"
                       placeholder="0"
                       value={formQuantity}
                       onChange={(e) => setFormQuantity(e.target.value)}
@@ -546,10 +548,10 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="input-group">
-                  <label className="input-label">Availability Status *</label>
+                <div className="stitch-form-group">
+                  <label className="stitch-label">Availability Status *</label>
                   <select
-                    className="input-field"
+                    className="stitch-select"
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as ProductStatus)}
                   >
@@ -559,10 +561,10 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                   </select>
                 </div>
 
-                <div className="input-group">
-                  <label className="input-label">Category</label>
+                <div className="stitch-form-group">
+                  <label className="stitch-label">Category</label>
                   <select
-                    className="input-field"
+                    className="stitch-select"
                     value={formCategoryId}
                     onChange={(e) => setFormCategoryId(e.target.value)}
                   >
@@ -576,33 +578,34 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                 </div>
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Image Asset URL (Optional)</label>
+              <div className="stitch-form-group">
+                <label className="stitch-label">Image Asset URL (Optional)</label>
                 <input
                   type="text"
-                  className="input-field"
+                  className="stitch-input"
                   placeholder="e.g. /assets/products/motor-2207.jpg"
                   value={formImage}
                   onChange={(e) => setFormImage(e.target.value)}
                 />
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Description (Optional)</label>
+              <div className="stitch-form-group">
+                <label className="stitch-label">Description (Optional)</label>
                 <textarea
-                  className="input-field"
+                  className="stitch-textarea"
+                  rows={3}
                   placeholder="Enter detailed description..."
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-                <button type="button" onClick={closeModal} className="btn-dronesz-secondary">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+                <button type="button" onClick={closeModal} className="btn-stitch-ghost">
                   Cancel
                 </button>
-                <button type="submit" disabled={submitting} className="btn-dronesz-primary">
-                  {submitting ? 'Saving...' : editingProduct ? 'Save Product Changes' : 'Create Product'}
+                <button type="submit" disabled={submitting} className="btn-stitch-primary">
+                  {submitting ? 'Saving...' : editingProduct ? 'Save Changes' : 'Create Product'}
                 </button>
               </div>
             </form>
@@ -612,22 +615,26 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
       {/* Delete Confirmation Modal */}
       {deletingProduct && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem', color: '#dc2626' }}>
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--color-error)' }}>
               Confirm Product Deletion
             </h3>
-            <p style={{ color: 'var(--color-ink-muted)', marginBottom: '1.25rem', fontSize: '0.92rem' }}>
-              Are you sure you want to delete product <strong>"{deletingProduct.name}"</strong>? PARENT products with child variants cannot be deleted until child variants are reassigned or removed.
+            <p style={{ color: 'var(--color-muted)', marginBottom: '1.25rem', fontSize: '14px', lineHeight: 1.5 }}>
+              Are you sure you want to delete product <strong>"{deletingProduct.name}"</strong>?
             </p>
 
-            {formError && <div className="error-banner">{formError}</div>}
+            {formError && (
+              <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.25rem', fontSize: '13px' }}>
+                {formError}
+              </div>
+            )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-              <button type="button" onClick={closeModal} className="btn-dronesz-secondary">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <button type="button" onClick={closeModal} className="btn-stitch-ghost">
                 Cancel
               </button>
-              <button type="button" onClick={handleDeleteProduct} disabled={submitting} className="btn-danger btn-sm" style={{ padding: '0.75rem 1.25rem', fontSize: '0.9rem' }}>
+              <button type="button" onClick={handleDeleteProduct} disabled={submitting} className="btn-stitch-danger">
                 {submitting ? 'Deleting...' : 'Delete Product'}
               </button>
             </div>

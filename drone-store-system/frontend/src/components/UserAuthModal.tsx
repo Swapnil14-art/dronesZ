@@ -17,7 +17,6 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
   const { login, signup } = useUserAuth();
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
 
-  // Sync mode state whenever initialMode or isOpen changes
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode);
@@ -106,21 +105,30 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-ink-primary)' }}>
-            {mode === 'login' ? 'Customer Sign In' : 'Create Customer Account'}
-          </h3>
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase' }}>
+              DRONESZ CUSTOMER AUTHENTICATION
+            </div>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>
+              {mode === 'login' ? 'Customer Sign In' : 'Create Customer Account'}
+            </h3>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--color-ink-muted)' }}
+            style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--color-muted)' }}
           >
             ✕
           </button>
         </div>
 
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.25rem', fontSize: '13px' }}>
+            {error}
+          </div>
+        )}
 
-        <div style={{ display: 'flex', borderBottom: '1px solid var(--color-line)', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--color-outline)', marginBottom: '1.5rem' }}>
           <button
             type="button"
             onClick={() => { setMode('login'); setError(null); }}
@@ -129,10 +137,11 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
               padding: '0.6rem',
               background: 'none',
               border: 'none',
-              borderBottom: mode === 'login' ? '2px solid var(--color-brand-red)' : 'none',
-              color: mode === 'login' ? 'var(--color-brand-red)' : 'var(--color-ink-muted)',
+              borderBottom: mode === 'login' ? '3px solid var(--color-primary)' : 'none',
+              color: mode === 'login' ? 'var(--color-primary)' : 'var(--color-muted)',
               fontWeight: mode === 'login' ? 700 : 500,
               cursor: 'pointer',
+              fontSize: '14px',
             }}
           >
             Sign In
@@ -145,10 +154,11 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
               padding: '0.6rem',
               background: 'none',
               border: 'none',
-              borderBottom: mode === 'signup' ? '2px solid var(--color-brand-red)' : 'none',
-              color: mode === 'signup' ? 'var(--color-brand-red)' : 'var(--color-ink-muted)',
+              borderBottom: mode === 'signup' ? '3px solid var(--color-primary)' : 'none',
+              color: mode === 'signup' ? 'var(--color-primary)' : 'var(--color-muted)',
               fontWeight: mode === 'signup' ? 700 : 500,
               cursor: 'pointer',
+              fontSize: '14px',
             }}
           >
             Create Account
@@ -156,12 +166,12 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
         </div>
 
         {mode === 'login' ? (
-          <form onSubmit={handleLoginSubmit}>
-            <div className="input-group">
-              <label className="input-label">Email Address</label>
+          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="stitch-form-group">
+              <label className="stitch-label">Email Address</label>
               <input
                 type="email"
-                className="input-field"
+                className="stitch-input"
                 placeholder="name@example.com"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
@@ -169,11 +179,11 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
               />
             </div>
 
-            <div className="input-group">
-              <label className="input-label">Password</label>
+            <div className="stitch-form-group">
+              <label className="stitch-label">Password</label>
               <input
                 type="password"
-                className="input-field"
+                className="stitch-input"
                 placeholder="••••••••"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
@@ -183,20 +193,20 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
 
             <button
               type="submit"
-              className="btn-dronesz-primary"
+              className="btn-stitch-primary"
               disabled={loading}
-              style={{ width: '100%', marginTop: '0.5rem' }}
+              style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem' }}
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Authenticating...' : 'Sign In'}
             </button>
           </form>
         ) : (
-          <form onSubmit={handleSignupSubmit}>
-            <div className="input-group">
-              <label className="input-label">Full Name</label>
+          <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <div className="stitch-form-group">
+              <label className="stitch-label">Full Name</label>
               <input
                 type="text"
-                className="input-field"
+                className="stitch-input"
                 placeholder="John Doe"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
@@ -204,11 +214,11 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
               />
             </div>
 
-            <div className="input-group">
-              <label className="input-label">Email Address</label>
+            <div className="stitch-form-group">
+              <label className="stitch-label">Email Address</label>
               <input
                 type="email"
-                className="input-field"
+                className="stitch-input"
                 placeholder="name@example.com"
                 value={signupEmail}
                 onChange={(e) => setSignupEmail(e.target.value)}
@@ -216,11 +226,11 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
               />
             </div>
 
-            <div className="input-group">
-              <label className="input-label">Phone Number</label>
+            <div className="stitch-form-group">
+              <label className="stitch-label">Phone Number</label>
               <input
                 type="tel"
-                className="input-field"
+                className="stitch-input"
                 placeholder="+91 9876543210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -228,11 +238,11 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
               />
             </div>
 
-            <div className="input-group">
-              <label className="input-label">Password</label>
+            <div className="stitch-form-group">
+              <label className="stitch-label">Password</label>
               <input
                 type="password"
-                className="input-field"
+                className="stitch-input"
                 placeholder="At least 6 characters"
                 value={signupPassword}
                 onChange={(e) => setSignupPassword(e.target.value)}
@@ -240,11 +250,11 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
               />
             </div>
 
-            <div className="input-group">
-              <label className="input-label">Confirm Password</label>
+            <div className="stitch-form-group">
+              <label className="stitch-label">Confirm Password</label>
               <input
                 type="password"
-                className="input-field"
+                className="stitch-input"
                 placeholder="Re-enter password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -254,11 +264,11 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
 
             <button
               type="submit"
-              className="btn-dronesz-primary"
+              className="btn-stitch-primary"
               disabled={loading}
-              style={{ width: '100%', marginTop: '0.5rem' }}
+              style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem' }}
             >
-              {loading ? 'Creating Account...' : 'Register Now'}
+              {loading ? 'Registering Account...' : 'Create Account'}
             </button>
           </form>
         )}

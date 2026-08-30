@@ -15,16 +15,16 @@ export const ProtectedAdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="admin-dashboard-container">
+    <div className="stitch-admin-container">
       {/* Sidebar Navigation */}
-      <aside className="admin-sidebar">
+      <aside className="stitch-admin-sidebar">
         <div>
           {/* Brand Identity Header */}
-          <div style={{ padding: '0.5rem 0.5rem 1.5rem 0.5rem', borderBottom: '1px solid var(--color-line)', marginBottom: '1.5rem' }}>
-            <h2 className="brand-wordmark" style={{ fontSize: '1.4rem' }}>
-              Drones<span className="accent">Z</span> Admin
-            </h2>
-            <p style={{ fontSize: '0.78rem', color: 'var(--color-ink-muted)', marginTop: '0.2rem' }}>
+          <div style={{ padding: '0.5rem 0.5rem 1.5rem 0.5rem', borderBottom: '1px solid #334155', marginBottom: '1.5rem' }}>
+            <div style={{ fontSize: '1.25rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: '#ffffff' }}>
+              DRONES<span style={{ color: 'var(--color-primary)' }}>Z</span> ADMIN
+            </div>
+            <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Store Management Portal
             </p>
           </div>
@@ -32,21 +32,21 @@ export const ProtectedAdminDashboard: React.FC = () => {
           {/* Navigation Items */}
           <nav>
             <div
-              className={`sidebar-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+              className={`stitch-admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
               <span style={{ fontSize: '1.1rem' }}>📊</span> Overview
             </div>
 
             <div
-              className={`sidebar-nav-item ${activeTab === 'products' ? 'active' : ''}`}
+              className={`stitch-admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
               onClick={() => setActiveTab('products')}
             >
               <span style={{ fontSize: '1.1rem' }}>📦</span> Products
             </div>
 
             <div
-              className={`sidebar-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
+              className={`stitch-admin-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
               onClick={() => setActiveTab('categories')}
             >
               <span style={{ fontSize: '1.1rem' }}>🏷️</span> Categories
@@ -55,13 +55,13 @@ export const ProtectedAdminDashboard: React.FC = () => {
         </div>
 
         {/* Footer Admin User Profile & Sign Out */}
-        <div style={{ borderTop: '1px solid var(--color-line)', paddingTop: '1.25rem' }}>
+        <div style={{ borderTop: '1px solid #334155', paddingTop: '1.25rem' }}>
           <div style={{ marginBottom: '0.75rem' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-ink-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f8fafc', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {admin?.email || 'admin@example.com'}
             </div>
             <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.25rem' }}>
-              <span className="dronesz-badge" style={{ padding: '0.1rem 0.4rem', fontSize: '0.68rem' }}>
+              <span className="badge-parent" style={{ background: '#ef4444', color: '#fff', fontSize: '10px' }}>
                 {admin?.role || 'ADMIN'}
               </span>
             </div>
@@ -69,8 +69,8 @@ export const ProtectedAdminDashboard: React.FC = () => {
 
           <button
             onClick={logout}
-            className="btn-dronesz-secondary"
-            style={{ width: '100%', padding: '0.6rem', fontSize: '0.85rem' }}
+            className="btn-stitch-ghost"
+            style={{ width: '100%', borderColor: '#475569', color: '#94a3b8', fontSize: '12px' }}
           >
             Sign Out
           </button>
@@ -78,7 +78,7 @@ export const ProtectedAdminDashboard: React.FC = () => {
       </aside>
 
       {/* Main View Area */}
-      <main className="admin-main-content">
+      <main className="stitch-admin-main blueprint-bg">
         {activeTab === 'overview' && (
           <DashboardOverview token={token} onNavigateTab={(tab) => setActiveTab(tab)} />
         )}

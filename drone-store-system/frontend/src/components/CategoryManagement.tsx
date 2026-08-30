@@ -120,30 +120,38 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
   return (
     <div>
       {/* Top Action & Title Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-ink-primary)' }}>
-            Category Management
-          </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--color-ink-muted)' }}>
-            Organize products into store categories
-          </p>
+          <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+            TAXONOMY MANAGEMENT
+          </div>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
+            Store Categories
+          </h1>
         </div>
-        <button onClick={openAddModal} className="btn-dronesz-primary">
+        <button onClick={openAddModal} className="btn-stitch-primary">
           + Add New Category
         </button>
       </div>
 
       {/* Alert Banners */}
-      {successMsg && <div className="success-banner">{successMsg}</div>}
-      {error && <div className="error-banner">{error}</div>}
+      {successMsg && (
+        <div style={{ background: '#e6f4ea', border: '1px solid #a7f3d0', color: 'var(--color-tertiary)', padding: '1rem', borderRadius: '0.375rem', marginBottom: '1.5rem', fontWeight: 600 }}>
+          {successMsg}
+        </div>
+      )}
+      {error && (
+        <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.375rem', marginBottom: '1.5rem' }}>
+          {error}
+        </div>
+      )}
 
       {/* Filter / Search Bar */}
-      <div className="dronesz-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
+      <div className="stitch-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
         <input
           type="text"
-          className="input-field"
-          placeholder="Search categories by name or description..."
+          className="stitch-input"
+          placeholder="Search categories by name..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ maxWidth: '400px' }}
@@ -152,16 +160,16 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
 
       {/* Categories Table */}
       {loading ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
+        <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
           Loading store categories...
         </div>
       ) : filteredCategories.length === 0 ? (
-        <div className="dronesz-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
+        <div className="stitch-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
           No categories found. Click <strong>+ Add New Category</strong> to create one.
         </div>
       ) : (
-        <div className="data-table-container">
-          <table className="data-table">
+        <div className="stitch-table-wrapper">
+          <table className="stitch-table">
             <thead>
               <tr>
                 <th>ID</th>
@@ -176,27 +184,20 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
                 <tr key={cat.id}>
                   <td><strong>#{cat.id}</strong></td>
                   <td>
-                    <span className="category-pill">{cat.name}</span>
+                    <span className="badge-category">{cat.name}</span>
                   </td>
-                  <td style={{ color: 'var(--color-ink-muted)', maxWidth: '350px' }}>
+                  <td style={{ color: 'var(--color-muted)', maxWidth: '350px' }}>
                     {cat.description || <em style={{ color: '#9ca3af' }}>No description provided</em>}
                   </td>
-                  <td style={{ fontSize: '0.82rem', color: 'var(--color-ink-muted)' }}>
-                    {cat.createdAt ? new Date(cat.createdAt).toLocaleDateString() : 'N/A'}
+                  <td style={{ fontSize: '12px', color: 'var(--color-muted)' }}>
+                    {cat.createdAt ? new Date(cat.createdAt).toLocaleDateString('en-IN') : 'N/A'}
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
-                      <button
-                        onClick={() => openEditModal(cat)}
-                        className="btn-dronesz-secondary btn-sm"
-                      >
+                      <button onClick={() => openEditModal(cat)} className="btn-stitch-ghost" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
                         Edit
                       </button>
-                      <button
-                        onClick={() => setDeletingCategory(cat)}
-                        className="btn-danger btn-sm"
-                        style={{ padding: '0.4rem 0.8rem' }}
-                      >
+                      <button onClick={() => setDeletingCategory(cat)} className="btn-stitch-danger" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
                         Delete
                       </button>
                     </div>
@@ -210,20 +211,24 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
 
       {/* Add / Edit Category Modal */}
       {(isAddModalOpen || editingCategory) && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '1.25rem', color: 'var(--color-ink-primary)' }}>
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--color-on-surface)' }}>
               {editingCategory ? `Edit Category #${editingCategory.id}` : 'Create New Category'}
             </h3>
 
-            {formError && <div className="error-banner">{formError}</div>}
+            {formError && (
+              <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.25rem', fontSize: '13px' }}>
+                {formError}
+              </div>
+            )}
 
-            <form onSubmit={handleSaveCategory}>
-              <div className="input-group">
-                <label className="input-label">Category Name *</label>
+            <form onSubmit={handleSaveCategory} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="stitch-form-group">
+                <label className="stitch-label">Category Name *</label>
                 <input
                   type="text"
-                  className="input-field"
+                  className="stitch-input"
                   placeholder="e.g. Motors, Frames, Propellers"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
@@ -232,21 +237,22 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
                 />
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Description (Optional)</label>
+              <div className="stitch-form-group">
+                <label className="stitch-label">Description (Optional)</label>
                 <textarea
-                  className="input-field"
+                  className="stitch-textarea"
+                  rows={3}
                   placeholder="Enter a brief category description..."
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-                <button type="button" onClick={closeModal} className="btn-dronesz-secondary">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+                <button type="button" onClick={closeModal} className="btn-stitch-ghost">
                   Cancel
                 </button>
-                <button type="submit" disabled={submitting} className="btn-dronesz-primary">
+                <button type="submit" disabled={submitting} className="btn-stitch-primary">
                   {submitting ? 'Saving...' : editingCategory ? 'Save Changes' : 'Create Category'}
                 </button>
               </div>
@@ -257,22 +263,26 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
 
       {/* Delete Confirmation Modal */}
       {deletingCategory && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.75rem', color: '#dc2626' }}>
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--color-error)' }}>
               Confirm Category Deletion
             </h3>
-            <p style={{ color: 'var(--color-ink-muted)', marginBottom: '1.25rem', fontSize: '0.92rem' }}>
+            <p style={{ color: 'var(--color-muted)', marginBottom: '1.25rem', fontSize: '14px', lineHeight: 1.5 }}>
               Are you sure you want to delete category <strong>"{deletingCategory.name}"</strong>? Categories with assigned products cannot be deleted.
             </p>
 
-            {formError && <div className="error-banner">{formError}</div>}
+            {formError && (
+              <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.25rem', fontSize: '13px' }}>
+                {formError}
+              </div>
+            )}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-              <button type="button" onClick={closeModal} className="btn-dronesz-secondary">
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <button type="button" onClick={closeModal} className="btn-stitch-ghost">
                 Cancel
               </button>
-              <button type="button" onClick={handleDeleteCategory} disabled={submitting} className="btn-danger btn-sm" style={{ padding: '0.75rem 1.25rem', fontSize: '0.9rem' }}>
+              <button type="button" onClick={handleDeleteCategory} disabled={submitting} className="btn-stitch-danger">
                 {submitting ? 'Deleting...' : 'Delete Category'}
               </button>
             </div>

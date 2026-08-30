@@ -41,118 +41,117 @@ export const DashboardOverview: React.FC<Props> = ({ token, onNavigateTab }) => 
 
   return (
     <div>
-      <div style={{ marginBottom: '1.75rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-ink-primary)' }}>
-          Welcome back, Admin 👋
-        </h2>
-        <p style={{ fontSize: '0.88rem', color: 'var(--color-ink-muted)' }}>
-          System overview and quick administrative status summary
+      <div style={{ marginBottom: '2.5rem' }}>
+        <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+          ADMINISTRATIVE SYSTEM METRICS
+        </div>
+        <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
+          System Dashboard Overview
+        </h1>
+        <p style={{ color: 'var(--color-muted)', marginTop: '0.25rem' }}>
+          Live system status, catalog analytics, and administrative management shortcuts.
         </p>
       </div>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && (
+        <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.375rem', marginBottom: '2rem' }}>
+          {error}
+        </div>
+      )}
 
       {loading ? (
-        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
+        <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
           Loading dashboard metrics...
         </div>
       ) : (
         <>
           {/* Quick Metrics Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
             {/* Metric 1 */}
-            <div className="dronesz-card" style={{ padding: '1.5rem', borderTopColor: '#3b82f6' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-muted)', letterSpacing: '0.05em' }}>
-                Total Products
-              </div>
-              <div style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--color-ink-primary)', margin: '0.3rem 0' }}>
-                {products.length}
-              </div>
+            <div className="stitch-stat-card">
+              <div className="stitch-stat-label">Total Catalog Products</div>
+              <div className="stitch-stat-value">{products.length}</div>
               <button
                 onClick={() => onNavigateTab('products')}
-                style={{ background: 'none', border: 'none', color: '#3b82f6', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: 0 }}
+                className="btn-stitch-secondary-link"
+                style={{ marginTop: '0.75rem', fontSize: '13px' }}
               >
                 Manage Products Catalog &rarr;
               </button>
             </div>
 
             {/* Metric 2 */}
-            <div className="dronesz-card" style={{ padding: '1.5rem', borderTopColor: '#10b981' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-muted)', letterSpacing: '0.05em' }}>
-                Store Categories
-              </div>
-              <div style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--color-ink-primary)', margin: '0.3rem 0' }}>
-                {categories.length}
-              </div>
+            <div className="stitch-stat-card" style={{ borderTopColor: 'var(--color-tertiary)' }}>
+              <div className="stitch-stat-label">Store Categories</div>
+              <div className="stitch-stat-value">{categories.length}</div>
               <button
                 onClick={() => onNavigateTab('categories')}
-                style={{ background: 'none', border: 'none', color: '#10b981', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', padding: 0 }}
+                className="btn-stitch-secondary-link"
+                style={{ marginTop: '0.75rem', fontSize: '13px', color: 'var(--color-tertiary)' }}
               >
                 Manage Categories &rarr;
               </button>
             </div>
 
             {/* Metric 3 */}
-            <div className="dronesz-card" style={{ padding: '1.5rem', borderTopColor: '#059669' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-muted)', letterSpacing: '0.05em' }}>
-                In Stock & Available
-              </div>
-              <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#059669', margin: '0.3rem 0' }}>
+            <div className="stitch-stat-card" style={{ borderTopColor: 'var(--color-tertiary)' }}>
+              <div className="stitch-stat-label">In Stock &amp; Available</div>
+              <div className="stitch-stat-value" style={{ color: 'var(--color-tertiary)' }}>
                 {availableCount}
               </div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>Ready for customer ordering</span>
+              <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginTop: '0.5rem' }}>Ready for customer ordering</div>
             </div>
 
             {/* Metric 4 */}
-            <div className="dronesz-card" style={{ padding: '1.5rem', borderTopColor: '#dc2626' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--color-ink-muted)', letterSpacing: '0.05em' }}>
-                Out of Stock / Coming Soon
-              </div>
-              <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#dc2626', margin: '0.3rem 0' }}>
+            <div className="stitch-stat-card" style={{ borderTopColor: 'var(--color-primary)' }}>
+              <div className="stitch-stat-label">Out of Stock / Coming Soon</div>
+              <div className="stitch-stat-value" style={{ color: 'var(--color-primary)' }}>
                 {outOfStockCount + comingSoonCount}
               </div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--color-ink-muted)' }}>{outOfStockCount} Out of stock, {comingSoonCount} Coming soon</span>
+              <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginTop: '0.5rem' }}>
+                {outOfStockCount} Out of stock, {comingSoonCount} Coming soon
+              </div>
             </div>
           </div>
 
           {/* System & Auth Details */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-            <div className="dronesz-card" style={{ padding: '1.75rem' }}>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--color-ink-primary)' }}>
-                Administrator Profile
+            <div className="stitch-card" style={{ padding: '1.75rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.25rem', color: 'var(--color-on-surface)' }}>
+                Administrator Session
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '14px' }}>
                 <div>
-                  <span style={{ color: 'var(--color-ink-muted)' }}>Email: </span>
-                  <strong>{admin?.email}</strong>
+                  <span style={{ color: 'var(--color-muted)' }}>Email: </span>
+                  <strong style={{ color: 'var(--color-on-surface)' }}>{admin?.email}</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--color-ink-muted)' }}>Role Authority: </span>
-                  <span className="dronesz-badge" style={{ padding: '0.15rem 0.5rem', fontSize: '0.7rem' }}>{admin?.role}</span>
+                  <span style={{ color: 'var(--color-muted)' }}>Role Authority: </span>
+                  <span className="badge-parent" style={{ background: '#ef4444', color: '#fff' }}>{admin?.role}</span>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--color-ink-muted)' }}>Session Security: </span>
-                  <span className="dronesz-badge-active" style={{ padding: '0.15rem 0.5rem', fontSize: '0.7rem' }}>Active JWT Session</span>
+                  <span style={{ color: 'var(--color-muted)' }}>Session Security: </span>
+                  <span className="badge-tertiary">JWT Authorized</span>
                 </div>
               </div>
             </div>
 
-            <div className="dronesz-card" style={{ padding: '1.75rem' }}>
-              <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: 'var(--color-ink-primary)' }}>
-                System Status
+            <div className="stitch-card" style={{ padding: '1.75rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1.25rem', color: 'var(--color-on-surface)' }}>
+                Infrastructure Status
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '14px' }}>
                 <div>
-                  <span style={{ color: 'var(--color-ink-muted)' }}>Database Connection: </span>
-                  <strong style={{ color: '#10b981' }}>Supabase PostgreSQL (Connected)</strong>
+                  <span style={{ color: 'var(--color-muted)' }}>Database Connection: </span>
+                  <strong style={{ color: 'var(--color-tertiary)' }}>PostgreSQL (Active)</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--color-ink-muted)' }}>Flyway Schema Version: </span>
-                  <strong>V3 (Categories & Products Schema)</strong>
+                  <span style={{ color: 'var(--color-muted)' }}>3-Tier Product Logic: </span>
+                  <strong style={{ color: 'var(--color-on-surface)' }}>STANDALONE / PARENT / CHILD</strong>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--color-ink-muted)' }}>Backend Port: </span>
-                  <strong>8070</strong>
+                  <span style={{ color: 'var(--color-muted)' }}>Backend Service: </span>
+                  <strong style={{ color: 'var(--color-on-surface)' }}>Spring Boot Port 8070</strong>
                 </div>
               </div>
             </div>
