@@ -22,7 +22,7 @@ const csp = [
   `img-src 'self' data: blob:`,
   `font-src 'self'`,
   `media-src 'self'`,
-  `connect-src 'self' https://*.public.blob.vercel-storage.com https://blob.vercel-storage.com`,
+  `connect-src 'self' http://localhost:8070 http://127.0.0.1:8070 https://*.public.blob.vercel-storage.com https://blob.vercel-storage.com`,
   `worker-src 'self' blob:`,
   `object-src 'none'`,
   `base-uri 'self'`,

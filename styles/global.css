@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./typography.css";
+@import "../store/index.css";
 
 /* ---- Reset ---- */
 *,

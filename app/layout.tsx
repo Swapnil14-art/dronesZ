@@ -52,6 +52,8 @@ const orgJsonLd = {
   },
 };
 
+import { StoreProviders } from "@/components/providers/StoreProviders";
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -62,11 +64,13 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
-        <LenisGSAPProvider>
-          <Nav />
-          {children}
-          <SoundToggle />
-        </LenisGSAPProvider>
+        <StoreProviders>
+          <LenisGSAPProvider>
+            <Nav />
+            {children}
+            <SoundToggle />
+          </LenisGSAPProvider>
+        </StoreProviders>
       </body>
     </html>
   );
