@@ -28,6 +28,55 @@ const CartIcon = ({ size = 18, style }: { size?: number; style?: React.CSSProper
   </svg>
 );
 
+const ArrowRightIcon = ({ size = 16, style }: { size?: number; style?: React.CSSProperties }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
+  >
+    <path d="M5 12h14M12 5l7 7-7 7" />
+  </svg>
+);
+
+const ArrowLeftIcon = ({ size = 18, style }: { size?: number; style?: React.CSSProperties }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
+  >
+    <path d="M19 12H5M12 19l-7-7 7-7" />
+  </svg>
+);
+
+const CheckCircleIcon = ({ size = 18, style }: { size?: number; style?: React.CSSProperties }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
+  >
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+    <polyline points="22 4 12 14.01 9 11.01" />
+  </svg>
+);
+
 function slugify(name: string): string {
   return name
     .toLowerCase()
@@ -214,7 +263,7 @@ export const PublicStore: React.FC = () => {
             gap: '0.5rem'
           }}
         >
-          <span className="material-symbols-outlined">check_circle</span>
+          <CheckCircleIcon size={20} />
           {cartFeedbackMsg}
         </div>
       )}
@@ -249,7 +298,7 @@ export const PublicStore: React.FC = () => {
               color: 'var(--color-on-surface)',
               marginBottom: '1.25rem',
               textWrap: 'balance'
-            }}>
+            }}><br></br>
               DronesZ Flight Specs &amp; Components
             </h1>
             <p style={{ fontSize: '1.125rem', color: 'var(--color-on-surface-variant)', lineHeight: 1.6, maxWidth: '650px' }}>
@@ -282,7 +331,7 @@ export const PublicStore: React.FC = () => {
                   className="btn-stitch-ghost"
                   style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>arrow_back</span>
+                  <ArrowLeftIcon size={18} />
                   Back to Store Catalog
                 </button>
               </div>
@@ -463,7 +512,7 @@ export const PublicStore: React.FC = () => {
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                       >
                         Explore Variant Series
-                        <span className="material-symbols-outlined text-sm" style={{ fontSize: '16px' }}>arrow_forward</span>
+                        <ArrowRightIcon size={16} />
                       </button>
                     </div>
                   ))}
