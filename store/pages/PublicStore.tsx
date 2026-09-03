@@ -10,6 +10,24 @@ import { UserAuthModal } from '../components/UserAuthModal';
 import { StitchHeader } from '../components/StitchHeader';
 import { StitchFooter } from '../components/StitchFooter';
 
+const CartIcon = ({ size = 18, style }: { size?: number; style?: React.CSSProperties }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}
+  >
+    <circle cx="9" cy="21" r="1" />
+    <circle cx="20" cy="21" r="1" />
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+  </svg>
+);
+
 function slugify(name: string): string {
   return name
     .toLowerCase()
@@ -353,7 +371,7 @@ export const PublicStore: React.FC = () => {
                           className="btn-stitch-primary"
                           style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                         >
-                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>shopping_cart</span>
+                          <CartIcon size={18} />
                           {addingToCartId === child.id ? 'Adding...' : (child.status === 'AVAILABLE' ? 'Add to Cart' : 'Out of Stock')}
                         </button>
                         <button
@@ -516,7 +534,7 @@ export const PublicStore: React.FC = () => {
                             className="btn-stitch-primary"
                             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                           >
-                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>shopping_cart</span>
+                            <CartIcon size={18} />
                             {addingToCartId === p.id ? 'Adding...' : (p.status === 'AVAILABLE' ? 'Add to Cart' : 'Out of Stock')}
                           </button>
                           <button
@@ -610,7 +628,7 @@ export const PublicStore: React.FC = () => {
                 className="btn-stitch-primary"
                 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>shopping_cart</span>
+                <CartIcon size={18} />
                 {selectedDetailProduct.status === 'AVAILABLE' ? (addingToCartId === selectedDetailProduct.id ? 'Adding...' : 'Add to Cart') : 'Out of Stock'}
               </button>
             </div>

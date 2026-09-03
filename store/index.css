@@ -3,9 +3,6 @@
    Matches Main Home Page Canvas, Typography, and Aesthetics
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
-
 :root {
   /* Store Tokens — Aligned with Main Website Light Theme */
   --color-primary: #e52b31;
