@@ -223,12 +223,14 @@ export const PublicStore: React.FC = () => {
               — PRODUCT CATALOG
             </div>
             <h1 style={{
-              fontSize: '3rem',
-              fontWeight: 800,
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(2.4rem, 1.8rem + 2.5vw, 3.5rem)',
+              fontWeight: 700,
               letterSpacing: '-0.02em',
-              lineHeight: 1.15,
+              lineHeight: 1.1,
               color: 'var(--color-on-surface)',
-              marginBottom: '1.25rem'
+              marginBottom: '1.25rem',
+              textWrap: 'balance'
             }}>
               DronesZ Flight Specs &amp; Components
             </h1>

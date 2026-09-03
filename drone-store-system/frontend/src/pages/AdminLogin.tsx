@@ -3,8 +3,9 @@ import { useAuth } from '../context/AuthContext';
 
 export const AdminLogin: React.FC = () => {
   const { login } = useAuth();
-  const [email, setEmail] = useState<string>('admin@example.com');
-  const [password, setPassword] = useState<string>('AdminPassword123!');
+
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -72,7 +73,7 @@ export const AdminLogin: React.FC = () => {
               className="stitch-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@example.com"
+              placeholder="Enter your admin email"
               required
               disabled={isSubmitting}
             />
@@ -86,12 +87,13 @@ export const AdminLogin: React.FC = () => {
               className="stitch-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••••••"
+              placeholder="Enter your admin password"
               required
               disabled={isSubmitting}
             />
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             className="btn-stitch-primary"
