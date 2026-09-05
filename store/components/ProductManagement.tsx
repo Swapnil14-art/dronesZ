@@ -19,6 +19,28 @@ interface Props {
   token: string;
 }
 
+const CloudUploadIcon: React.FC<{ size?: number; color?: string; style?: React.CSSProperties }> = ({
+  size = 32,
+  color = 'var(--color-primary, #e52b31)',
+  style = {},
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', ...style }}
+  >
+    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+    <path d="M12 12v9" />
+    <path d="m16 16-4-4-4 4" />
+  </svg>
+);
+
 export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [categories, setCategories] = useState<CategoryDto[]>([]);
@@ -891,9 +913,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                         background: '#ffffff'
                       }}
                     >
-                      <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--color-primary)', marginBottom: '0.35rem' }}>
-                        cloud_upload
-                      </span>
+                      <CloudUploadIcon size={32} color="var(--color-primary, #e52b31)" style={{ marginBottom: '0.4rem' }} />
                       <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-on-surface)' }}>
                         Click to choose product image file
                       </span>
