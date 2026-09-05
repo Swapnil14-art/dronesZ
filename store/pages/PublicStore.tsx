@@ -11,6 +11,7 @@ import { useUserAuth } from '../context/UserAuthContext';
 import { UserAuthModal } from '../components/UserAuthModal';
 import { StitchHeader } from '../components/StitchHeader';
 import { StitchFooter } from '../components/StitchFooter';
+import { ProductGallery } from '../components/ProductGallery';
 
 const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({ section }) => {
   if (section.type === 'WORD') {
@@ -510,52 +511,15 @@ export const PublicStore: React.FC = () => {
               width: '100%',
               minWidth: 0
             }}>
-              {/* Left Column: Media Stage & Specimen Visualizer */}
+              {/* Left Column: Multi-Image Amazon-style Product Gallery */}
               <div style={{ width: '100%', minWidth: 0 }}>
-                <div className="image-void-stage" style={{
-                  borderRadius: '0.75rem',
-                  minHeight: '420px',
-                  maxHeight: '500px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  border: '1px solid var(--color-outline)',
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  height: '500px'
-                }}>
-                  {activeProductDetail.image ? (
-                    <img
-                      src={getProductImageUrl(activeProductDetail.image)!}
-                      alt={activeProductDetail.name}
-                      className="product-img"
-                      style={{ borderRadius: '0.75rem' }}
-                    />
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '2rem' }}>
-                      <div style={{ fontSize: '48px', marginBottom: '1rem', opacity: 0.8 }}>🛸</div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                        DRONESZ SPECIMEN CAD MODEL
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#64748b' }}>
-                        Hardware ID #{activeProductDetail.id.toString().padStart(4, '0')}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Corner Specimen Identifier Badge */}
-                  <div style={{ position: 'absolute', top: '16px', left: '16px' }}>
-                    <span className="badge-category" style={{ letterSpacing: '0.08em', padding: '0.35rem 0.75rem' }}>
-                      {activeProductDetail.productType.replace('_', ' ')}
-                    </span>
-                  </div>
-
-                  <div style={{ position: 'absolute', top: '16px', right: '16px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>
-                    REF #{activeProductDetail.id}
-                  </div>
-                </div>
+                <ProductGallery
+                  productId={activeProductDetail.id}
+                  productName={activeProductDetail.name}
+                  productType={activeProductDetail.productType}
+                  images={activeProductDetail.images}
+                  primaryImageUrl={activeProductDetail.image}
+                />
 
                 {/* Feature Badges Grid underneath image */}
                 <div style={{

@@ -53,6 +53,24 @@ public class PublicProductController {
                 .body(imageData);
     }
 
+    @GetMapping(value = "/{productId}/images/{imageId}", produces = {org.springframework.http.MediaType.IMAGE_JPEG_VALUE, org.springframework.http.MediaType.IMAGE_PNG_VALUE, org.springframework.http.MediaType.ALL_VALUE})
+    public ResponseEntity<byte[]> getSpecificProductImage(
+            @PathVariable("productId") Long productId,
+            @PathVariable("imageId") Long imageId) {
+        byte[] imageData = productImageService.getImageDataById(productId, imageId);
+        String mimeType = productImageService.getMimeTypeById(productId, imageId);
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(mimeType))
+                .contentLength(imageData.length)
+                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                .body(imageData);
+    }
+
+    @GetMapping("/{id}/images")
+    public ResponseEntity<List<com.dronestore.system.dto.ProductImageDto>> getProductImagesMetadata(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(productImageService.getProductImages(id));
+    }
+
     @GetMapping("/{id}/children")
     public ResponseEntity<List<ProductDto>> getChildProducts(@PathVariable("id") Long id) {
         return ResponseEntity.ok(productService.getChildProducts(id));

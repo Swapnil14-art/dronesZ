@@ -4,7 +4,9 @@ import com.dronestore.system.dto.PageResponse;
 import com.dronestore.system.dto.ProductContentSectionDto;
 import com.dronestore.system.dto.ProductContentSectionRequest;
 import com.dronestore.system.dto.ProductDto;
+import com.dronestore.system.dto.ProductImageDto;
 import com.dronestore.system.dto.ProductRequest;
+import com.dronestore.system.dto.ReorderImagesRequest;
 import com.dronestore.system.dto.ReorderSectionsRequest;
 import com.dronestore.system.entity.ProductStatus;
 import com.dronestore.system.entity.ProductType;
@@ -66,6 +68,55 @@ public class AdminProductController {
     public ResponseEntity<ProductDto> updateProduct(@PathVariable("id") Long id, @Valid @RequestBody ProductRequest request) {
         ProductDto updated = productService.updateProduct(id, request);
         return ResponseEntity.ok(updated);
+    }
+
+    // ================= Product Images Endpoints =================
+
+    @GetMapping("/{id}/images")
+    public ResponseEntity<List<ProductImageDto>> getProductImages(@PathVariable("id") Long id) {
+        List<ProductImageDto> images = productImageService.getProductImages(id);
+        return ResponseEntity.ok(images);
+    }
+
+    @PostMapping("/{id}/images")
+    public ResponseEntity<List<ProductImageDto>> uploadMultipleProductImages(
+            @PathVariable("id") Long id,
+            @RequestParam("files") List<MultipartFile> files) {
+        List<ProductImageDto> images = productImageService.uploadMultipleProductImages(id, files);
+        return ResponseEntity.ok(images);
+    }
+
+    @PutMapping("/{id}/images/reorder")
+    public ResponseEntity<List<ProductImageDto>> reorderProductImages(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody ReorderImagesRequest request) {
+        List<ProductImageDto> reordered = productImageService.reorderImages(id, request.getImageIds());
+        return ResponseEntity.ok(reordered);
+    }
+
+    @PatchMapping("/{id}/images/{imageId}/primary")
+    public ResponseEntity<ProductImageDto> setPrimaryProductImage(
+            @PathVariable("id") Long id,
+            @PathVariable("imageId") Long imageId) {
+        ProductImageDto primary = productImageService.setPrimaryImage(id, imageId);
+        return ResponseEntity.ok(primary);
+    }
+
+    @PutMapping("/{id}/images/{imageId}")
+    public ResponseEntity<ProductImageDto> replaceProductImage(
+            @PathVariable("id") Long id,
+            @PathVariable("imageId") Long imageId,
+            @RequestParam("file") MultipartFile file) {
+        ProductImageDto replaced = productImageService.replaceImage(id, imageId, file);
+        return ResponseEntity.ok(replaced);
+    }
+
+    @DeleteMapping("/{id}/images/{imageId}")
+    public ResponseEntity<Void> deleteSpecificProductImage(
+            @PathVariable("id") Long id,
+            @PathVariable("imageId") Long imageId) {
+        productImageService.deleteImage(id, imageId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/image")

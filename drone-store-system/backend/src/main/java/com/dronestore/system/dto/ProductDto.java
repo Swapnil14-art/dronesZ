@@ -27,6 +27,8 @@ public class ProductDto {
     private Boolean taxInclusive;
     private String taxNote;
     private List<ProductContentSectionDto> contentSections = new ArrayList<>();
+    private List<ProductImageDto> images = new ArrayList<>();
+    private ProductImageDto primaryImage;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -167,6 +169,22 @@ public class ProductDto {
 
     public void setContentSections(List<ProductContentSectionDto> contentSections) {
         this.contentSections = contentSections;
+    }
+
+    public List<ProductImageDto> getImages() {
+        return images;
+    }
+
+    public void setImages(List<ProductImageDto> images) {
+        this.images = images;
+    }
+
+    public ProductImageDto getPrimaryImage() {
+        return primaryImage;
+    }
+
+    public void setPrimaryImage(ProductImageDto primaryImage) {
+        this.primaryImage = primaryImage;
     }
 
     public LocalDateTime getCreatedAt() {

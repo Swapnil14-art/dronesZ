@@ -17,10 +17,22 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
 
     Optional<ProductImage> findFirstByProductId(Long productId);
 
-    @Query("SELECT pi.imageData FROM ProductImage pi WHERE pi.product.id = :productId ORDER BY pi.isPrimary DESC, pi.id ASC")
+    Optional<ProductImage> findFirstByProductIdOrderByDisplayOrderAsc(Long productId);
+
+    Optional<ProductImage> findTopByProductIdOrderByDisplayOrderDesc(Long productId);
+
+    Optional<ProductImage> findByProductIdAndId(Long productId, Long id);
+
+    List<ProductImage> findByProductIdOrderByDisplayOrderAsc(Long productId);
+
+    List<ProductImage> findByProductIdOrderByIsPrimaryDescDisplayOrderAsc(Long productId);
+
+    long countByProductId(Long productId);
+
+    @Query("SELECT pi.imageData FROM ProductImage pi WHERE pi.product.id = :productId ORDER BY pi.isPrimary DESC, pi.displayOrder ASC, pi.id ASC")
     List<byte[]> findImageDataListByProductId(@Param("productId") Long productId);
 
-    @Query("SELECT pi.mimeType FROM ProductImage pi WHERE pi.product.id = :productId ORDER BY pi.isPrimary DESC, pi.id ASC")
+    @Query("SELECT pi.mimeType FROM ProductImage pi WHERE pi.product.id = :productId ORDER BY pi.isPrimary DESC, pi.displayOrder ASC, pi.id ASC")
     List<String> findMimeTypeListByProductId(@Param("productId") Long productId);
 
     boolean existsByProductIdAndContentHash(Long productId, String contentHash);

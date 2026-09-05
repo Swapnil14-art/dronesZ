@@ -4,10 +4,12 @@ import com.dronestore.system.dto.PageResponse;
 import com.dronestore.system.dto.ProductContentSectionDto;
 import com.dronestore.system.dto.ProductContentSectionRequest;
 import com.dronestore.system.dto.ProductDto;
+import com.dronestore.system.dto.ProductImageDto;
 import com.dronestore.system.dto.ProductRequest;
 import com.dronestore.system.entity.Category;
 import com.dronestore.system.entity.Product;
 import com.dronestore.system.entity.ProductContentSection;
+import com.dronestore.system.entity.ProductImage;
 import com.dronestore.system.entity.ProductStatus;
 import com.dronestore.system.entity.ProductType;
 import com.dronestore.system.exception.BadRequestException;
@@ -467,13 +469,21 @@ public class ProductService {
         dto.setTaxInclusive(product.getTaxInclusive() != null ? product.getTaxInclusive() : true);
         dto.setTaxNote(product.getTaxNote() != null ? product.getTaxNote() : "GST & Taxes Included");
 
-        String img = product.getImage();
-        boolean hasDbImage = productImageRepository.findFirstByProductId(product.getId()).isPresent();
-        if (hasDbImage) {
+        // Fetch ordered images
+        List<ProductImage> imageEntities = productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
+        List<ProductImageDto> imageDtos = imageEntities.stream().map(this::mapImageToDto).collect(Collectors.toList());
+        dto.setImages(imageDtos);
+
+        ProductImageDto primaryDto = imageDtos.stream()
+                .filter(imgDto -> Boolean.TRUE.equals(imgDto.getIsPrimary()))
+                .findFirst()
+                .orElse(imageDtos.isEmpty() ? null : imageDtos.get(0));
+        dto.setPrimaryImage(primaryDto);
+
+        String img = primaryDto != null ? primaryDto.getUrl() : product.getImage();
+        if (img != null && img.startsWith("/api/products/") && !img.contains("?")) {
             long timestamp = product.getUpdatedAt() != null ? product.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toEpochSecond() : System.currentTimeMillis();
-            img = "/api/products/" + product.getId() + "/image?v=" + timestamp;
-        } else if (img != null && img.startsWith("/api/products/")) {
-            img = null;
+            img = img + "?v=" + timestamp;
         }
         dto.setImage(img);
         dto.setCreatedAt(product.getCreatedAt());
@@ -497,6 +507,26 @@ public class ProductService {
             dto.setContentSections(sections.stream().map(this::mapSectionToDto).collect(Collectors.toList()));
         }
 
+        return dto;
+    }
+
+    public ProductImageDto mapImageToDto(ProductImage img) {
+        ProductImageDto dto = new ProductImageDto();
+        dto.setId(img.getId());
+        dto.setProductId(img.getProduct() != null ? img.getProduct().getId() : null);
+
+        long timestamp = img.getUpdatedAt() != null
+                ? img.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toEpochSecond()
+                : System.currentTimeMillis();
+
+        dto.setUrl("/api/products/" + (img.getProduct() != null ? img.getProduct().getId() : 0) + "/images/" + img.getId() + "?v=" + timestamp);
+        dto.setFileName(img.getFileName());
+        dto.setFileSize(img.getFileSize());
+        dto.setMimeType(img.getMimeType());
+        dto.setIsPrimary(Boolean.TRUE.equals(img.getIsPrimary()));
+        dto.setDisplayOrder(img.getDisplayOrder() != null ? img.getDisplayOrder() : 0);
+        dto.setCreatedAt(img.getCreatedAt());
+        dto.setUpdatedAt(img.getUpdatedAt());
         return dto;
     }
 

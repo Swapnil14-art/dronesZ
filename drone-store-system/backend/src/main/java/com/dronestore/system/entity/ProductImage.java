@@ -35,6 +35,9 @@ public class ProductImage {
     @Column(name = "is_primary", nullable = false)
     private Boolean isPrimary = true;
 
+    @Column(name = "display_order", nullable = false)
+    private Integer displayOrder = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -51,6 +54,9 @@ public class ProductImage {
         this.updatedAt = now;
         if (this.isPrimary == null) {
             this.isPrimary = true;
+        }
+        if (this.displayOrder == null) {
+            this.displayOrder = 0;
         }
     }
 
@@ -121,6 +127,14 @@ public class ProductImage {
 
     public void setIsPrimary(Boolean isPrimary) {
         this.isPrimary = isPrimary;
+    }
+
+    public Integer getDisplayOrder() {
+        return displayOrder;
+    }
+
+    public void setDisplayOrder(Integer displayOrder) {
+        this.displayOrder = displayOrder;
     }
 
     public LocalDateTime getCreatedAt() {

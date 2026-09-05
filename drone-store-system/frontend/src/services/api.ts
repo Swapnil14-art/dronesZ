@@ -59,6 +59,19 @@ export interface CategoryRequest {
   description?: string;
 }
 
+export interface ProductImageDto {
+  id: number;
+  productId: number;
+  url: string;
+  fileName?: string;
+  fileSize?: number;
+  mimeType?: string;
+  isPrimary: boolean;
+  displayOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ProductDto {
   id: number;
   name: string;
@@ -71,6 +84,8 @@ export interface ProductDto {
   categoryId?: number | null;
   categoryName?: string | null;
   image?: string | null;
+  images?: ProductImageDto[];
+  primaryImage?: ProductImageDto;
   dispatchTime?: string;
   warranty?: string;
   grade?: string;
@@ -761,6 +776,125 @@ export async function deleteProduct(token: string, id: number): Promise<void> {
   if (!response.ok) {
     const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to delete product', timestamp: '' }));
     throw new Error(err.message || 'Failed to delete product');
+  }
+}
+
+export async function fetchProductImages(productId: number, token?: string): Promise<ProductImageDto[]> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const url = token
+    ? `${API_BASE_URL}/api/admin/products/${productId}/images`
+    : `${API_BASE_URL}/api/products/${productId}/images`;
+
+  try {
+    const response = await fetch(url, { headers });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  // Fallback to public endpoint
+  const publicRes = await fetch(`${API_BASE_URL}/api/products/${productId}/images`);
+  if (!publicRes.ok) {
+    throw new Error('Failed to fetch product images');
+  }
+  return publicRes.json();
+}
+
+export async function uploadMultipleProductImages(token: string, productId: number, files: File[]): Promise<ProductImageDto[]> {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append('files', file);
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/images`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to upload images', timestamp: '' }));
+    throw new Error(err.message || 'Failed to upload images');
+  }
+
+  return response.json();
+}
+
+export async function setPrimaryProductImage(token: string, productId: number, imageId: number): Promise<ProductImageDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/images/${imageId}/primary`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to set primary image', timestamp: '' }));
+    throw new Error(err.message || 'Failed to set primary image');
+  }
+
+  return response.json();
+}
+
+export async function reorderProductImages(token: string, productId: number, imageIds: number[]): Promise<ProductImageDto[]> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/images/reorder`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ imageIds }),
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to reorder images', timestamp: '' }));
+    throw new Error(err.message || 'Failed to reorder images');
+  }
+
+  return response.json();
+}
+
+export async function replaceProductImage(token: string, productId: number, imageId: number, file: File): Promise<ProductImageDto> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/images/${imageId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to replace image', timestamp: '' }));
+    throw new Error(err.message || 'Failed to replace image');
+  }
+
+  return response.json();
+}
+
+export async function deleteSpecificProductImage(token: string, productId: number, imageId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/images/${imageId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to delete image', timestamp: '' }));
+    throw new Error(err.message || 'Failed to delete image');
   }
 }
 
