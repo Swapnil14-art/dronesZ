@@ -15,7 +15,9 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  const MAIN_SITE_URL = import.meta.env.VITE_MAIN_SITE_URL || 'http://localhost:3000';
+  const MAIN_SITE_URL =
+    (typeof process !== 'undefined' && (process.env.NEXT_PUBLIC_VITE_MAIN_SITE_URL || process.env.NEXT_PUBLIC_MAIN_SITE_URL)) ||
+    'http://localhost:3000';
 
   const navigateTo = (path: string) => {
     setIsMobileMenuOpen(false);

@@ -98,12 +98,14 @@ export const PublicStore: React.FC = () => {
   const [childProducts, setChildProducts] = useState<ProductDto[]>([]);
   const [loadingChildren, setLoadingChildren] = useState<boolean>(false);
 
+  // Active Product Detail Page State (when at /products/:id)
+  const [activeProductDetail, setActiveProductDetail] = useState<ProductDto | null>(null);
+  const [loadingProductDetail, setLoadingProductDetail] = useState<boolean>(false);
+  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+
   // Search & Availability Filters
   const [search, setSearch] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
-
-  // Item Detail Modal State
-  const [selectedDetailProduct, setSelectedDetailProduct] = useState<ProductDto | null>(null);
 
   // Customer Auth Modal State
   const [isUserAuthOpen, setIsUserAuthOpen] = useState<boolean>(false);
@@ -124,7 +126,7 @@ export const PublicStore: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!activeParent) {
+    if (!activeParent && !activeProductDetail) {
       loadMainCatalog();
     }
   }, [search, selectedStatus]);
@@ -134,9 +136,15 @@ export const PublicStore: React.FC = () => {
 
     if (pathname.startsWith('/store/') && pathname.length > 7) {
       const param = pathname.substring(7);
+      setActiveProductDetail(null);
       await loadParentSeriesPage(param);
+    } else if (pathname.startsWith('/products/') && pathname.length > 10) {
+      const param = pathname.substring(10);
+      setActiveParent(null);
+      await loadProductDetailPage(param);
     } else {
       setActiveParent(null);
+      setActiveProductDetail(null);
       await loadMainCatalog();
     }
   };
@@ -156,6 +164,37 @@ export const PublicStore: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadProductDetailPage = async (param: string) => {
+    setLoadingProductDetail(true);
+    setError(null);
+    setSelectedQuantity(1);
+    try {
+      const idMatch = param.match(/\d+$/);
+      const id = idMatch ? Number(idMatch[0]) : Number(param);
+      if (!isNaN(id)) {
+        const prod = await fetchPublicProductById(id);
+        if (prod) {
+          setActiveProductDetail(prod);
+        } else {
+          setError(`Product ID "${param}" not found.`);
+          setActiveProductDetail(null);
+        }
+      } else {
+        setError(`Invalid product ID "${param}".`);
+        setActiveProductDetail(null);
+      }
+    } catch (err: any) {
+      setError('Failed to load product specifications page.');
+      setActiveProductDetail(null);
+    } finally {
+      setLoadingProductDetail(false);
+    }
+  };
+
+  const navigateToProductDetail = (productId: number) => {
+    navigateTo(`/products/${productId}`);
   };
 
   const loadParentSeriesPage = async (param: string) => {
@@ -199,6 +238,7 @@ export const PublicStore: React.FC = () => {
 
   const navigateToMainStore = () => {
     setActiveParent(null);
+    setActiveProductDetail(null);
     setSearch('');
     setSelectedStatus('');
     navigateTo('/store');
@@ -209,7 +249,7 @@ export const PublicStore: React.FC = () => {
     navigateTo(`/store/${slug}`);
   };
 
-  const handleAddToCart = async (product: ProductDto) => {
+  const handleAddToCart = async (product: ProductDto, quantity: number = 1) => {
     setCartFeedbackMsg(null);
     if (!isAuthenticated) {
       setUserAuthMode('login');
@@ -219,8 +259,8 @@ export const PublicStore: React.FC = () => {
 
     try {
       setAddingToCartId(product.id);
-      await addToCart(product.id, 1);
-      setCartFeedbackMsg(`Added "${product.name}" to cart!`);
+      await addToCart(product.id, quantity);
+      setCartFeedbackMsg(`Added ${quantity > 1 ? `${quantity} × ` : ''}"${product.name}" to cart!`);
       setTimeout(() => setCartFeedbackMsg(null), 3000);
     } catch (err: any) {
       alert(err.message || 'Failed to add item to cart');
@@ -276,8 +316,8 @@ export const PublicStore: React.FC = () => {
           </div>
         )}
 
-        {/* Hero Section */}
-        {!activeParent && (
+        {/* Hero Section (only on main store catalog view) */}
+        {!activeParent && !activeProductDetail && (
           <section style={{ maxWidth: '800px', marginBottom: '4rem' }}>
             <div style={{
               fontSize: '12px',
@@ -306,9 +346,418 @@ export const PublicStore: React.FC = () => {
             </p>
           </section>
         )}
+        {/* VIEW 1: DEDICATED FULL-PAGE E-COMMERCE PRODUCT DETAILS (/products/{id}) */}
+        {loadingProductDetail ? (
+          <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--color-muted)' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>Loading DronesZ Hardware Specifications...</div>
+            <div style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)' }}>Fetching live database record for specimen ID</div>
+          </div>
+        ) : activeProductDetail ? (
+          <div className="product-detail-page-container" style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
+            {/* Breadcrumb & Navigation Header */}
+            <nav style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '2rem',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              paddingBottom: '1rem',
+              borderBottom: '1px solid var(--color-outline)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '14px', color: 'var(--color-on-surface-variant)', flexWrap: 'wrap' }}>
+                <span
+                  onClick={navigateToMainStore}
+                  style={{ cursor: 'pointer', fontWeight: 600, color: 'var(--color-primary)' }}
+                >
+                  Store Catalog
+                </span>
+                <span>/</span>
+                <span style={{ textTransform: 'capitalize' }}>
+                  {activeProductDetail.productType.toLowerCase().replace('_', ' ')}
+                </span>
+                <span>/</span>
+                <span style={{ fontWeight: 700, color: 'var(--color-on-surface)', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                  {activeProductDetail.name}
+                </span>
+              </div>
 
-        {/* VIEW 1: DEDICATED PARENT SERIES WEBPAGE (/store/parent_name) */}
-        {activeParent ? (
+              <button
+                onClick={navigateToMainStore}
+                className="btn-stitch-ghost"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }}
+              >
+                <ArrowLeftIcon size={18} />
+                Back to Store Catalog
+              </button>
+            </nav>
+
+            {/* Primary Hero Section: 2-Column Responsive E-Commerce Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: '3rem',
+              marginBottom: '4rem',
+              alignItems: 'start',
+              width: '100%',
+              minWidth: 0
+            }}>
+              {/* Left Column: Media Stage & Specimen Visualizer */}
+              <div style={{ width: '100%', minWidth: 0 }}>
+                <div className="image-void-stage" style={{
+                  borderRadius: '0.75rem',
+                  minHeight: '420px',
+                  maxHeight: '500px',
+                  padding: '2rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  border: '1px solid var(--color-outline)',
+                  width: '100%',
+                  boxSizing: 'border-box'
+                }}>
+                  {activeProductDetail.image ? (
+                    <img
+                      src={activeProductDetail.image}
+                      alt={activeProductDetail.name}
+                      className="product-img"
+                      style={{ maxHeight: '400px', width: '100%', objectFit: 'contain', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15))' }}
+                    />
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                      <div style={{ fontSize: '48px', marginBottom: '1rem', opacity: 0.8 }}>🛸</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                        DRONESZ SPECIMEN CAD MODEL
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b' }}>
+                        Hardware ID #{activeProductDetail.id.toString().padStart(4, '0')}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Corner Specimen Identifier Badge */}
+                  <div style={{ position: 'absolute', top: '16px', left: '16px' }}>
+                    <span className="badge-category" style={{ letterSpacing: '0.08em', padding: '0.35rem 0.75rem' }}>
+                      {activeProductDetail.productType.replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  <div style={{ position: 'absolute', top: '16px', right: '16px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>
+                    REF #{activeProductDetail.id}
+                  </div>
+                </div>
+
+                {/* Feature Badges Grid underneath image */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '1rem',
+                  marginTop: '1.25rem',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ background: 'var(--color-surface-container-low)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline)' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Dispatched</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>24-48 Hours</div>
+                  </div>
+                  <div style={{ background: 'var(--color-surface-container-low)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline)' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Warranty</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>1-Yr Factory</div>
+                  </div>
+                  <div style={{ background: 'var(--color-surface-container-low)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline)' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Grade</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>Aero Precision</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: E-Commerce Product Meta & Purchasing Options */}
+              <div style={{ display: 'flex', flexDirection: 'column', width: '100%', minWidth: 0 }}>
+                <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                  DRONESZ PRECISION MULTIROTOR
+                </div>
+
+                <h1 style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: 'clamp(2rem, 1.6rem + 1.8vw, 2.75rem)',
+                  fontWeight: 800,
+                  letterSpacing: '-0.02em',
+                  color: 'var(--color-on-surface)',
+                  marginBottom: '1rem',
+                  lineHeight: 1.15,
+                  overflowWrap: 'anywhere',
+                  wordBreak: 'break-word'
+                }}>
+                  {activeProductDetail.name}
+                </h1>
+
+                {/* Stock & Status Bar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.75rem', flexWrap: 'wrap' }}>
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    padding: '0.35rem 0.85rem',
+                    borderRadius: '9999px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    background: activeProductDetail.status === 'AVAILABLE' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                    color: activeProductDetail.status === 'AVAILABLE' ? 'var(--color-tertiary)' : 'var(--color-error)',
+                    border: `1px solid ${activeProductDetail.status === 'AVAILABLE' ? 'var(--color-tertiary)' : 'var(--color-error)'}`
+                  }}>
+                    ● {activeProductDetail.status.replace('_', ' ')}
+                  </span>
+
+                  <span style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>
+                    Inventory Level: <strong style={{ color: 'var(--color-on-surface)' }}>{activeProductDetail.quantity} units in stock</strong>
+                  </span>
+                </div>
+
+                {/* Price Card */}
+                <div style={{
+                  background: 'var(--color-surface-container-low)',
+                  border: '1px solid var(--color-outline)',
+                  padding: '1.5rem',
+                  borderRadius: '0.75rem',
+                  marginBottom: '2rem'
+                }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-on-surface-variant)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
+                    Unit Retail Price
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '2.75rem', fontWeight: 900, color: 'var(--color-primary)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
+                      ₹{activeProductDetail.price.toFixed(2)}
+                    </span>
+                    <span style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>
+                      (GST &amp; Taxes Included)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Quantity Stepper & Add to Cart Action */}
+                <div style={{ marginBottom: '2rem' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
+                    Select Quantity
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {/* Quantity Stepper */}
+                    <div style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      border: '1px solid var(--color-outline)',
+                      borderRadius: '0.5rem',
+                      background: '#fff',
+                      overflow: 'hidden'
+                    }}>
+                      <button
+                        disabled={selectedQuantity <= 1}
+                        onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          border: 'none',
+                          background: 'none',
+                          cursor: selectedQuantity <= 1 ? 'not-allowed' : 'pointer',
+                          fontWeight: 800,
+                          fontSize: '1.1rem',
+                          color: 'var(--color-on-surface)'
+                        }}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        max={activeProductDetail.quantity || 99}
+                        value={selectedQuantity}
+                        onChange={(e) => setSelectedQuantity(Math.max(1, Math.min(activeProductDetail.quantity || 99, parseInt(e.target.value) || 1)))}
+                        style={{
+                          width: '50px',
+                          textAlign: 'center',
+                          border: 'none',
+                          fontWeight: 700,
+                          fontSize: '1rem',
+                          outline: 'none',
+                          color: 'var(--color-on-surface)'
+                        }}
+                      />
+                      <button
+                        disabled={selectedQuantity >= (activeProductDetail.quantity || 99)}
+                        onClick={() => setSelectedQuantity(selectedQuantity + 1)}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          border: 'none',
+                          background: 'none',
+                          cursor: selectedQuantity >= (activeProductDetail.quantity || 99) ? 'not-allowed' : 'pointer',
+                          fontWeight: 800,
+                          fontSize: '1.1rem',
+                          color: 'var(--color-on-surface)'
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Total Price preview */}
+                    <div style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>
+                      Total: <strong style={{ color: 'var(--color-primary)', fontSize: '1.1rem' }}>₹{(activeProductDetail.price * selectedQuantity).toFixed(2)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+                  <button
+                    disabled={activeProductDetail.status !== 'AVAILABLE' || addingToCartId === activeProductDetail.id}
+                    onClick={() => handleAddToCart(activeProductDetail, selectedQuantity)}
+                    className="btn-stitch-primary"
+                    style={{
+                      width: '100%',
+                      padding: '1.1rem 2rem',
+                      fontSize: '1.15rem',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.75rem',
+                      borderRadius: '0.5rem'
+                    }}
+                  >
+                    <CartIcon size={22} />
+                    {addingToCartId === activeProductDetail.id
+                      ? 'Adding to Cart...'
+                      : activeProductDetail.status === 'AVAILABLE'
+                      ? `Add ${selectedQuantity} ${selectedQuantity > 1 ? 'Units' : 'Unit'} to Cart`
+                      : 'Currently Out of Stock'}
+                  </button>
+
+                  {activeProductDetail.status === 'AVAILABLE' && (
+                    <button
+                      onClick={async () => {
+                        await handleAddToCart(activeProductDetail, selectedQuantity);
+                        navigateTo('/checkout');
+                      }}
+                      className="btn-stitch-ghost"
+                      style={{
+                        width: '100%',
+                        padding: '0.85rem 2rem',
+                        fontSize: '1rem',
+                        fontWeight: 700,
+                        textAlign: 'center',
+                        border: '1px solid var(--color-outline)'
+                      }}
+                    >
+                      Proceed directly to Buy Now &rarr;
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Below Fold: Detailed Specifications & Technical Documentation */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '2.5rem',
+              marginBottom: '4rem',
+              width: '100%',
+              minWidth: 0
+            }}>
+              {/* Description Panel */}
+              <div style={{
+                background: '#fff',
+                border: '1px solid var(--color-outline)',
+                padding: '2rem',
+                borderRadius: '0.75rem',
+                width: '100%',
+                minWidth: 0,
+                boxSizing: 'border-box',
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word'
+              }}>
+                <h3 style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: 'var(--color-on-surface)',
+                  marginBottom: '1rem',
+                  paddingBottom: '0.75rem',
+                  borderBottom: '1px solid var(--color-outline)'
+                }}>
+                  Overview &amp; Product Description
+                </h3>
+
+                {activeProductDetail.description ? (
+                  <p style={{
+                    fontSize: '1rem',
+                    color: 'var(--color-on-surface-variant)',
+                    lineHeight: 1.7,
+                    whiteSpace: 'pre-wrap',
+                    overflowWrap: 'anywhere',
+                    wordBreak: 'break-word',
+                    maxWidth: '100%',
+                    margin: 0
+                  }}>
+                    {activeProductDetail.description}
+                  </p>
+                ) : (
+                  <p style={{ fontSize: '0.95rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
+                    No additional text description provided for this product specimen in the database catalog.
+                  </p>
+                )}
+              </div>
+
+              {/* Specifications Table Panel */}
+              <div style={{
+                background: '#fff',
+                border: '1px solid var(--color-outline)',
+                padding: '2rem',
+                borderRadius: '0.75rem',
+                width: '100%',
+                minWidth: 0,
+                boxSizing: 'border-box',
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word'
+              }}>
+                <h3 style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: 'var(--color-on-surface)',
+                  marginBottom: '1rem',
+                  paddingBottom: '0.75rem',
+                  borderBottom: '1px solid var(--color-outline)'
+                }}>
+                  Technical Specifications Matrix
+                </h3>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '14px', width: '100%', minWidth: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
+                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>System Product ID</span>
+                    <strong style={{ color: 'var(--color-on-surface)' }}>#{activeProductDetail.id}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
+                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Classification Category</span>
+                    <strong style={{ color: 'var(--color-on-surface)', textTransform: 'uppercase' }}>{activeProductDetail.productType.replace('_', ' ')}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
+                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Inventory Quantity</span>
+                    <strong style={{ color: 'var(--color-on-surface)' }}>{activeProductDetail.quantity} Units</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
+                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Availability State</span>
+                    <strong style={{ color: activeProductDetail.status === 'AVAILABLE' ? 'var(--color-tertiary)' : 'var(--color-error)' }}>
+                      {activeProductDetail.status.replace('_', ' ')}
+                    </strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', gap: '1rem', flexWrap: 'wrap' }}>
+                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Database Reference</span>
+                    <strong style={{ color: 'var(--color-on-surface)' }}>Live Synchronized</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : activeParent ? (
+          /* VIEW 2: DEDICATED PARENT SERIES WEBPAGE (/store/parent_name) */
           <div>
             <div className="parent-series-card" style={{ marginBottom: '2.5rem', padding: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
@@ -380,7 +829,12 @@ export const PublicStore: React.FC = () => {
                 gap: '1.5rem'
               }}>
                 {filteredChildProducts.map((child) => (
-                  <div key={child.id} className="stitch-product-card">
+                  <div
+                    key={child.id}
+                    className="stitch-product-card"
+                    onClick={() => navigateToProductDetail(child.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="image-void-stage">
                       {child.image ? (
                         <img src={child.image} alt={child.name} className="product-img" />
@@ -416,7 +870,10 @@ export const PublicStore: React.FC = () => {
                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                         <button
                           disabled={child.status !== 'AVAILABLE' || addingToCartId === child.id}
-                          onClick={() => handleAddToCart(child)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(child);
+                          }}
                           className="btn-stitch-primary"
                           style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                         >
@@ -424,9 +881,12 @@ export const PublicStore: React.FC = () => {
                           {addingToCartId === child.id ? 'Adding...' : (child.status === 'AVAILABLE' ? 'Add to Cart' : 'Out of Stock')}
                         </button>
                         <button
-                          onClick={() => setSelectedDetailProduct(child)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigateToProductDetail(child.id);
+                          }}
                           className="btn-stitch-ghost"
-                          title="View Specifications"
+                          title="View Product Details"
                         >
                           Specs
                         </button>
@@ -438,7 +898,7 @@ export const PublicStore: React.FC = () => {
             )}
           </div>
         ) : (
-          /* VIEW 2: ROOT STORE CATALOG WEBPAGE (/ or /store) */
+          /* VIEW 3: ROOT STORE CATALOG WEBPAGE (/ or /store) */
           <div>
             {/* Search & Filter Bar */}
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '3rem' }}>
@@ -484,7 +944,12 @@ export const PublicStore: React.FC = () => {
                   gap: '1.5rem'
                 }}>
                   {parentProducts.map((parent) => (
-                    <div key={parent.id} className="parent-series-card">
+                    <div
+                      key={parent.id}
+                      className="parent-series-card"
+                      onClick={() => navigateToParentSeries(parent)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className="badge-parent" style={{ marginBottom: '1rem' }}>
                         PARENT SERIES
                       </div>
@@ -507,7 +972,10 @@ export const PublicStore: React.FC = () => {
                       </div>
 
                       <button
-                        onClick={() => navigateToParentSeries(parent)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigateToParentSeries(parent);
+                        }}
                         className="btn-stitch-secondary-link"
                         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                       >
@@ -543,7 +1011,12 @@ export const PublicStore: React.FC = () => {
                   gap: '1.5rem'
                 }}>
                   {standaloneProducts.map((p) => (
-                    <div key={p.id} className="stitch-product-card">
+                    <div
+                      key={p.id}
+                      className="stitch-product-card"
+                      onClick={() => navigateToProductDetail(p.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className="image-void-stage">
                         {p.image ? (
                           <img src={p.image} alt={p.name} className="product-img" />
@@ -579,7 +1052,10 @@ export const PublicStore: React.FC = () => {
                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                           <button
                             disabled={p.status !== 'AVAILABLE' || addingToCartId === p.id}
-                            onClick={() => handleAddToCart(p)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddToCart(p);
+                            }}
                             className="btn-stitch-primary"
                             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
                           >
@@ -587,7 +1063,10 @@ export const PublicStore: React.FC = () => {
                             {addingToCartId === p.id ? 'Adding...' : (p.status === 'AVAILABLE' ? 'Add to Cart' : 'Out of Stock')}
                           </button>
                           <button
-                            onClick={() => setSelectedDetailProduct(p)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigateToProductDetail(p.id);
+                            }}
                             className="btn-stitch-ghost"
                             title="View Specifications"
                           >
@@ -603,87 +1082,6 @@ export const PublicStore: React.FC = () => {
           </div>
         )}
       </main>
-
-      {/* Detail Modal */}
-      {selectedDetailProduct && (
-        <div className="modal-overlay" onClick={() => setSelectedDetailProduct(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-              <div>
-                <span className="badge-category" style={{ marginBottom: '0.5rem', display: 'inline-block' }}>
-                  {selectedDetailProduct.productType}
-                </span>
-                <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-on-surface)' }}>
-                  {selectedDetailProduct.name}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedDetailProduct(null)}
-                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--color-muted)' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="image-void-stage" style={{ borderRadius: '0.375rem', marginBottom: '1.25rem' }}>
-              {selectedDetailProduct.image ? (
-                <img src={selectedDetailProduct.image} alt={selectedDetailProduct.name} className="product-img" />
-              ) : (
-                <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  DronesZ Hardware Specification
-                </span>
-              )}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem', fontSize: '14px' }}>
-              <div>
-                <span style={{ color: 'var(--color-muted)' }}>Status: </span>
-                <strong style={{ color: selectedDetailProduct.status === 'AVAILABLE' ? 'var(--color-tertiary)' : 'var(--color-error)' }}>
-                  {selectedDetailProduct.status.replace('_', ' ')}
-                </strong>
-              </div>
-              <div>
-                <span style={{ color: 'var(--color-muted)' }}>Stock Available: </span>
-                <strong>{selectedDetailProduct.quantity} units</strong>
-              </div>
-            </div>
-
-            {selectedDetailProduct.description && (
-              <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-muted)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
-                  SPECIFICATIONS &amp; DESCRIPTION
-                </div>
-                <p style={{ fontSize: '14px', color: 'var(--color-on-surface)', lineHeight: 1.5 }}>
-                  {selectedDetailProduct.description}
-                </p>
-              </div>
-            )}
-
-            <div style={{ borderTop: '1px solid var(--color-outline)', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: '12px', color: 'var(--color-muted)', display: 'block' }}>Price</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-                  ₹{selectedDetailProduct.price.toFixed(2)}
-                </span>
-              </div>
-
-              <button
-                disabled={selectedDetailProduct.status !== 'AVAILABLE' || addingToCartId === selectedDetailProduct.id}
-                onClick={() => {
-                  const p = selectedDetailProduct;
-                  setSelectedDetailProduct(null);
-                  handleAddToCart(p);
-                }}
-                className="btn-stitch-primary"
-                style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-              >
-                <CartIcon size={18} />
-                {selectedDetailProduct.status === 'AVAILABLE' ? (addingToCartId === selectedDetailProduct.id ? 'Adding...' : 'Add to Cart') : 'Out of Stock'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Customer Account Modal */}
       <UserAuthModal

@@ -170,6 +170,7 @@ export function Nav() {
 
   const isStorePage =
     pathname.startsWith("/store") ||
+    pathname.startsWith("/products") ||
     pathname === "/cart" ||
     pathname === "/checkout" ||
     pathname === "/dashboard" ||
@@ -202,7 +203,7 @@ export function Nav() {
                 const isActive =
                   (!isAnchor &&
                     (pathname === item.href ||
-                      (item.label === "Products" && pathname.startsWith("/store")))) ||
+                      (item.label === "Products" && (pathname.startsWith("/store") || pathname.startsWith("/products"))))) ||
                   (item.href === "/" && pathname === "/");
                 return (
                   <li key={item.href}>
