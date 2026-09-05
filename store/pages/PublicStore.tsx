@@ -410,7 +410,6 @@ export const PublicStore: React.FC = () => {
                   borderRadius: '0.75rem',
                   minHeight: '420px',
                   maxHeight: '500px',
-                  padding: '2rem',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -418,14 +417,15 @@ export const PublicStore: React.FC = () => {
                   position: 'relative',
                   border: '1px solid var(--color-outline)',
                   width: '100%',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  height: '500px'
                 }}>
                   {activeProductDetail.image ? (
                     <img
                       src={getProductImageUrl(activeProductDetail.image)!}
                       alt={activeProductDetail.name}
                       className="product-img"
-                      style={{ maxHeight: '400px', width: '100%', objectFit: 'contain', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15))' }}
+                      style={{ borderRadius: '0.75rem' }}
                     />
                   ) : (
                     <div style={{ textAlign: 'center', padding: '2rem' }}>
