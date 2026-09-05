@@ -291,7 +291,8 @@ public class ProductService {
         String img = product.getImage();
         boolean hasDbImage = productImageRepository.findFirstByProductId(product.getId()).isPresent();
         if (hasDbImage) {
-            img = "/api/products/" + product.getId() + "/image";
+            long timestamp = product.getUpdatedAt() != null ? product.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toEpochSecond() : System.currentTimeMillis();
+            img = "/api/products/" + product.getId() + "/image?v=" + timestamp;
         } else if (img != null && img.startsWith("/api/products/")) {
             img = null;
         }

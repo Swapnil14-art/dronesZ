@@ -173,16 +173,37 @@ const getApiBaseUrl = (): string => {
 
 export const API_BASE_URL = getApiBaseUrl();
 
+/**
+ * Canonical product-image URL helper.
+ *
+ * Backend returns image paths as relative API routes, e.g.:
+ *   /api/products/15/image?v=1788608619
+ *
+ * These MUST stay relative so the browser loads them from the same origin
+ * (via Next.js rewrites → Spring Boot backend). Prepending API_BASE_URL
+ * (http://localhost:8070) would create a cross-origin request that the
+ * Content-Security-Policy `img-src 'self'` directive blocks — which is
+ * the root cause of images not rendering while "Open in new tab" works.
+ *
+ * blob:/data: URLs (local upload previews) are passed through as-is.
+ */
 export const getProductImageUrl = (imagePath?: string | null): string | null => {
   if (!imagePath || !imagePath.trim()) return null;
   const path = imagePath.trim();
+
+  // Absolute URLs / local previews — pass through unchanged
   if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
     return path;
   }
+
+  // Relative API paths (e.g. /api/products/15/image?v=...) — keep relative
+  // so the request goes through Next.js rewrites → backend, staying same-origin.
   if (path.startsWith('/')) {
-    return `${API_BASE_URL}${path}`;
+    return path;
   }
-  return `${API_BASE_URL}/${path}`;
+
+  // Bare relative path — prefix with /
+  return `/${path}`;
 };
 
 /* Admin Login Route */

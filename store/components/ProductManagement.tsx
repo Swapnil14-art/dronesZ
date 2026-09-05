@@ -930,7 +930,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               <div
                 style={{
                   display: 'flex',
-                  justify: 'flex-end',
+                  justifyContent: 'flex-end',
                   gap: '0.75rem',
                   marginTop: '0.5rem',
                   paddingTop: '1rem',

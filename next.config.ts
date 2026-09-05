@@ -19,7 +19,7 @@ const csp = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' data: blob:`,
+  `img-src 'self' data: blob: http://localhost:8070 http://127.0.0.1:8070`,
   `font-src 'self'`,
   `media-src 'self'`,
   `connect-src 'self' http://localhost:8070 http://127.0.0.1:8070 https://*.public.blob.vercel-storage.com https://blob.vercel-storage.com`,
@@ -60,6 +60,14 @@ const nextConfig: NextConfig = {
   transpilePackages: ["three"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://localhost:8070/api/:path*",
+      },
+    ];
   },
 };
 

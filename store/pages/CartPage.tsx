@@ -3,6 +3,7 @@ import { useUserAuth } from '../context/UserAuthContext';
 import { UserAuthModal } from '../components/UserAuthModal';
 import { StitchHeader } from '../components/StitchHeader';
 import { StitchFooter } from '../components/StitchFooter';
+import { getProductImageUrl } from '../services/api';
 
 export const CartPage: React.FC = () => {
   const { cart, isAuthenticated, updateCartQuantity, removeFromCart } = useUserAuth();
@@ -144,9 +145,14 @@ export const CartPage: React.FC = () => {
                       height: '90px',
                       borderRadius: '0.375rem',
                       fontSize: '1.75rem',
+                      padding: '0.25rem'
                     }}
                   >
-                    🚁
+                    {item.productImage ? (
+                      <img src={getProductImageUrl(item.productImage)!} alt={item.productName} className="product-img" />
+                    ) : (
+                      <span>🚁</span>
+                    )}
                   </div>
 
                   {/* Info */}
