@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ProductDto,
   ProductRequest,
@@ -68,19 +68,18 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [editingProduct, setEditingProduct] = useState<ProductDto | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductDto | null>(null);
-  const [deletingImageProduct, setDeletingImageProduct] = useState<ProductDto | null>(null);
 
   // Form Fields State
   const [formName, setFormName] = useState<string>('');
   const [formDescription, setFormDescription] = useState<string>('');
-  const [formProductType, setFormProductType] = useState<ProductType>('STANDALONE');
+  const [formProductType, setFormProductType] = useState<ProductType>('PARENT');
   const [formPrice, setFormPrice] = useState<string>('0');
   const [formQuantity, setFormQuantity] = useState<string>('0');
   const [formStatus, setFormStatus] = useState<ProductStatus>('AVAILABLE');
   const [formCategoryId, setFormCategoryId] = useState<string>('');
   const [formParentId, setFormParentId] = useState<string>('');
 
-  // New Dynamic Delivery / Warranty / Grade / Tax fields
+  // Dynamic Delivery / Warranty / Grade / Tax fields
   const [formDispatchTime, setFormDispatchTime] = useState<string>('24-48 Hours');
   const [formWarranty, setFormWarranty] = useState<string>('1-Yr Factory');
   const [formGrade, setFormGrade] = useState<string>('Aero Precision');
@@ -102,18 +101,23 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
   // Active Tab in Large Modal
   const [activeModalTab, setActiveModalTab] = useState<'details' | 'boxes'>('details');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Lock background scroll when modal is open
+  // Lock background scroll completely when modal is open
   useEffect(() => {
-    if (isAddModalOpen || editingProduct || deletingProduct || deletingImageProduct) {
+    const isModalOpen = isAddModalOpen || editingProduct !== null || deletingProduct !== null;
+    if (isModalOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
-  }, [isAddModalOpen, editingProduct, deletingProduct, deletingImageProduct]);
+  }, [isAddModalOpen, editingProduct, deletingProduct]);
 
   useEffect(() => {
     loadCategories();
@@ -240,7 +244,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       URL.revokeObjectURL(imagePreviewUrl);
     }
     setSelectedImageFile(null);
-    setImagePreviewUrl(editingProduct?.image || null);
+    setImagePreviewUrl(editingProduct?.image ? getProductImageUrl(editingProduct.image) : null);
     setImageInfo(null);
     setFileError(null);
   };
@@ -249,7 +253,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setEditingProduct(null);
     setFormName('');
     setFormDescription('');
-    setFormProductType('STANDALONE');
+    setFormProductType('PARENT');
     setFormPrice('0');
     setFormQuantity('0');
     setFormStatus('AVAILABLE');
@@ -275,7 +279,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setEditingProduct(product);
     setFormName(product.name);
     setFormDescription(product.description || '');
-    setFormProductType(product.productType || 'STANDALONE');
+    setFormProductType(product.productType === 'CHILD' ? 'CHILD' : 'PARENT');
     setFormPrice(product.price.toString());
     setFormQuantity(product.quantity.toString());
     setFormStatus(product.status);
@@ -287,7 +291,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormTaxInclusive(product.taxInclusive !== undefined ? product.taxInclusive : true);
     setFormTaxNote(product.taxNote || 'GST & Taxes Included');
 
-    // Load content sections for product
     if (product.contentSections && product.contentSections.length > 0) {
       setFormContentSections(product.contentSections.map(s => ({
         id: s.id,
@@ -326,7 +329,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setIsAddModalOpen(false);
     setEditingProduct(null);
     setDeletingProduct(null);
-    setDeletingImageProduct(null);
     setShowAddBoxMenu(false);
     if (imagePreviewUrl && imagePreviewUrl.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreviewUrl);
@@ -352,8 +354,8 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       initialContent = JSON.stringify({
         headers: ['Specification / Parameter', 'Standard Value', 'Tolerance / Notes'],
         rows: [
-          ['Motor KV Rating', '1850 KV', '±3% rated speed'],
-          ['Configuration', '12N14P', 'Precision wound'],
+          ['Motor KV Rating', '1850 KV', '+/- 3% rated speed'],
+          ['Configuration', '12N14P', 'Precision wound core'],
           ['Shaft Diameter', '5.0 mm', 'Titanium alloy core'],
           ['Idle Current (10V)', '1.2 A', 'Low friction bearings'],
           ['Max Continuous Power', '920 W (60s)', 'Active cooling design']
@@ -421,16 +423,16 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       return;
     }
 
-    if (formProductType === 'STANDALONE' || formProductType === 'PARENT') {
+    if (formProductType === 'PARENT') {
       if (formParentId) {
-        setFormError(`${formProductType} products cannot have a parent product.`);
+        setFormError('PARENT product series cannot have a parent product.');
         return;
       }
     }
 
     if (formProductType === 'CHILD') {
       if (!formParentId) {
-        setFormError('CHILD products must select a valid PARENT product.');
+        setFormError('CHILD product variants must select a valid PARENT product series.');
         return;
       }
     }
@@ -443,11 +445,11 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       qtyNum = 0;
     } else {
       if (isNaN(priceNum) || priceNum < 0) {
-        setFormError('Valid non-negative price is required for ' + formProductType + ' products.');
+        setFormError('Valid non-negative price is required for CHILD product variants.');
         return;
       }
       if (isNaN(qtyNum) || qtyNum < 0) {
-        setFormError('Valid non-negative quantity is required for ' + formProductType + ' products.');
+        setFormError('Valid non-negative quantity is required for CHILD product variants.');
         return;
       }
     }
@@ -524,23 +526,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     }
   };
 
-  const handleConfirmDeleteImage = async () => {
-    if (!deletingImageProduct) return;
-    setSubmitting(true);
-    setFormError(null);
-    try {
-      await deleteProductImage(token, deletingImageProduct.id);
-      setSuccessMsg(`Image for product "${deletingImageProduct.name}" removed successfully.`);
-      closeModal();
-      await loadProductsList();
-      setTimeout(() => setSuccessMsg(null), 4000);
-    } catch (err: any) {
-      setFormError(err.message || 'Failed to delete product image');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header Bar */}
@@ -550,7 +535,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             CATALOG MANAGEMENT &amp; CONTENT CMS
           </div>
           <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
-            3-Tier Multirotor Products &amp; Content Boxes
+            Product Series &amp; Model Variants
           </h1>
         </div>
         <button onClick={openAddModal} className="btn-stitch-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}>
@@ -591,10 +576,9 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             setTypeFilter(e.target.value);
             setPage(0);
           }}
-          style={{ width: '180px' }}
+          style={{ width: '190px' }}
         >
           <option value="">All Product Types</option>
-          <option value="STANDALONE">STANDALONE</option>
           <option value="PARENT">PARENT (Series)</option>
           <option value="CHILD">CHILD (Variant)</option>
         </select>
@@ -678,12 +662,12 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                       </div>
                     </td>
                     <td>
-                      <span className={`badge-type badge-type-${p.productType?.toLowerCase() || 'standalone'}`}>
-                        {p.productType}
+                      <span className={`badge-type badge-type-${p.productType?.toLowerCase() === 'child' ? 'child' : 'parent'}`}>
+                        {p.productType === 'CHILD' ? 'CHILD VARIANT' : 'PARENT SERIES'}
                       </span>
                       {p.productType === 'CHILD' && p.parentId && (
                         <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginTop: '4px' }}>
-                          Parent ID: #{p.parentId}
+                          Series Parent ID: #{p.parentId}
                         </div>
                       )}
                     </td>
@@ -753,12 +737,13 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       )}
 
       {/* =========================================================================
-          LARGE DESKTOP PRODUCT & CONTENT CMS MODAL
+          LARGE DESKTOP PRODUCT & CONTENT CMS MODAL WITH PROPER SCROLLING
       ========================================================================= */}
       {(isAddModalOpen || editingProduct) && (
         <div
           className="modal-overlay"
           onClick={closeModal}
+          onWheel={(e) => e.stopPropagation()}
           style={{
             position: 'fixed',
             top: 0,
@@ -771,7 +756,9 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
-            padding: '1.5rem',
+            padding: '1.25rem',
+            overflow: 'hidden',
+            overscrollBehavior: 'contain',
           }}
         >
           <div
@@ -789,10 +776,11 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               border: '1px solid var(--color-outline, #e2e8f0)',
               overflow: 'hidden',
               padding: 0,
+              overscrollBehavior: 'contain',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Sticky Modal Header */}
+            {/* Fixed Sticky Header */}
             <div style={{
               padding: '1.25rem 2rem',
               background: '#0f172a',
@@ -817,7 +805,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                   {editingProduct ? `PRODUCT #${editingProduct.id}` : 'NEW PRODUCT'}
                 </span>
                 <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
-                  {editingProduct ? `Edit Product: ${editingProduct.name}` : 'Create New Multirotor Product'}
+                  {editingProduct ? `Edit Product: ${editingProduct.name}` : 'Create New Product'}
                 </h2>
               </div>
 
@@ -899,590 +887,595 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               </div>
             )}
 
-            {/* Scrollable Modal Body */}
-            <form
-              id="product-edit-form"
-              onSubmit={handleSaveProduct}
+            {/* Scrollable Form Body Container with isolated scrolling */}
+            <div
+              ref={scrollContainerRef}
               style={{
                 flex: 1,
                 overflowY: 'auto',
+                overflowX: 'hidden',
+                overscrollBehavior: 'contain',
                 padding: '2rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '2rem',
                 backgroundColor: '#f8fafc',
+                display: 'block',
               }}
             >
-              {activeModalTab === 'details' ? (
-                <>
-                  {/* Section 1: Basic Information & Product Hierarchy */}
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
-                      1. Basic Information &amp; Product Hierarchy
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1.25rem' }}>
-                      <div className="stitch-form-group">
-                        <label className="stitch-label">Product Name *</label>
-                        <input
-                          type="text"
-                          className="stitch-input"
-                          placeholder="e.g. DronesZ FPV Race Motor 2207"
-                          value={formName}
-                          onChange={(e) => setFormName(e.target.value)}
-                          maxLength={255}
-                          required
-                        />
+              <form
+                id="product-edit-form"
+                onSubmit={handleSaveProduct}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2rem',
+                }}
+              >
+                {activeModalTab === 'details' ? (
+                  <>
+                    {/* Section 1: Basic Information & Product Hierarchy */}
+                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
+                        1. Basic Information &amp; Product Hierarchy
                       </div>
 
-                      <div className="stitch-form-group">
-                        <label className="stitch-label">Product Type *</label>
-                        <select
-                          className="stitch-select"
-                          value={formProductType}
-                          onChange={(e) => {
-                            const newType = e.target.value as ProductType;
-                            setFormProductType(newType);
-                            if (newType !== 'CHILD') {
-                              setFormParentId('');
-                            }
-                          }}
-                        >
-                          <option value="STANDALONE">STANDALONE (Independent)</option>
-                          <option value="PARENT">PARENT (Series Header)</option>
-                          <option value="CHILD">CHILD (Variant of Series)</option>
-                        </select>
-                      </div>
-
-                      <div className="stitch-form-group">
-                        <label className="stitch-label">Category</label>
-                        <select
-                          className="stitch-select"
-                          value={formCategoryId}
-                          onChange={(e) => setFormCategoryId(e.target.value)}
-                        >
-                          <option value="">None (Uncategorized)</option>
-                          {categories.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* CHILD parent assignment */}
-                    {formProductType === 'CHILD' && (
-                      <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '0.5rem', padding: '1rem', marginTop: '1.25rem' }}>
-                        <label className="stitch-label" style={{ color: '#0369a1', marginBottom: '0.4rem' }}>
-                          Select Parent Series * (Mandatory for CHILD variant)
-                        </label>
-                        <select
-                          className="stitch-select"
-                          value={formParentId}
-                          onChange={(e) => setFormParentId(e.target.value)}
-                          required
-                        >
-                          <option value="">-- Choose Parent Product Series --</option>
-                          {parentProducts
-                            .filter((p) => !editingProduct || p.id !== editingProduct.id)
-                            .map((p) => (
-                              <option key={p.id} value={p.id}>
-                                #{p.id}: {p.name}
-                              </option>
-                            ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Section 2: Pricing, Inventory & Availability */}
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
-                      2. Pricing, Inventory &amp; Status
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: formProductType === 'PARENT' ? '1fr' : '1fr 1fr 1fr', gap: '1.25rem' }}>
-                      {formProductType !== 'PARENT' && (
-                        <>
-                          <div className="stitch-form-group">
-                            <label className="stitch-label">Unit Price (₹) *</label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              className="stitch-input"
-                              placeholder="0.00"
-                              value={formPrice}
-                              onChange={(e) => setFormPrice(e.target.value)}
-                              required
-                            />
-                          </div>
-
-                          <div className="stitch-form-group">
-                            <label className="stitch-label">Inventory Quantity *</label>
-                            <input
-                              type="number"
-                              min="0"
-                              className="stitch-input"
-                              placeholder="0"
-                              value={formQuantity}
-                              onChange={(e) => setFormQuantity(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </>
-                      )}
-
-                      <div className="stitch-form-group">
-                        <label className="stitch-label">Availability Status *</label>
-                        <select
-                          className="stitch-select"
-                          value={formStatus}
-                          onChange={(e) => setFormStatus(e.target.value as ProductStatus)}
-                        >
-                          <option value="AVAILABLE">AVAILABLE (In Stock / Active)</option>
-                          <option value="OUT_OF_STOCK">OUT OF STOCK</option>
-                          <option value="COMING_SOON">COMING SOON</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Section 3: Delivery, Warranty, Specifications & Tax */}
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
-                      3. Delivery, Warranty, Specification Grade &amp; GST/Tax
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                      <div className="stitch-form-group">
-                        <label className="stitch-label">Dispatch / Delivery Time</label>
-                        <input
-                          type="text"
-                          className="stitch-input"
-                          placeholder="e.g. 24-48 Hours"
-                          value={formDispatchTime}
-                          onChange={(e) => setFormDispatchTime(e.target.value)}
-                        />
-                        <span style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>Shown on product page under product specimen</span>
-                      </div>
-
-                      <div className="stitch-form-group">
-                        <label className="stitch-label">Warranty</label>
-                        <input
-                          type="text"
-                          className="stitch-input"
-                          placeholder="e.g. 1-Yr Factory"
-                          value={formWarranty}
-                          onChange={(e) => setFormWarranty(e.target.value)}
-                        />
-                        <span style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>Warranty badge details</span>
-                      </div>
-
-                      <div className="stitch-form-group">
-                        <label className="stitch-label">Grade / Specification</label>
-                        <input
-                          type="text"
-                          className="stitch-input"
-                          placeholder="e.g. Aero Precision"
-                          value={formGrade}
-                          onChange={(e) => setFormGrade(e.target.value)}
-                        />
-                        <span style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>Material / build qualification</span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem', alignItems: 'center', background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <input
-                          type="checkbox"
-                          id="taxInclusiveCheck"
-                          checked={formTaxInclusive}
-                          onChange={(e) => setFormTaxInclusive(e.target.checked)}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                        />
-                        <label htmlFor="taxInclusiveCheck" style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', cursor: 'pointer' }}>
-                          GST / Taxes Included in Price
-                        </label>
-                      </div>
-
-                      <div className="stitch-form-group" style={{ margin: 0 }}>
-                        <label className="stitch-label" style={{ fontSize: '12px' }}>Custom Tax / GST Display Label</label>
-                        <input
-                          type="text"
-                          className="stitch-input"
-                          placeholder="e.g. GST & Taxes Included or Excl. 18% GST"
-                          value={formTaxNote}
-                          onChange={(e) => setFormTaxNote(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Section 4: Product Image & Overview */}
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
-                      4. Product Image &amp; Overview Description
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem' }}>
-                      {/* Image Upload Zone */}
-                      <div>
-                        <label className="stitch-label" style={{ marginBottom: '0.5rem' }}>Product Photo (Stored in Database)</label>
-                        <div style={{
-                          border: '2px dashed #cbd5e1',
-                          borderRadius: '0.5rem',
-                          padding: '1rem',
-                          textAlign: 'center',
-                          background: '#f8fafc',
-                          position: 'relative'
-                        }}>
-                          {imagePreviewUrl ? (
-                            <div style={{ position: 'relative' }}>
-                              <img
-                                src={imagePreviewUrl}
-                                alt="Product Preview"
-                                style={{ width: '100%', height: '160px', objectFit: 'contain', borderRadius: '4px', background: '#0f172a' }}
-                              />
-                              <button
-                                type="button"
-                                onClick={clearSelectedImage}
-                                style={{
-                                  position: 'absolute',
-                                  top: '6px',
-                                  right: '6px',
-                                  background: 'rgba(239, 68, 68, 0.9)',
-                                  color: '#ffffff',
-                                  border: 'none',
-                                  borderRadius: '50%',
-                                  width: '24px',
-                                  height: '24px',
-                                  cursor: 'pointer',
-                                  fontWeight: 800,
-                                }}
-                                title="Remove Image"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          ) : (
-                            <div style={{ padding: '1.5rem 0.5rem' }}>
-                              <CloudUploadIcon size={36} />
-                              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '0.5rem' }}>
-                                Drag &amp; drop or click to upload
-                              </div>
-                            </div>
-                          )}
-
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1.25rem' }}>
+                        <div className="stitch-form-group">
+                          <label className="stitch-label">Product Name *</label>
                           <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp,image/gif"
-                            onChange={handleImageFileChange}
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              opacity: 0,
-                              cursor: 'pointer',
-                              display: imagePreviewUrl ? 'none' : 'block'
-                            }}
+                            type="text"
+                            className="stitch-input"
+                            placeholder="e.g. Motors Series or Motor 2207 1850KV"
+                            value={formName}
+                            onChange={(e) => setFormName(e.target.value)}
+                            maxLength={255}
+                            required
                           />
                         </div>
-                        {imageInfo && (
-                          <div style={{ fontSize: '11px', color: '#10b981', marginTop: '4px', fontWeight: 600 }}>
-                            Optimized: {imageInfo.optimizedSize} ({imageInfo.type})
-                          </div>
-                        )}
-                        {fileError && (
-                          <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px' }}>
-                            {fileError}
-                          </div>
-                        )}
-                      </div>
 
-                      {/* Overview Description */}
-                      <div className="stitch-form-group">
-                        <label className="stitch-label">Overview Description</label>
-                        <textarea
-                          className="stitch-textarea"
-                          rows={7}
-                          placeholder="Provide a general summary of the drone component or airframe..."
-                          value={formDescription}
-                          onChange={(e) => setFormDescription(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                /* =========================================================================
-                    TAB 2: DYNAMIC CONTENT BOXES CMS (WORD & EXCEL)
-                ========================================================================= */
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                      <div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                          Dynamic Product Content Boxes
-                        </h3>
-                        <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
-                          Add configurable content sections that will be rendered directly on the public product page in ordered sequence.
-                        </p>
-                      </div>
-
-                      <div style={{ position: 'relative' }}>
-                        <button
-                          type="button"
-                          onClick={() => setShowAddBoxMenu(!showAddBoxMenu)}
-                          className="btn-stitch-primary"
-                          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0.6rem 1.25rem' }}
-                        >
-                          + ADD BOX ▾
-                        </button>
-
-                        {showAddBoxMenu && (
-                          <div style={{
-                            position: 'absolute',
-                            right: 0,
-                            top: '100%',
-                            marginTop: '6px',
-                            background: '#ffffff',
-                            borderRadius: '8px',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-                            border: '1px solid #cbd5e1',
-                            width: '260px',
-                            zIndex: 100,
-                            overflow: 'hidden',
-                          }}>
-                            <button
-                              type="button"
-                              onClick={() => handleAddBox('WORD')}
-                              style={{
-                                width: '100%',
-                                padding: '12px 14px',
-                                border: 'none',
-                                background: '#ffffff',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                borderBottom: '1px solid #f1f5f9',
-                              }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ background: '#dbeafe', color: '#1d4ed8', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
-                                  WORD
-                                </span>
-                                <strong style={{ fontSize: '13px', color: '#0f172a' }}>Rich Text / Bullets</strong>
-                              </div>
-                              <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                                Paragraphs, formatting, headings &amp; bullet list items.
-                              </span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => handleAddBox('EXCEL')}
-                              style={{
-                                width: '100%',
-                                padding: '12px 14px',
-                                border: 'none',
-                                background: '#ffffff',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                flexDirection: 'column',
-                              }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ background: '#ccfbf1', color: '#0f766e', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
-                                  EXCEL
-                                </span>
-                                <strong style={{ fontSize: '13px', color: '#0f172a' }}>Spreadsheet Table</strong>
-                              </div>
-                              <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                                Structured rows &amp; columns matrix for specs &amp; benchmarks.
-                              </span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {formContentSections.length === 0 ? (
-                      <div style={{
-                        padding: '3rem',
-                        textAlign: 'center',
-                        background: '#f8fafc',
-                        border: '2px dashed #cbd5e1',
-                        borderRadius: '0.5rem',
-                        marginTop: '1rem',
-                      }}>
-                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#334155' }}>
-                          No Content Boxes Added Yet
-                        </div>
-                        <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '400px', margin: '0.5rem auto 1.5rem auto' }}>
-                          Add formatted rich text (WORD) or structured spreadsheets (EXCEL) to customize technical details for this drone product.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setShowAddBoxMenu(true)}
-                          className="btn-stitch-primary"
-                          style={{ padding: '0.5rem 1.25rem', fontSize: '13px' }}
-                        >
-                          + ADD FIRST BOX
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.25rem' }}>
-                        {formContentSections.map((section, idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              border: section.enabled !== false ? '1px solid #cbd5e1' : '1px dashed #cbd5e1',
-                              borderRadius: '0.65rem',
-                              background: section.enabled !== false ? '#ffffff' : '#f8fafc',
-                              opacity: section.enabled !== false ? 1 : 0.75,
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
-                              overflow: 'hidden',
+                        <div className="stitch-form-group">
+                          <label className="stitch-label">Product Hierarchy *</label>
+                          <select
+                            className="stitch-select"
+                            value={formProductType}
+                            onChange={(e) => {
+                              const newType = e.target.value as ProductType;
+                              setFormProductType(newType);
+                              if (newType !== 'CHILD') {
+                                setFormParentId('');
+                              }
                             }}
                           >
-                            {/* Box Header Toolbar */}
-                            <div style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              padding: '10px 16px',
-                              background: section.enabled !== false ? '#f1f5f9' : '#e2e8f0',
-                              borderBottom: '1px solid #e2e8f0',
-                              flexWrap: 'wrap',
-                              gap: '8px',
-                            }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 300px' }}>
-                                <span style={{
-                                  fontSize: '11px',
-                                  fontWeight: 800,
-                                  background: '#334155',
-                                  color: '#ffffff',
-                                  padding: '2px 6px',
-                                  borderRadius: '4px',
-                                }}>
-                                  #{idx + 1}
-                                </span>
+                            <option value="PARENT">PARENT (Series Header / Category Line)</option>
+                            <option value="CHILD">CHILD (Variant Model under Parent Series)</option>
+                          </select>
+                        </div>
 
-                                <span style={{
-                                  fontSize: '11px',
-                                  fontWeight: 800,
-                                  background: section.type === 'WORD' ? '#dbeafe' : '#ccfbf1',
-                                  color: section.type === 'WORD' ? '#1d4ed8' : '#0f766e',
-                                  padding: '2px 8px',
-                                  borderRadius: '4px',
-                                }}>
-                                  {section.type} BOX
-                                </span>
-
-                                <input
-                                  type="text"
-                                  value={section.title}
-                                  onChange={(e) => handleUpdateBox(idx, { title: e.target.value })}
-                                  placeholder="Enter Box Heading / Title..."
-                                  style={{
-                                    flex: 1,
-                                    padding: '5px 8px',
-                                    border: '1px solid #cbd5e1',
-                                    borderRadius: '4px',
-                                    fontSize: '13px',
-                                    fontWeight: 700,
-                                    color: '#0f172a',
-                                    background: '#ffffff',
-                                  }}
-                                  required
-                                />
-                              </div>
-
-                              {/* Action controls: Order, Toggle, Delete */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <button
-                                  type="button"
-                                  disabled={idx === 0}
-                                  onClick={() => handleMoveBox(idx, 'up')}
-                                  title="Move Up"
-                                  style={{ ...boxControlBtnStyle, opacity: idx === 0 ? 0.4 : 1 }}
-                                >
-                                  ▲ Up
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={idx === formContentSections.length - 1}
-                                  onClick={() => handleMoveBox(idx, 'down')}
-                                  title="Move Down"
-                                  style={{ ...boxControlBtnStyle, opacity: idx === formContentSections.length - 1 ? 0.4 : 1 }}
-                                >
-                                  ▼ Down
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleBox(idx)}
-                                  style={{
-                                    ...boxControlBtnStyle,
-                                    background: section.enabled !== false ? '#ecfdf5' : '#fef2f2',
-                                    color: section.enabled !== false ? '#065f46' : '#991b1b',
-                                    borderColor: section.enabled !== false ? '#a7f3d0' : '#fecaca',
-                                    fontWeight: 700,
-                                  }}
-                                >
-                                  {section.enabled !== false ? '● Enabled' : '○ Disabled'}
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteBox(idx)}
-                                  title="Delete Box"
-                                  style={{
-                                    ...boxControlBtnStyle,
-                                    background: '#fee2e2',
-                                    color: '#991b1b',
-                                    borderColor: '#f87171',
-                                    fontWeight: 700,
-                                  }}
-                                >
-                                  🗑 Delete
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Box Editor Body */}
-                            <div style={{ padding: '1rem' }}>
-                              {section.type === 'WORD' ? (
-                                <RichTextEditor
-                                  value={section.content}
-                                  onChange={(val) => handleUpdateBox(idx, { content: val })}
-                                />
-                              ) : (
-                                <TableEditor
-                                  value={section.content}
-                                  onChange={(val) => handleUpdateBox(idx, { content: val })}
-                                />
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                        <div className="stitch-form-group">
+                          <label className="stitch-label">Category</label>
+                          <select
+                            className="stitch-select"
+                            value={formCategoryId}
+                            onChange={(e) => setFormCategoryId(e.target.value)}
+                          >
+                            <option value="">None (Uncategorized)</option>
+                            {categories.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </form>
 
-            {/* Sticky Modal Footer Actions */}
+                      {/* CHILD parent series assignment */}
+                      {formProductType === 'CHILD' && (
+                        <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '0.5rem', padding: '1rem', marginTop: '1.25rem' }}>
+                          <label className="stitch-label" style={{ color: '#0369a1', marginBottom: '0.4rem' }}>
+                            Select Parent Product Series * (Required for CHILD model variant)
+                          </label>
+                          <select
+                            className="stitch-select"
+                            value={formParentId}
+                            onChange={(e) => setFormParentId(e.target.value)}
+                            required
+                          >
+                            <option value="">-- Choose Parent Series --</option>
+                            {parentProducts
+                              .filter((p) => !editingProduct || p.id !== editingProduct.id)
+                              .map((p) => (
+                                <option key={p.id} value={p.id}>
+                                  #{p.id}: {p.name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Section 2: Pricing, Inventory & Availability */}
+                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
+                        2. Pricing, Inventory &amp; Status
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: formProductType === 'PARENT' ? '1fr' : '1fr 1fr 1fr', gap: '1.25rem' }}>
+                        {formProductType === 'CHILD' && (
+                          <>
+                            <div className="stitch-form-group">
+                              <label className="stitch-label">Unit Price (₹) *</label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                className="stitch-input"
+                                placeholder="0.00"
+                                value={formPrice}
+                                onChange={(e) => setFormPrice(e.target.value)}
+                                required
+                              />
+                            </div>
+
+                            <div className="stitch-form-group">
+                              <label className="stitch-label">Inventory Quantity *</label>
+                              <input
+                                type="number"
+                                min="0"
+                                className="stitch-input"
+                                placeholder="0"
+                                value={formQuantity}
+                                onChange={(e) => setFormQuantity(e.target.value)}
+                                required
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        <div className="stitch-form-group">
+                          <label className="stitch-label">Availability Status *</label>
+                          <select
+                            className="stitch-select"
+                            value={formStatus}
+                            onChange={(e) => setFormStatus(e.target.value as ProductStatus)}
+                          >
+                            <option value="AVAILABLE">AVAILABLE (Active / In Stock)</option>
+                            <option value="OUT_OF_STOCK">OUT OF STOCK</option>
+                            <option value="COMING_SOON">COMING SOON</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 3: Delivery, Warranty, Specifications & Tax */}
+                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
+                        3. Delivery, Warranty, Specification Grade &amp; GST/Tax
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                        <div className="stitch-form-group">
+                          <label className="stitch-label">Dispatch / Delivery Time</label>
+                          <input
+                            type="text"
+                            className="stitch-input"
+                            placeholder="e.g. 24-48 Hours"
+                            value={formDispatchTime}
+                            onChange={(e) => setFormDispatchTime(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="stitch-form-group">
+                          <label className="stitch-label">Warranty</label>
+                          <input
+                            type="text"
+                            className="stitch-input"
+                            placeholder="e.g. 1-Yr Factory"
+                            value={formWarranty}
+                            onChange={(e) => setFormWarranty(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="stitch-form-group">
+                          <label className="stitch-label">Grade / Specification</label>
+                          <input
+                            type="text"
+                            className="stitch-input"
+                            placeholder="e.g. Aero Precision"
+                            value={formGrade}
+                            onChange={(e) => setFormGrade(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem', alignItems: 'center', background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <input
+                            type="checkbox"
+                            id="taxInclusiveCheck"
+                            checked={formTaxInclusive}
+                            onChange={(e) => setFormTaxInclusive(e.target.checked)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                          />
+                          <label htmlFor="taxInclusiveCheck" style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', cursor: 'pointer' }}>
+                            GST / Taxes Included in Price
+                          </label>
+                        </div>
+
+                        <div className="stitch-form-group" style={{ margin: 0 }}>
+                          <label className="stitch-label" style={{ fontSize: '12px' }}>Custom Tax / GST Display Label</label>
+                          <input
+                            type="text"
+                            className="stitch-input"
+                            placeholder="e.g. GST & Taxes Included or Excl. 18% GST"
+                            value={formTaxNote}
+                            onChange={(e) => setFormTaxNote(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 4: Product Image & Overview */}
+                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
+                        4. Product Image &amp; Overview Description
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem' }}>
+                        {/* Image Upload Zone */}
+                        <div>
+                          <label className="stitch-label" style={{ marginBottom: '0.5rem' }}>Product Photo (Stored in Database)</label>
+                          <div style={{
+                            border: '2px dashed #cbd5e1',
+                            borderRadius: '0.5rem',
+                            padding: '1rem',
+                            textAlign: 'center',
+                            background: '#f8fafc',
+                            position: 'relative'
+                          }}>
+                            {imagePreviewUrl ? (
+                              <div style={{ position: 'relative' }}>
+                                <img
+                                  src={imagePreviewUrl}
+                                  alt="Product Preview"
+                                  style={{ width: '100%', height: '160px', objectFit: 'contain', borderRadius: '4px', background: '#0f172a' }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={clearSelectedImage}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '6px',
+                                    right: '6px',
+                                    background: 'rgba(239, 68, 68, 0.9)',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '24px',
+                                    height: '24px',
+                                    cursor: 'pointer',
+                                    fontWeight: 800,
+                                  }}
+                                  title="Remove Image"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <div style={{ padding: '1.5rem 0.5rem' }}>
+                                <CloudUploadIcon size={36} />
+                                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '0.5rem' }}>
+                                  Drag &amp; drop or click to upload
+                                </div>
+                              </div>
+                            )}
+
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/gif"
+                              onChange={handleImageFileChange}
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                opacity: 0,
+                                cursor: 'pointer',
+                                display: imagePreviewUrl ? 'none' : 'block'
+                              }}
+                            />
+                          </div>
+                          {imageInfo && (
+                            <div style={{ fontSize: '11px', color: '#10b981', marginTop: '4px', fontWeight: 600 }}>
+                              Optimized: {imageInfo.optimizedSize} ({imageInfo.type})
+                            </div>
+                          )}
+                          {fileError && (
+                            <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px' }}>
+                              {fileError}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Overview Description */}
+                        <div className="stitch-form-group">
+                          <label className="stitch-label">Overview Description</label>
+                          <textarea
+                            className="stitch-textarea"
+                            rows={7}
+                            placeholder="Provide a general overview of the product or series..."
+                            value={formDescription}
+                            onChange={(e) => setFormDescription(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* =========================================================================
+                      TAB 2: DYNAMIC CONTENT BOXES CMS (WORD & EXCEL)
+                  ========================================================================= */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div>
+                          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                            Dynamic Product Content Boxes
+                          </h3>
+                          <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
+                            Add configurable content sections that will be rendered directly on the public product page in ordered sequence.
+                          </p>
+                        </div>
+
+                        <div style={{ position: 'relative' }}>
+                          <button
+                            type="button"
+                            onClick={() => setShowAddBoxMenu(!showAddBoxMenu)}
+                            className="btn-stitch-primary"
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0.6rem 1.25rem' }}
+                          >
+                            + ADD BOX ▾
+                          </button>
+
+                          {showAddBoxMenu && (
+                            <div style={{
+                              position: 'absolute',
+                              right: 0,
+                              top: '100%',
+                              marginTop: '6px',
+                              background: '#ffffff',
+                              borderRadius: '8px',
+                              boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                              border: '1px solid #cbd5e1',
+                              width: '260px',
+                              zIndex: 100,
+                              overflow: 'hidden',
+                            }}>
+                              <button
+                                type="button"
+                                onClick={() => handleAddBox('WORD')}
+                                style={{
+                                  width: '100%',
+                                  padding: '12px 14px',
+                                  border: 'none',
+                                  background: '#ffffff',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  borderBottom: '1px solid #f1f5f9',
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ background: '#dbeafe', color: '#1d4ed8', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
+                                    WORD
+                                  </span>
+                                  <strong style={{ fontSize: '13px', color: '#0f172a' }}>Rich Text / Bullets</strong>
+                                </div>
+                                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                                  Paragraphs, formatting, headings &amp; bullet list items.
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleAddBox('EXCEL')}
+                                style={{
+                                  width: '100%',
+                                  padding: '12px 14px',
+                                  border: 'none',
+                                  background: '#ffffff',
+                                  textAlign: 'left',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ background: '#ccfbf1', color: '#0f766e', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
+                                    EXCEL
+                                  </span>
+                                  <strong style={{ fontSize: '13px', color: '#0f172a' }}>Spreadsheet Table</strong>
+                                </div>
+                                <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                                  Structured rows &amp; columns matrix for specs &amp; benchmarks.
+                                </span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {formContentSections.length === 0 ? (
+                        <div style={{
+                          padding: '3rem',
+                          textAlign: 'center',
+                          background: '#f8fafc',
+                          border: '2px dashed #cbd5e1',
+                          borderRadius: '0.5rem',
+                          marginTop: '1rem',
+                        }}>
+                          <div style={{ fontSize: '15px', fontWeight: 700, color: '#334155' }}>
+                            No Content Boxes Added Yet
+                          </div>
+                          <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '400px', margin: '0.5rem auto 1.5rem auto' }}>
+                            Add formatted rich text (WORD) or structured spreadsheets (EXCEL) to customize technical details for this drone product.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setShowAddBoxMenu(true)}
+                            className="btn-stitch-primary"
+                            style={{ padding: '0.5rem 1.25rem', fontSize: '13px' }}
+                          >
+                            + ADD FIRST BOX
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.25rem' }}>
+                          {formContentSections.map((section, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                border: section.enabled !== false ? '1px solid #cbd5e1' : '1px dashed #cbd5e1',
+                                borderRadius: '0.65rem',
+                                background: section.enabled !== false ? '#ffffff' : '#f8fafc',
+                                opacity: section.enabled !== false ? 1 : 0.75,
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {/* Box Header Toolbar */}
+                              <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '10px 16px',
+                                background: section.enabled !== false ? '#f1f5f9' : '#e2e8f0',
+                                borderBottom: '1px solid #e2e8f0',
+                                flexWrap: 'wrap',
+                                gap: '8px',
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 300px' }}>
+                                  <span style={{
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    background: '#334155',
+                                    color: '#ffffff',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                  }}>
+                                    #{idx + 1}
+                                  </span>
+
+                                  <span style={{
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    background: section.type === 'WORD' ? '#dbeafe' : '#ccfbf1',
+                                    color: section.type === 'WORD' ? '#1d4ed8' : '#0f766e',
+                                    padding: '2px 8px',
+                                    borderRadius: '4px',
+                                  }}>
+                                    {section.type} BOX
+                                  </span>
+
+                                  <input
+                                    type="text"
+                                    value={section.title}
+                                    onChange={(e) => handleUpdateBox(idx, { title: e.target.value })}
+                                    placeholder="Enter Box Heading / Title..."
+                                    style={{
+                                      flex: 1,
+                                      padding: '5px 8px',
+                                      border: '1px solid #cbd5e1',
+                                      borderRadius: '4px',
+                                      fontSize: '13px',
+                                      fontWeight: 700,
+                                      color: '#0f172a',
+                                      background: '#ffffff',
+                                    }}
+                                    required
+                                  />
+                                </div>
+
+                                {/* Action controls: Order, Toggle, Delete */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <button
+                                    type="button"
+                                    disabled={idx === 0}
+                                    onClick={() => handleMoveBox(idx, 'up')}
+                                    title="Move Up"
+                                    style={{ ...boxControlBtnStyle, opacity: idx === 0 ? 0.4 : 1 }}
+                                  >
+                                    ▲ Up
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={idx === formContentSections.length - 1}
+                                    onClick={() => handleMoveBox(idx, 'down')}
+                                    title="Move Down"
+                                    style={{ ...boxControlBtnStyle, opacity: idx === formContentSections.length - 1 ? 0.4 : 1 }}
+                                  >
+                                    ▼ Down
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleBox(idx)}
+                                    style={{
+                                      ...boxControlBtnStyle,
+                                      background: section.enabled !== false ? '#ecfdf5' : '#fef2f2',
+                                      color: section.enabled !== false ? '#065f46' : '#991b1b',
+                                      borderColor: section.enabled !== false ? '#a7f3d0' : '#fecaca',
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {section.enabled !== false ? '● Enabled' : '○ Disabled'}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteBox(idx)}
+                                    title="Delete Box"
+                                    style={{
+                                      ...boxControlBtnStyle,
+                                      background: '#fee2e2',
+                                      color: '#991b1b',
+                                      borderColor: '#f87171',
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    🗑 Delete
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Box Editor Body */}
+                              <div style={{ padding: '1rem' }}>
+                                {section.type === 'WORD' ? (
+                                  <RichTextEditor
+                                    value={section.content}
+                                    onChange={(val) => handleUpdateBox(idx, { content: val })}
+                                  />
+                                ) : (
+                                  <TableEditor
+                                    value={section.content}
+                                    onChange={(val) => handleUpdateBox(idx, { content: val })}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </form>
+            </div>
+
+            {/* Fixed Sticky Modal Footer Actions */}
             <div style={{
               padding: '1rem 2rem',
               background: '#ffffff',

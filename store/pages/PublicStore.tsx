@@ -378,7 +378,6 @@ export const PublicStore: React.FC = () => {
   };
 
   const parentProducts = products.filter((p) => p.productType === 'PARENT');
-  const standaloneProducts = products.filter((p) => p.productType === 'STANDALONE');
 
   const filteredChildProducts = childProducts.filter((c) => {
     const matchesSearch = !search || c.name.toLowerCase().includes(search.toLowerCase()) || (c.description && c.description.toLowerCase().includes(search.toLowerCase()));
@@ -1119,97 +1118,15 @@ export const PublicStore: React.FC = () => {
               </section>
             )}
 
-            {/* Standalone Components Section */}
-            <section>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--color-outline)', paddingBottom: '1rem' }}>
-                <h2 style={{ fontSize: '1.75rem', fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--color-on-surface)' }}>
-                  Standalone Components
-                </h2>
+            {loading ? (
+              <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
+                Loading DronesZ storefront catalog...
               </div>
-
-              {loading ? (
-                <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-                  Loading DronesZ storefront catalog...
-                </div>
-              ) : standaloneProducts.length === 0 ? (
-                <div style={{ background: '#fff', border: '1px solid var(--color-outline)', padding: '4rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '0.5rem' }}>
-                  No standalone items match your search query.
-                </div>
-              ) : (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-                  gap: '1.5rem'
-                }}>
-                  {standaloneProducts.map((p) => (
-                    <div
-                      key={p.id}
-                      className="stitch-product-card"
-                      onClick={() => navigateToProductDetail(p.id)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className="image-void-stage">
-                        {p.image ? (
-                          <img src={getProductImageUrl(p.image)!} alt={p.name} className="product-img" />
-                        ) : (
-                          <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: '#94a3b8', textTransform: 'uppercase' }}>
-                            DRONESZ SPECIMEN
-                          </span>
-                        )}
-                        <div style={{ position: 'absolute', top: '12px', left: '12px' }}>
-                          <span className="badge-category">STANDALONE</span>
-                        </div>
-                      </div>
-
-                      <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                        <h4 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-on-surface)', marginBottom: '0.3rem', lineHeight: 1.3 }}>
-                          {p.name}
-                        </h4>
-
-                        <div style={{
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          color: p.status === 'AVAILABLE' ? 'var(--color-tertiary)' : (p.status === 'OUT_OF_STOCK' ? 'var(--color-error)' : 'var(--color-amber)'),
-                          marginBottom: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}>
-                          {p.status.replace('_', ' ')}
-                        </div>
-
-                        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: 'auto', marginBottom: '1rem' }}>
-                          ₹{p.price.toFixed(2)}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
-                          <button
-                            disabled={p.status !== 'AVAILABLE' || addingToCartId === p.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddToCart(p);
-                            }}
-                            className="btn-stitch-primary"
-                            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
-                          >
-                            <CartIcon size={18} />
-                            {addingToCartId === p.id ? 'Adding...' : (p.status === 'AVAILABLE' ? 'Add to Cart' : 'Out of Stock')}
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigateToProductDetail(p.id);
-                            }}
-                            className="btn-stitch-ghost"
-                            title="View Specifications"
-                          >
-                            Specs
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
+            ) : parentProducts.length === 0 ? (
+              <div style={{ background: '#fff', border: '1px solid var(--color-outline)', padding: '4rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '0.5rem' }}>
+                No product series found matching your search query.
+              </div>
+            ) : null}
           </div>
         )}
       </main>
