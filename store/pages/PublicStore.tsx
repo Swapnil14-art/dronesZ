@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ProductDto,
+  ProductContentSectionDto,
   fetchPublicProducts,
   fetchPublicChildProducts,
   fetchPublicProductById,
@@ -10,6 +11,112 @@ import { useUserAuth } from '../context/UserAuthContext';
 import { UserAuthModal } from '../components/UserAuthModal';
 import { StitchHeader } from '../components/StitchHeader';
 import { StitchFooter } from '../components/StitchFooter';
+
+const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({ section }) => {
+  if (section.type === 'WORD') {
+    return (
+      <div style={{
+        background: '#ffffff',
+        border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
+        padding: '2rem',
+        borderRadius: '0.75rem',
+        marginBottom: '2rem',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflowWrap: 'break-word',
+      }}>
+        <h3 style={{
+          fontSize: '1.25rem',
+          fontWeight: 700,
+          color: 'var(--color-on-surface, #0f172a)',
+          marginBottom: '1rem',
+          paddingBottom: '0.75rem',
+          borderBottom: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
+        }}>
+          {section.title}
+        </h3>
+        <div
+          className="word-content-box"
+          style={{
+            fontSize: '1rem',
+            color: 'var(--color-on-surface-variant, #475569)',
+            lineHeight: 1.7,
+          }}
+          dangerouslySetInnerHTML={{ __html: section.content }}
+        />
+      </div>
+    );
+  }
+
+  // EXCEL Table Box
+  let tableData: { headers: string[]; rows: string[][] } = { headers: [], rows: [] };
+  try {
+    if (section.content && section.content.trim()) {
+      tableData = JSON.parse(section.content);
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  return (
+    <div style={{
+      background: '#ffffff',
+      border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
+      padding: '2rem',
+      borderRadius: '0.75rem',
+      marginBottom: '2rem',
+      width: '100%',
+      boxSizing: 'border-box',
+      overflowWrap: 'break-word',
+    }}>
+      <h3 style={{
+        fontSize: '1.25rem',
+        fontWeight: 700,
+        color: 'var(--color-on-surface, #0f172a)',
+        marginBottom: '1.25rem',
+        paddingBottom: '0.75rem',
+        borderBottom: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
+      }}>
+        {section.title}
+      </h3>
+
+      <div style={{ overflowX: 'auto', width: '100%' }}>
+        <table style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          fontSize: '14px',
+          textAlign: 'left',
+        }}>
+          {tableData.headers && tableData.headers.length > 0 && (
+            <thead>
+              <tr style={{ background: 'var(--color-surface-container-low, #f8fafc)', borderBottom: '2px solid var(--color-outline, #e2e8f0)' }}>
+                {tableData.headers.map((header, idx) => (
+                  <th key={idx} style={{ padding: '0.85rem 1rem', fontWeight: 700, color: 'var(--color-on-surface, #0f172a)' }}>
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          )}
+          <tbody>
+            {tableData.rows && tableData.rows.map((row, rIdx) => (
+              <tr key={rIdx} style={{
+                borderBottom: '1px solid var(--color-outline, #e2e8f0)',
+                background: rIdx % 2 === 1 ? 'rgba(248, 250, 252, 0.5)' : '#ffffff'
+              }}>
+                {row.map((cell, cIdx) => (
+                  <td key={cIdx} style={{ padding: '0.75rem 1rem', color: 'var(--color-on-surface-variant, #475569)' }}>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
 
 const CartIcon = ({ size = 18, style }: { size?: number; style?: React.CSSProperties }) => (
   <svg
@@ -461,15 +568,15 @@ export const PublicStore: React.FC = () => {
                 }}>
                   <div style={{ background: 'var(--color-surface-container-low)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline)' }}>
                     <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Dispatched</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>24-48 Hours</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>{activeProductDetail.dispatchTime || '24-48 Hours'}</div>
                   </div>
                   <div style={{ background: 'var(--color-surface-container-low)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline)' }}>
                     <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Warranty</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>1-Yr Factory</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>{activeProductDetail.warranty || '1-Yr Factory'}</div>
                   </div>
                   <div style={{ background: 'var(--color-surface-container-low)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline)' }}>
                     <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Grade</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>Aero Precision</div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>{activeProductDetail.grade || 'Aero Precision'}</div>
                   </div>
                 </div>
               </div>
@@ -531,7 +638,7 @@ export const PublicStore: React.FC = () => {
                       ₹{activeProductDetail.price.toFixed(2)}
                     </span>
                     <span style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>
-                      (GST &amp; Taxes Included)
+                      ({activeProductDetail.taxNote || (activeProductDetail.taxInclusive !== false ? 'GST & Taxes Included' : 'Excl. Taxes')})
                     </span>
                   </div>
                 </div>
@@ -757,6 +864,28 @@ export const PublicStore: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Dynamic Product Content Boxes (WORD & EXCEL) */}
+            {activeProductDetail.contentSections && activeProductDetail.contentSections.filter(s => s.enabled !== false).length > 0 && (
+              <div style={{ marginTop: '1rem', marginBottom: '4rem', width: '100%' }}>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  color: 'var(--color-primary)',
+                  textTransform: 'uppercase',
+                  marginBottom: '1.25rem'
+                }}>
+                  Product Documentation &amp; Technical Reports
+                </div>
+                {activeProductDetail.contentSections
+                  .filter(s => s.enabled !== false)
+                  .sort((a, b) => a.displayOrder - b.displayOrder)
+                  .map((sec) => (
+                    <RenderContentSection key={sec.id} section={sec} />
+                  ))}
+              </div>
+            )}
           </div>
         ) : activeParent ? (
           /* VIEW 2: DEDICATED PARENT SERIES WEBPAGE (/store/parent_name) */

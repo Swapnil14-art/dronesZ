@@ -3,8 +3,10 @@ package com.dronestore.system.dto;
 import com.dronestore.system.entity.ProductStatus;
 import com.dronestore.system.entity.ProductType;
 
+import javax.validation.Valid;
 import javax.validation.constraints.*;
 import java.math.BigDecimal;
+import java.util.List;
 
 public class ProductRequest {
 
@@ -31,6 +33,19 @@ public class ProductRequest {
     private Long categoryId;
 
     private String image;
+
+    private String dispatchTime;
+
+    private String warranty;
+
+    private String grade;
+
+    private Boolean taxInclusive;
+
+    private String taxNote;
+
+    @Valid
+    private List<ProductContentSectionRequest> contentSections;
 
     public ProductRequest() {
     }
@@ -105,5 +120,53 @@ public class ProductRequest {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public String getDispatchTime() {
+        return dispatchTime;
+    }
+
+    public void setDispatchTime(String dispatchTime) {
+        this.dispatchTime = dispatchTime;
+    }
+
+    public String getWarranty() {
+        return warranty;
+    }
+
+    public void setWarranty(String warranty) {
+        this.warranty = warranty;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+
+    public Boolean getTaxInclusive() {
+        return taxInclusive;
+    }
+
+    public void setTaxInclusive(Boolean taxInclusive) {
+        this.taxInclusive = taxInclusive;
+    }
+
+    public String getTaxNote() {
+        return taxNote;
+    }
+
+    public void setTaxNote(String taxNote) {
+        this.taxNote = taxNote;
+    }
+
+    public List<ProductContentSectionRequest> getContentSections() {
+        return contentSections;
+    }
+
+    public void setContentSections(List<ProductContentSectionRequest> contentSections) {
+        this.contentSections = contentSections;
     }
 }

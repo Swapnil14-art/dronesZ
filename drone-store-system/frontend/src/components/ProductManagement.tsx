@@ -5,16 +5,46 @@ import {
   ProductType,
   CategoryDto,
   ProductStatus,
+  ProductContentSectionType,
+  ProductContentSectionRequest,
   fetchProducts,
   createProduct,
   updateProduct,
   deleteProduct,
-  fetchCategories
+  fetchCategories,
+  uploadOrReplaceProductImage,
+  deleteProductImage,
+  getProductImageUrl,
+  fetchProductContentSections
 } from '../services/api';
+import { RichTextEditor } from './RichTextEditor';
+import { TableEditor } from './TableEditor';
 
 interface Props {
   token: string;
 }
+
+const CloudUploadIcon: React.FC<{ size?: number; color?: string; style?: React.CSSProperties }> = ({
+  size = 32,
+  color = 'var(--color-primary, #e52b31)',
+  style = {},
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: 'inline-block', ...style }}
+  >
+    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+    <path d="M12 12v9" />
+    <path d="m16 16-4-4-4 4" />
+  </svg>
+);
 
 export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [products, setProducts] = useState<ProductDto[]>([]);
@@ -34,12 +64,13 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
 
-  // Modals state
+  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [editingProduct, setEditingProduct] = useState<ProductDto | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductDto | null>(null);
+  const [deletingImageProduct, setDeletingImageProduct] = useState<ProductDto | null>(null);
 
-  // Form state
+  // Form Fields State
   const [formName, setFormName] = useState<string>('');
   const [formDescription, setFormDescription] = useState<string>('');
   const [formProductType, setFormProductType] = useState<ProductType>('STANDALONE');
@@ -48,25 +79,66 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [formStatus, setFormStatus] = useState<ProductStatus>('AVAILABLE');
   const [formCategoryId, setFormCategoryId] = useState<string>('');
   const [formParentId, setFormParentId] = useState<string>('');
-  const [formImage, setFormImage] = useState<string>('');
+
+  // New Dynamic Delivery / Warranty / Grade / Tax fields
+  const [formDispatchTime, setFormDispatchTime] = useState<string>('24-48 Hours');
+  const [formWarranty, setFormWarranty] = useState<string>('1-Yr Factory');
+  const [formGrade, setFormGrade] = useState<string>('Aero Precision');
+  const [formTaxInclusive, setFormTaxInclusive] = useState<boolean>(true);
+  const [formTaxNote, setFormTaxNote] = useState<string>('GST & Taxes Included');
+
+  // Dynamic Content Boxes State
+  const [formContentSections, setFormContentSections] = useState<ProductContentSectionRequest[]>([]);
+  const [showAddBoxMenu, setShowAddBoxMenu] = useState<boolean>(false);
+
+  // Image Upload State
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imageInfo, setImageInfo] = useState<{ name: string; type: string; originalSize: string; optimizedSize: string } | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
+  // Active Tab in Large Modal
+  const [activeModalTab, setActiveModalTab] = useState<'details' | 'boxes'>('details');
+
+  // Lock background scroll when modal is open
   useEffect(() => {
-    loadCategoriesList();
+    if (isAddModalOpen || editingProduct || deletingProduct || deletingImageProduct) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAddModalOpen, editingProduct, deletingProduct, deletingImageProduct]);
+
+  useEffect(() => {
+    loadCategories();
+    loadParentProducts();
   }, [token]);
 
   useEffect(() => {
     loadProductsList();
   }, [token, page, search, statusFilter, categoryFilter, typeFilter]);
 
-  const loadCategoriesList = async () => {
+  const loadCategories = async () => {
     try {
-      const catData = await fetchCategories(token);
-      setCategories(catData);
-    } catch (err) {
+      const res = await fetchCategories(token);
+      setCategories(res);
+    } catch (err: any) {
       console.error('Failed to load categories', err);
+    }
+  };
+
+  const loadParentProducts = async () => {
+    try {
+      const res = await fetchProducts(token, { productType: 'PARENT', size: 100 });
+      setParentProducts(res.content);
+    } catch (err: any) {
+      console.error('Failed to load parent products', err);
     }
   };
 
@@ -79,22 +151,98 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         size: 15,
         search: search.trim() || undefined,
         status: statusFilter || undefined,
-        categoryId: categoryFilter ? Number(categoryFilter) : undefined,
-        productType: typeFilter ? (typeFilter as ProductType) : undefined,
+        categoryId: categoryFilter || undefined,
+        productType: (typeFilter as ProductType) || undefined,
       });
-
       setProducts(res.content);
       setTotalPages(res.totalPages);
       setTotalElements(res.totalElements);
-
-      // Load all candidate PARENT products
-      const allParentsRes = await fetchProducts(token, { size: 100, productType: 'PARENT' });
-      setParentProducts(allParentsRes.content);
     } catch (err: any) {
-      setError(err.message || 'Failed to load products list');
+      setError(err.message || 'Failed to load products');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const MAX_SIZE = 10 * 1024 * 1024;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+
+    if (file.size > MAX_SIZE) {
+      setFileError(`Selected file exceeds limit of 10 MB. Size: ${(file.size / (1024 * 1024)).toFixed(2)} MB.`);
+      return;
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      setFileError(`Unsupported format '${file.type}'. Allowed: JPEG, PNG, WEBP, GIF.`);
+      return;
+    }
+
+    setFileError(null);
+    setSelectedImageFile(file);
+
+    const origSizeStr = file.size >= 1024 * 1024
+      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+      : `${(file.size / 1024).toFixed(1)} KB`;
+
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreviewUrl(previewUrl);
+
+    // Client-side image optimization
+    const img = new Image();
+    img.src = previewUrl;
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+      const MAX_DIM = 1600;
+
+      if (width > MAX_DIM || height > MAX_DIM) {
+        const scale = Math.min(MAX_DIM / width, MAX_DIM / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        const format = file.type.includes('png') ? 'image/png' : 'image/jpeg';
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const optimizedFile = new File([blob], file.name, {
+              type: blob.type || file.type,
+              lastModified: Date.now(),
+            });
+            setSelectedImageFile(optimizedFile);
+
+            const optSizeStr = blob.size >= 1024 * 1024
+              ? `${(blob.size / (1024 * 1024)).toFixed(2)} MB`
+              : `${(blob.size / 1024).toFixed(1)} KB`;
+            setImageInfo({
+              name: file.name,
+              type: file.type.split('/')[1]?.toUpperCase() || 'IMAGE',
+              originalSize: origSizeStr,
+              optimizedSize: optSizeStr,
+            });
+          }
+        }, format, 0.85);
+      }
+    };
+  };
+
+  const clearSelectedImage = () => {
+    if (imagePreviewUrl && imagePreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setSelectedImageFile(null);
+    setImagePreviewUrl(editingProduct?.image || null);
+    setImageInfo(null);
+    setFileError(null);
   };
 
   const openAddModal = () => {
@@ -107,12 +255,23 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormStatus('AVAILABLE');
     setFormCategoryId('');
     setFormParentId('');
-    setFormImage('');
+    setFormDispatchTime('24-48 Hours');
+    setFormWarranty('1-Yr Factory');
+    setFormGrade('Aero Precision');
+    setFormTaxInclusive(true);
+    setFormTaxNote('GST & Taxes Included');
+    setFormContentSections([]);
+    setShowAddBoxMenu(false);
+    setSelectedImageFile(null);
+    setImagePreviewUrl(null);
+    setImageInfo(null);
+    setFileError(null);
     setFormError(null);
+    setActiveModalTab('details');
     setIsAddModalOpen(true);
   };
 
-  const openEditModal = (product: ProductDto) => {
+  const openEditModal = async (product: ProductDto) => {
     setEditingProduct(product);
     setFormName(product.name);
     setFormDescription(product.description || '');
@@ -122,19 +281,141 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormStatus(product.status);
     setFormCategoryId(product.categoryId ? product.categoryId.toString() : '');
     setFormParentId(product.parentId ? product.parentId.toString() : '');
-    setFormImage(product.image || '');
+    setFormDispatchTime(product.dispatchTime || '24-48 Hours');
+    setFormWarranty(product.warranty || '1-Yr Factory');
+    setFormGrade(product.grade || 'Aero Precision');
+    setFormTaxInclusive(product.taxInclusive !== undefined ? product.taxInclusive : true);
+    setFormTaxNote(product.taxNote || 'GST & Taxes Included');
+
+    // Load content sections for product
+    if (product.contentSections && product.contentSections.length > 0) {
+      setFormContentSections(product.contentSections.map(s => ({
+        id: s.id,
+        title: s.title,
+        type: s.type,
+        content: s.content,
+        displayOrder: s.displayOrder,
+        enabled: s.enabled,
+      })));
+    } else {
+      try {
+        const sections = await fetchProductContentSections(token, product.id);
+        setFormContentSections(sections.map(s => ({
+          id: s.id,
+          title: s.title,
+          type: s.type,
+          content: s.content,
+          displayOrder: s.displayOrder,
+          enabled: s.enabled,
+        })));
+      } catch (e) {
+        setFormContentSections([]);
+      }
+    }
+
+    setShowAddBoxMenu(false);
+    setSelectedImageFile(null);
+    setImagePreviewUrl(product.image ? getProductImageUrl(product.image) : null);
+    setImageInfo(null);
+    setFileError(null);
     setFormError(null);
+    setActiveModalTab('details');
   };
 
   const closeModal = () => {
     setIsAddModalOpen(false);
     setEditingProduct(null);
     setDeletingProduct(null);
+    setDeletingImageProduct(null);
+    setShowAddBoxMenu(false);
+    if (imagePreviewUrl && imagePreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setSelectedImageFile(null);
+    setImagePreviewUrl(null);
+    setImageInfo(null);
+    setFileError(null);
     setFormError(null);
+  };
+
+  // Content Box Operations
+  const handleAddBox = (type: ProductContentSectionType) => {
+    const nextOrder = formContentSections.length;
+    let initialContent = '';
+    let initialTitle = '';
+
+    if (type === 'WORD') {
+      initialTitle = 'Product Overview & Highlights';
+      initialContent = '<p>Detailed product overview with high performance specifications.</p><ul><li>Premium carbon composite material</li><li>Tested up to 35,000 RPM</li><li>Factory dynamic balanced</li></ul>';
+    } else {
+      initialTitle = 'Technical Specifications Table';
+      initialContent = JSON.stringify({
+        headers: ['Specification / Parameter', 'Standard Value', 'Tolerance / Notes'],
+        rows: [
+          ['Motor KV Rating', '1850 KV', '±3% rated speed'],
+          ['Configuration', '12N14P', 'Precision wound'],
+          ['Shaft Diameter', '5.0 mm', 'Titanium alloy core'],
+          ['Idle Current (10V)', '1.2 A', 'Low friction bearings'],
+          ['Max Continuous Power', '920 W (60s)', 'Active cooling design']
+        ]
+      });
+    }
+
+    const newBox: ProductContentSectionRequest = {
+      title: initialTitle,
+      type,
+      content: initialContent,
+      displayOrder: nextOrder,
+      enabled: true,
+    };
+
+    setFormContentSections([...formContentSections, newBox]);
+    setShowAddBoxMenu(false);
+  };
+
+  const handleUpdateBox = (index: number, updatedFields: Partial<ProductContentSectionRequest>) => {
+    const next = [...formContentSections];
+    next[index] = { ...next[index], ...updatedFields };
+    setFormContentSections(next);
+  };
+
+  const handleDeleteBox = (index: number) => {
+    const next = formContentSections.filter((_, idx) => idx !== index).map((box, idx) => ({
+      ...box,
+      displayOrder: idx
+    }));
+    setFormContentSections(next);
+  };
+
+  const handleMoveBox = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === formContentSections.length - 1) return;
+
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    const next = [...formContentSections];
+    const temp = next[index];
+    next[index] = next[targetIdx];
+    next[targetIdx] = temp;
+
+    const reindexed = next.map((box, idx) => ({
+      ...box,
+      displayOrder: idx
+    }));
+    setFormContentSections(reindexed);
+  };
+
+  const handleToggleBox = (index: number) => {
+    const current = formContentSections[index];
+    handleUpdateBox(index, { enabled: !current.enabled });
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (fileError) {
+      setFormError('Please fix file validation errors before saving.');
+      return;
+    }
+
     if (!formName.trim()) {
       setFormError('Product name is required');
       return;
@@ -183,19 +464,39 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       status: formStatus,
       categoryId: formCategoryId ? Number(formCategoryId) : null,
       parentId: formProductType === 'CHILD' && formParentId ? Number(formParentId) : null,
-      image: formImage.trim() || undefined,
+      dispatchTime: formDispatchTime.trim() || '24-48 Hours',
+      warranty: formWarranty.trim() || '1-Yr Factory',
+      grade: formGrade.trim() || 'Aero Precision',
+      taxInclusive: formTaxInclusive,
+      taxNote: formTaxNote.trim() || 'GST & Taxes Included',
+      contentSections: formContentSections.map((s, idx) => ({
+        id: s.id,
+        title: s.title.trim() || (s.type === 'WORD' ? 'Content Section' : 'Specification Matrix'),
+        type: s.type,
+        content: s.content || '',
+        displayOrder: idx,
+        enabled: s.enabled !== false,
+      })),
     };
 
     try {
+      let savedProduct: ProductDto;
       if (editingProduct) {
-        await updateProduct(token, editingProduct.id, payload);
-        setSuccessMsg(`Product "${payload.name}" updated successfully`);
+        savedProduct = await updateProduct(token, editingProduct.id, payload);
+        if (selectedImageFile) {
+          savedProduct = await uploadOrReplaceProductImage(token, editingProduct.id, selectedImageFile);
+        }
+        setSuccessMsg(`Product "${payload.name}" updated successfully.`);
       } else {
-        await createProduct(token, payload);
-        setSuccessMsg(`Product "${payload.name}" created successfully`);
+        savedProduct = await createProduct(token, payload);
+        if (selectedImageFile) {
+          savedProduct = await uploadOrReplaceProductImage(token, savedProduct.id, selectedImageFile);
+        }
+        setSuccessMsg(`Product "${payload.name}" created successfully.`);
       }
       closeModal();
       await loadProductsList();
+      await loadParentProducts();
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setFormError(err.message || 'Operation failed');
@@ -211,9 +512,10 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
     try {
       await deleteProduct(token, deletingProduct.id);
-      setSuccessMsg(`Product "${deletingProduct.name}" deleted successfully`);
+      setSuccessMsg(`Product "${deletingProduct.name}" deleted successfully.`);
       closeModal();
       await loadProductsList();
+      await loadParentProducts();
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setFormError(err.message || 'Failed to delete product');
@@ -222,32 +524,49 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     }
   };
 
+  const handleConfirmDeleteImage = async () => {
+    if (!deletingImageProduct) return;
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      await deleteProductImage(token, deletingImageProduct.id);
+      setSuccessMsg(`Image for product "${deletingImageProduct.name}" removed successfully.`);
+      closeModal();
+      await loadProductsList();
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setFormError(err.message || 'Failed to delete product image');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div>
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-            CATALOG MANAGEMENT
+            CATALOG MANAGEMENT &amp; CONTENT CMS
           </div>
           <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
-            3-Tier Multirotor Products
+            3-Tier Multirotor Products &amp; Content Boxes
           </h1>
         </div>
-        <button onClick={openAddModal} className="btn-stitch-primary">
+        <button onClick={openAddModal} className="btn-stitch-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}>
           + Add New Product
         </button>
       </div>
 
       {/* Alert Banners */}
       {successMsg && (
-        <div style={{ background: '#e6f4ea', border: '1px solid #a7f3d0', color: 'var(--color-tertiary)', padding: '1rem', borderRadius: '0.375rem', marginBottom: '1.5rem', fontWeight: 600 }}>
-          {successMsg}
+        <div style={{ background: '#e6f4ea', border: '1px solid #a7f3d0', color: 'var(--color-tertiary)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem', fontWeight: 600 }}>
+          ✓ {successMsg}
         </div>
       )}
       {error && (
-        <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.375rem', marginBottom: '1.5rem' }}>
-          {error}
+        <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1.5rem' }}>
+          ✕ {error}
         </div>
       )}
 
@@ -256,13 +575,13 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         <input
           type="text"
           className="stitch-input"
-          placeholder="Search products by name..."
+          placeholder="Search by name or description..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
             setPage(0);
           }}
-          style={{ flex: '1 1 220px' }}
+          style={{ flex: '1 1 250px' }}
         />
 
         <select
@@ -287,7 +606,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             setStatusFilter(e.target.value);
             setPage(0);
           }}
-          style={{ width: '160px' }}
+          style={{ width: '170px' }}
         >
           <option value="">All Statuses</option>
           <option value="AVAILABLE">Available</option>
@@ -313,107 +632,97 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         </select>
       </div>
 
-      {/* Products Data Table */}
+      {/* Products Table */}
       {loading ? (
         <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-          Loading product catalog...
+          Loading products catalog...
         </div>
       ) : products.length === 0 ? (
-        <div className="stitch-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-          No products found matching your filter criteria.
+        <div style={{ background: '#fff', border: '1px solid var(--color-outline)', padding: '4rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '0.5rem' }}>
+          No products found matching the criteria.
         </div>
       ) : (
         <>
-          <div className="stitch-table-wrapper">
+          <div className="stitch-table-container">
             <table className="stitch-table">
               <thead>
                 <tr>
-                  <th>Product Name</th>
-                  <th>Product Type</th>
-                  <th>Hierarchy / Parent</th>
+                  <th style={{ width: '60px' }}>ID</th>
+                  <th style={{ width: '64px' }}>Image</th>
+                  <th>Product Details</th>
+                  <th>Type &amp; Hierarchy</th>
                   <th>Category</th>
-                  <th>Price</th>
-                  <th>Stock Qty</th>
+                  <th>Price &amp; Stock</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th style={{ textAlign: 'right', width: '160px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((p) => {
-                  const parentProduct = parentProducts.find((cp) => cp.id === p.parentId);
-                  return (
-                    <tr key={p.id}>
-                      <td>
-                        <div style={{ fontWeight: 700, color: 'var(--color-on-surface)' }}>{p.name}</div>
-                        {p.description && (
-                          <div style={{ fontSize: '12px', color: 'var(--color-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {p.description}
-                          </div>
-                        )}
-                      </td>
-                      <td>
-                        <span className={p.productType === 'PARENT' ? 'badge-parent' : p.productType === 'CHILD' ? 'badge-category' : 'badge-category'}
-                          style={{
-                            background: p.productType === 'PARENT' ? '#f3e8ff' : p.productType === 'CHILD' ? '#e0f2fe' : '#f1f5f9',
-                            color: p.productType === 'PARENT' ? '#6b21a8' : p.productType === 'CHILD' ? '#0369a1' : '#334155',
-                          }}
-                        >
-                          {p.productType}
-                        </span>
-                      </td>
-                      <td>
-                        {p.productType === 'CHILD' ? (
-                          <span style={{ fontSize: '12px', fontWeight: 600, color: '#0369a1' }}>
-                            Parent: #{p.parentId} {parentProduct ? `(${parentProduct.name})` : ''}
-                          </span>
+                {products.map((p) => (
+                  <tr key={p.id}>
+                    <td style={{ color: 'var(--color-muted)', fontWeight: 600 }}>#{p.id}</td>
+                    <td>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '6px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--color-outline)' }}>
+                        {p.image ? (
+                          <img src={getProductImageUrl(p.image) || ''} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
-                          <span style={{ fontSize: '12px', color: 'var(--color-muted)' }}>Top Level</span>
+                          <span style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8' }}>N/A</span>
                         )}
-                      </td>
-                      <td>
-                        {p.categoryName ? (
-                          <span className="badge-category">{p.categoryName}</span>
-                        ) : (
-                          <span style={{ fontSize: '12px', color: 'var(--color-muted)' }}>Uncategorized</span>
-                        )}
-                      </td>
-                      <td>
-                        {p.productType === 'PARENT' ? (
-                          <span style={{ fontSize: '12px', color: 'var(--color-muted)', fontStyle: 'italic' }}>N/A (Parent)</span>
-                        ) : (
-                          <strong style={{ color: 'var(--color-on-surface)' }}>₹{p.price.toFixed(2)}</strong>
-                        )}
-                      </td>
-                      <td>
-                        {p.productType === 'PARENT' ? (
-                          <span style={{ fontSize: '12px', color: 'var(--color-muted)', fontStyle: 'italic' }}>N/A (Parent)</span>
-                        ) : (
-                          <span style={{
-                            fontWeight: 700,
-                            color: p.quantity === 0 ? 'var(--color-error)' : p.quantity <= 5 ? 'var(--color-amber)' : 'var(--color-tertiary)'
-                          }}>
-                            {p.quantity} units
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <span className={p.status === 'AVAILABLE' ? 'badge-tertiary' : p.status === 'OUT_OF_STOCK' ? 'badge-error' : 'badge-amber'}>
-                          {p.status.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
-                          <button onClick={() => openEditModal(p)} className="btn-stitch-ghost" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
-                            Edit
-                          </button>
-                          <button onClick={() => setDeletingProduct(p)} className="btn-stitch-danger" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
-                            Delete
-                          </button>
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 700, color: 'var(--color-on-surface)', fontSize: '15px' }}>{p.name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginTop: '2px', display: 'flex', gap: '8px' }}>
+                        <span>⏱ {p.dispatchTime || '24-48 Hours'}</span>
+                        <span>🛡 {p.warranty || '1-Yr Factory'}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`badge-type badge-type-${p.productType?.toLowerCase() || 'standalone'}`}>
+                        {p.productType}
+                      </span>
+                      {p.productType === 'CHILD' && p.parentId && (
+                        <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginTop: '4px' }}>
+                          Parent ID: #{p.parentId}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                      )}
+                    </td>
+                    <td>{p.categoryName || <span style={{ color: 'var(--color-muted)' }}>None</span>}</td>
+                    <td>
+                      {p.productType === 'PARENT' ? (
+                        <span style={{ color: 'var(--color-muted)', fontStyle: 'italic', fontSize: '13px' }}>Series Header (No direct price)</span>
+                      ) : (
+                        <div>
+                          <div style={{ fontWeight: 700, color: 'var(--color-primary)' }}>₹{p.price.toFixed(2)}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--color-muted)' }}>{p.quantity} in stock</div>
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`status-pill status-${p.status.toLowerCase()}`}>
+                        {p.status.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={() => openEditModal(p)}
+                          className="btn-stitch-ghost"
+                          style={{ padding: '0.35rem 0.75rem', fontSize: '12px' }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setDeletingProduct(p)}
+                          className="btn-stitch-danger"
+                          style={{ padding: '0.35rem 0.75rem', fontSize: '12px' }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -429,186 +738,787 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                 onClick={() => setPage(page - 1)}
                 className="btn-stitch-ghost"
               >
-                Previous Page
+                Previous
               </button>
               <button
                 disabled={page + 1 >= totalPages}
                 onClick={() => setPage(page + 1)}
                 className="btn-stitch-ghost"
               >
-                Next Page
+                Next
               </button>
             </div>
           </div>
         </>
       )}
 
-      {/* Add / Edit Product Modal */}
+      {/* =========================================================================
+          LARGE DESKTOP PRODUCT & CONTENT CMS MODAL
+      ========================================================================= */}
       {(isAddModalOpen || editingProduct) && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--color-on-surface)' }}>
-              {editingProduct ? `Edit Product #${editingProduct.id}` : 'Create New Product'}
-            </h3>
+        <div
+          className="modal-overlay"
+          onClick={closeModal}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.75)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1.5rem',
+          }}
+        >
+          <div
+            className="modal-content"
+            style={{
+              width: '100%',
+              maxWidth: '1150px',
+              height: '90vh',
+              maxHeight: '920px',
+              backgroundColor: '#ffffff',
+              borderRadius: '0.85rem',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+              border: '1px solid var(--color-outline, #e2e8f0)',
+              overflow: 'hidden',
+              padding: 0,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sticky Modal Header */}
+            <div style={{
+              padding: '1.25rem 2rem',
+              background: '#0f172a',
+              color: '#f8fafc',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderBottom: '1px solid #334155',
+              flexShrink: 0,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span style={{
+                  background: 'var(--color-primary, #e52b31)',
+                  color: '#ffffff',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  padding: '0.2rem 0.6rem',
+                  borderRadius: '4px',
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase'
+                }}>
+                  {editingProduct ? `PRODUCT #${editingProduct.id}` : 'NEW PRODUCT'}
+                </span>
+                <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                  {editingProduct ? `Edit Product: ${editingProduct.name}` : 'Create New Multirotor Product'}
+                </h2>
+              </div>
 
+              {/* Header Right / Tabs */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', background: '#1e293b', borderRadius: '6px', padding: '3px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModalTab('details')}
+                    style={{
+                      padding: '0.4rem 1rem',
+                      borderRadius: '4px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      background: activeModalTab === 'details' ? 'var(--color-primary, #e52b31)' : 'transparent',
+                      color: activeModalTab === 'details' ? '#ffffff' : '#94a3b8',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    1. Product Specifications
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModalTab('boxes')}
+                    style={{
+                      padding: '0.4rem 1rem',
+                      borderRadius: '4px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      background: activeModalTab === 'boxes' ? 'var(--color-primary, #e52b31)' : 'transparent',
+                      color: activeModalTab === 'boxes' ? '#ffffff' : '#94a3b8',
+                      transition: 'all 0.15s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    2. Dynamic Content Boxes
+                    <span style={{
+                      background: formContentSections.length > 0 ? '#10b981' : '#475569',
+                      color: '#fff',
+                      fontSize: '10px',
+                      padding: '1px 6px',
+                      borderRadius: '9999px',
+                      fontWeight: 800
+                    }}>
+                      {formContentSections.length}
+                    </span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    lineHeight: 1,
+                    padding: '4px',
+                  }}
+                  title="Close Modal"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Error Banner inside modal */}
             {formError && (
-              <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.25rem', fontSize: '13px' }}>
-                {formError}
+              <div style={{ background: '#fee2e2', borderBottom: '1px solid #f87171', color: '#991b1b', padding: '0.75rem 2rem', fontSize: '13px', fontWeight: 600 }}>
+                ✕ {formError}
               </div>
             )}
 
-            <form onSubmit={handleSaveProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div className="stitch-form-group">
-                <label className="stitch-label">Product Name *</label>
-                <input
-                  type="text"
-                  className="stitch-input"
-                  placeholder="e.g. Motors Series or Motor 2207 1850KV"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  maxLength={255}
-                  required
-                />
+            {/* Scrollable Modal Body */}
+            <form
+              id="product-edit-form"
+              onSubmit={handleSaveProduct}
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: '2rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2rem',
+                backgroundColor: '#f8fafc',
+              }}
+            >
+              {activeModalTab === 'details' ? (
+                <>
+                  {/* Section 1: Basic Information & Product Hierarchy */}
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
+                      1. Basic Information &amp; Product Hierarchy
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1.25rem' }}>
+                      <div className="stitch-form-group">
+                        <label className="stitch-label">Product Name *</label>
+                        <input
+                          type="text"
+                          className="stitch-input"
+                          placeholder="e.g. DronesZ FPV Race Motor 2207"
+                          value={formName}
+                          onChange={(e) => setFormName(e.target.value)}
+                          maxLength={255}
+                          required
+                        />
+                      </div>
+
+                      <div className="stitch-form-group">
+                        <label className="stitch-label">Product Type *</label>
+                        <select
+                          className="stitch-select"
+                          value={formProductType}
+                          onChange={(e) => {
+                            const newType = e.target.value as ProductType;
+                            setFormProductType(newType);
+                            if (newType !== 'CHILD') {
+                              setFormParentId('');
+                            }
+                          }}
+                        >
+                          <option value="STANDALONE">STANDALONE (Independent)</option>
+                          <option value="PARENT">PARENT (Series Header)</option>
+                          <option value="CHILD">CHILD (Variant of Series)</option>
+                        </select>
+                      </div>
+
+                      <div className="stitch-form-group">
+                        <label className="stitch-label">Category</label>
+                        <select
+                          className="stitch-select"
+                          value={formCategoryId}
+                          onChange={(e) => setFormCategoryId(e.target.value)}
+                        >
+                          <option value="">None (Uncategorized)</option>
+                          {categories.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* CHILD parent assignment */}
+                    {formProductType === 'CHILD' && (
+                      <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '0.5rem', padding: '1rem', marginTop: '1.25rem' }}>
+                        <label className="stitch-label" style={{ color: '#0369a1', marginBottom: '0.4rem' }}>
+                          Select Parent Series * (Mandatory for CHILD variant)
+                        </label>
+                        <select
+                          className="stitch-select"
+                          value={formParentId}
+                          onChange={(e) => setFormParentId(e.target.value)}
+                          required
+                        >
+                          <option value="">-- Choose Parent Product Series --</option>
+                          {parentProducts
+                            .filter((p) => !editingProduct || p.id !== editingProduct.id)
+                            .map((p) => (
+                              <option key={p.id} value={p.id}>
+                                #{p.id}: {p.name}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Section 2: Pricing, Inventory & Availability */}
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
+                      2. Pricing, Inventory &amp; Status
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: formProductType === 'PARENT' ? '1fr' : '1fr 1fr 1fr', gap: '1.25rem' }}>
+                      {formProductType !== 'PARENT' && (
+                        <>
+                          <div className="stitch-form-group">
+                            <label className="stitch-label">Unit Price (₹) *</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              className="stitch-input"
+                              placeholder="0.00"
+                              value={formPrice}
+                              onChange={(e) => setFormPrice(e.target.value)}
+                              required
+                            />
+                          </div>
+
+                          <div className="stitch-form-group">
+                            <label className="stitch-label">Inventory Quantity *</label>
+                            <input
+                              type="number"
+                              min="0"
+                              className="stitch-input"
+                              placeholder="0"
+                              value={formQuantity}
+                              onChange={(e) => setFormQuantity(e.target.value)}
+                              required
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      <div className="stitch-form-group">
+                        <label className="stitch-label">Availability Status *</label>
+                        <select
+                          className="stitch-select"
+                          value={formStatus}
+                          onChange={(e) => setFormStatus(e.target.value as ProductStatus)}
+                        >
+                          <option value="AVAILABLE">AVAILABLE (In Stock / Active)</option>
+                          <option value="OUT_OF_STOCK">OUT OF STOCK</option>
+                          <option value="COMING_SOON">COMING SOON</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Delivery, Warranty, Specifications & Tax */}
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
+                      3. Delivery, Warranty, Specification Grade &amp; GST/Tax
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                      <div className="stitch-form-group">
+                        <label className="stitch-label">Dispatch / Delivery Time</label>
+                        <input
+                          type="text"
+                          className="stitch-input"
+                          placeholder="e.g. 24-48 Hours"
+                          value={formDispatchTime}
+                          onChange={(e) => setFormDispatchTime(e.target.value)}
+                        />
+                        <span style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>Shown on product page under product specimen</span>
+                      </div>
+
+                      <div className="stitch-form-group">
+                        <label className="stitch-label">Warranty</label>
+                        <input
+                          type="text"
+                          className="stitch-input"
+                          placeholder="e.g. 1-Yr Factory"
+                          value={formWarranty}
+                          onChange={(e) => setFormWarranty(e.target.value)}
+                        />
+                        <span style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>Warranty badge details</span>
+                      </div>
+
+                      <div className="stitch-form-group">
+                        <label className="stitch-label">Grade / Specification</label>
+                        <input
+                          type="text"
+                          className="stitch-input"
+                          placeholder="e.g. Aero Precision"
+                          value={formGrade}
+                          onChange={(e) => setFormGrade(e.target.value)}
+                        />
+                        <span style={{ fontSize: '11px', color: '#64748b', marginTop: '3px' }}>Material / build qualification</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem', alignItems: 'center', background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <input
+                          type="checkbox"
+                          id="taxInclusiveCheck"
+                          checked={formTaxInclusive}
+                          onChange={(e) => setFormTaxInclusive(e.target.checked)}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <label htmlFor="taxInclusiveCheck" style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', cursor: 'pointer' }}>
+                          GST / Taxes Included in Price
+                        </label>
+                      </div>
+
+                      <div className="stitch-form-group" style={{ margin: 0 }}>
+                        <label className="stitch-label" style={{ fontSize: '12px' }}>Custom Tax / GST Display Label</label>
+                        <input
+                          type="text"
+                          className="stitch-input"
+                          placeholder="e.g. GST & Taxes Included or Excl. 18% GST"
+                          value={formTaxNote}
+                          onChange={(e) => setFormTaxNote(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 4: Product Image & Overview */}
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '1.25rem' }}>
+                      4. Product Image &amp; Overview Description
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '1.5rem' }}>
+                      {/* Image Upload Zone */}
+                      <div>
+                        <label className="stitch-label" style={{ marginBottom: '0.5rem' }}>Product Photo (Stored in Database)</label>
+                        <div style={{
+                          border: '2px dashed #cbd5e1',
+                          borderRadius: '0.5rem',
+                          padding: '1rem',
+                          textAlign: 'center',
+                          background: '#f8fafc',
+                          position: 'relative'
+                        }}>
+                          {imagePreviewUrl ? (
+                            <div style={{ position: 'relative' }}>
+                              <img
+                                src={imagePreviewUrl}
+                                alt="Product Preview"
+                                style={{ width: '100%', height: '160px', objectFit: 'contain', borderRadius: '4px', background: '#0f172a' }}
+                              />
+                              <button
+                                type="button"
+                                onClick={clearSelectedImage}
+                                style={{
+                                  position: 'absolute',
+                                  top: '6px',
+                                  right: '6px',
+                                  background: 'rgba(239, 68, 68, 0.9)',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  borderRadius: '50%',
+                                  width: '24px',
+                                  height: '24px',
+                                  cursor: 'pointer',
+                                  fontWeight: 800,
+                                }}
+                                title="Remove Image"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ padding: '1.5rem 0.5rem' }}>
+                              <CloudUploadIcon size={36} />
+                              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '0.5rem' }}>
+                                Drag &amp; drop or click to upload
+                              </div>
+                            </div>
+                          )}
+
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={handleImageFileChange}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              opacity: 0,
+                              cursor: 'pointer',
+                              display: imagePreviewUrl ? 'none' : 'block'
+                            }}
+                          />
+                        </div>
+                        {imageInfo && (
+                          <div style={{ fontSize: '11px', color: '#10b981', marginTop: '4px', fontWeight: 600 }}>
+                            Optimized: {imageInfo.optimizedSize} ({imageInfo.type})
+                          </div>
+                        )}
+                        {fileError && (
+                          <div style={{ fontSize: '11px', color: '#ef4444', marginTop: '4px' }}>
+                            {fileError}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Overview Description */}
+                      <div className="stitch-form-group">
+                        <label className="stitch-label">Overview Description</label>
+                        <textarea
+                          className="stitch-textarea"
+                          rows={7}
+                          placeholder="Provide a general summary of the drone component or airframe..."
+                          value={formDescription}
+                          onChange={(e) => setFormDescription(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* =========================================================================
+                    TAB 2: DYNAMIC CONTENT BOXES CMS (WORD & EXCEL)
+                ========================================================================= */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '0.65rem', padding: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                          Dynamic Product Content Boxes
+                        </h3>
+                        <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>
+                          Add configurable content sections that will be rendered directly on the public product page in ordered sequence.
+                        </p>
+                      </div>
+
+                      <div style={{ position: 'relative' }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddBoxMenu(!showAddBoxMenu)}
+                          className="btn-stitch-primary"
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0.6rem 1.25rem' }}
+                        >
+                          + ADD BOX ▾
+                        </button>
+
+                        {showAddBoxMenu && (
+                          <div style={{
+                            position: 'absolute',
+                            right: 0,
+                            top: '100%',
+                            marginTop: '6px',
+                            background: '#ffffff',
+                            borderRadius: '8px',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+                            border: '1px solid #cbd5e1',
+                            width: '260px',
+                            zIndex: 100,
+                            overflow: 'hidden',
+                          }}>
+                            <button
+                              type="button"
+                              onClick={() => handleAddBox('WORD')}
+                              style={{
+                                width: '100%',
+                                padding: '12px 14px',
+                                border: 'none',
+                                background: '#ffffff',
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                borderBottom: '1px solid #f1f5f9',
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ background: '#dbeafe', color: '#1d4ed8', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
+                                  WORD
+                                </span>
+                                <strong style={{ fontSize: '13px', color: '#0f172a' }}>Rich Text / Bullets</strong>
+                              </div>
+                              <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                                Paragraphs, formatting, headings &amp; bullet list items.
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleAddBox('EXCEL')}
+                              style={{
+                                width: '100%',
+                                padding: '12px 14px',
+                                border: 'none',
+                                background: '#ffffff',
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                flexDirection: 'column',
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ background: '#ccfbf1', color: '#0f766e', fontSize: '10px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
+                                  EXCEL
+                                </span>
+                                <strong style={{ fontSize: '13px', color: '#0f172a' }}>Spreadsheet Table</strong>
+                              </div>
+                              <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                                Structured rows &amp; columns matrix for specs &amp; benchmarks.
+                              </span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {formContentSections.length === 0 ? (
+                      <div style={{
+                        padding: '3rem',
+                        textAlign: 'center',
+                        background: '#f8fafc',
+                        border: '2px dashed #cbd5e1',
+                        borderRadius: '0.5rem',
+                        marginTop: '1rem',
+                      }}>
+                        <div style={{ fontSize: '15px', fontWeight: 700, color: '#334155' }}>
+                          No Content Boxes Added Yet
+                        </div>
+                        <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '400px', margin: '0.5rem auto 1.5rem auto' }}>
+                          Add formatted rich text (WORD) or structured spreadsheets (EXCEL) to customize technical details for this drone product.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddBoxMenu(true)}
+                          className="btn-stitch-primary"
+                          style={{ padding: '0.5rem 1.25rem', fontSize: '13px' }}
+                        >
+                          + ADD FIRST BOX
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.25rem' }}>
+                        {formContentSections.map((section, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              border: section.enabled !== false ? '1px solid #cbd5e1' : '1px dashed #cbd5e1',
+                              borderRadius: '0.65rem',
+                              background: section.enabled !== false ? '#ffffff' : '#f8fafc',
+                              opacity: section.enabled !== false ? 1 : 0.75,
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.04)',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            {/* Box Header Toolbar */}
+                            <div style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '10px 16px',
+                              background: section.enabled !== false ? '#f1f5f9' : '#e2e8f0',
+                              borderBottom: '1px solid #e2e8f0',
+                              flexWrap: 'wrap',
+                              gap: '8px',
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 300px' }}>
+                                <span style={{
+                                  fontSize: '11px',
+                                  fontWeight: 800,
+                                  background: '#334155',
+                                  color: '#ffffff',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                }}>
+                                  #{idx + 1}
+                                </span>
+
+                                <span style={{
+                                  fontSize: '11px',
+                                  fontWeight: 800,
+                                  background: section.type === 'WORD' ? '#dbeafe' : '#ccfbf1',
+                                  color: section.type === 'WORD' ? '#1d4ed8' : '#0f766e',
+                                  padding: '2px 8px',
+                                  borderRadius: '4px',
+                                }}>
+                                  {section.type} BOX
+                                </span>
+
+                                <input
+                                  type="text"
+                                  value={section.title}
+                                  onChange={(e) => handleUpdateBox(idx, { title: e.target.value })}
+                                  placeholder="Enter Box Heading / Title..."
+                                  style={{
+                                    flex: 1,
+                                    padding: '5px 8px',
+                                    border: '1px solid #cbd5e1',
+                                    borderRadius: '4px',
+                                    fontSize: '13px',
+                                    fontWeight: 700,
+                                    color: '#0f172a',
+                                    background: '#ffffff',
+                                  }}
+                                  required
+                                />
+                              </div>
+
+                              {/* Action controls: Order, Toggle, Delete */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <button
+                                  type="button"
+                                  disabled={idx === 0}
+                                  onClick={() => handleMoveBox(idx, 'up')}
+                                  title="Move Up"
+                                  style={{ ...boxControlBtnStyle, opacity: idx === 0 ? 0.4 : 1 }}
+                                >
+                                  ▲ Up
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={idx === formContentSections.length - 1}
+                                  onClick={() => handleMoveBox(idx, 'down')}
+                                  title="Move Down"
+                                  style={{ ...boxControlBtnStyle, opacity: idx === formContentSections.length - 1 ? 0.4 : 1 }}
+                                >
+                                  ▼ Down
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleBox(idx)}
+                                  style={{
+                                    ...boxControlBtnStyle,
+                                    background: section.enabled !== false ? '#ecfdf5' : '#fef2f2',
+                                    color: section.enabled !== false ? '#065f46' : '#991b1b',
+                                    borderColor: section.enabled !== false ? '#a7f3d0' : '#fecaca',
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {section.enabled !== false ? '● Enabled' : '○ Disabled'}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteBox(idx)}
+                                  title="Delete Box"
+                                  style={{
+                                    ...boxControlBtnStyle,
+                                    background: '#fee2e2',
+                                    color: '#991b1b',
+                                    borderColor: '#f87171',
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  🗑 Delete
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Box Editor Body */}
+                            <div style={{ padding: '1rem' }}>
+                              {section.type === 'WORD' ? (
+                                <RichTextEditor
+                                  value={section.content}
+                                  onChange={(val) => handleUpdateBox(idx, { content: val })}
+                                />
+                              ) : (
+                                <TableEditor
+                                  value={section.content}
+                                  onChange={(val) => handleUpdateBox(idx, { content: val })}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </form>
+
+            {/* Sticky Modal Footer Actions */}
+            <div style={{
+              padding: '1rem 2rem',
+              background: '#ffffff',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <span style={{ fontSize: '13px', color: '#64748b' }}>
+                  {formContentSections.length} Dynamic Box(es) Configured
+                </span>
               </div>
 
-              {/* Product Type Selector */}
-              <div className="stitch-form-group">
-                <label className="stitch-label">Product Type *</label>
-                <select
-                  className="stitch-select"
-                  value={formProductType}
-                  onChange={(e) => {
-                    const newType = e.target.value as ProductType;
-                    setFormProductType(newType);
-                    if (newType !== 'CHILD') {
-                      setFormParentId('');
-                    }
-                  }}
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  disabled={submitting}
+                  className="btn-stitch-ghost"
+                  style={{ padding: '0.65rem 1.25rem', fontSize: '14px' }}
                 >
-                  <option value="STANDALONE">STANDALONE (Independent Product)</option>
-                  <option value="PARENT">PARENT (Product Series / Category Header)</option>
-                  <option value="CHILD">CHILD (Variant belonging to PARENT)</option>
-                </select>
-              </div>
-
-              {/* Rules: CHILD requires PARENT selection */}
-              {formProductType === 'CHILD' && (
-                <div className="stitch-form-group" style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '0.375rem', border: '1px solid #bae6fd' }}>
-                  <label className="stitch-label" style={{ color: '#0369a1' }}>
-                    Select Parent Product Series *
-                  </label>
-                  <select
-                    className="stitch-select"
-                    value={formParentId}
-                    onChange={(e) => setFormParentId(e.target.value)}
-                    required
-                  >
-                    <option value="">-- Select Parent Series --</option>
-                    {parentProducts
-                      .filter((p) => !editingProduct || p.id !== editingProduct.id)
-                      .map((p) => (
-                        <option key={p.id} value={p.id}>
-                          #{p.id}: {p.name}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Rules: PARENT products do not have price/quantity */}
-              {formProductType !== 'PARENT' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="stitch-form-group">
-                    <label className="stitch-label">Price (₹) *</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      className="stitch-input"
-                      placeholder="0.00"
-                      value={formPrice}
-                      onChange={(e) => setFormPrice(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="stitch-form-group">
-                    <label className="stitch-label">Inventory Quantity *</label>
-                    <input
-                      type="number"
-                      min="0"
-                      className="stitch-input"
-                      placeholder="0"
-                      value={formQuantity}
-                      onChange={(e) => setFormQuantity(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="stitch-form-group">
-                  <label className="stitch-label">Availability Status *</label>
-                  <select
-                    className="stitch-select"
-                    value={formStatus}
-                    onChange={(e) => setFormStatus(e.target.value as ProductStatus)}
-                  >
-                    <option value="AVAILABLE">Available</option>
-                    <option value="OUT_OF_STOCK">Out of Stock</option>
-                    <option value="COMING_SOON">Coming Soon</option>
-                  </select>
-                </div>
-
-                <div className="stitch-form-group">
-                  <label className="stitch-label">Category</label>
-                  <select
-                    className="stitch-select"
-                    value={formCategoryId}
-                    onChange={(e) => setFormCategoryId(e.target.value)}
-                  >
-                    <option value="">None (Uncategorized)</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="stitch-form-group">
-                <label className="stitch-label">Image Asset URL (Optional)</label>
-                <input
-                  type="text"
-                  className="stitch-input"
-                  placeholder="e.g. /assets/products/motor-2207.jpg"
-                  value={formImage}
-                  onChange={(e) => setFormImage(e.target.value)}
-                />
-              </div>
-
-              <div className="stitch-form-group">
-                <label className="stitch-label">Description (Optional)</label>
-                <textarea
-                  className="stitch-textarea"
-                  rows={3}
-                  placeholder="Enter detailed description..."
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-                <button type="button" onClick={closeModal} className="btn-stitch-ghost">
                   Cancel
                 </button>
-                <button type="submit" disabled={submitting} className="btn-stitch-primary">
-                  {submitting ? 'Saving...' : editingProduct ? 'Save Changes' : 'Create Product'}
+                <button
+                  type="submit"
+                  form="product-edit-form"
+                  disabled={submitting}
+                  className="btn-stitch-primary"
+                  style={{ padding: '0.65rem 1.75rem', fontSize: '14px', fontWeight: 800 }}
+                >
+                  {submitting ? 'Saving...' : editingProduct ? 'Save Product Changes' : 'Create Product'}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
@@ -616,25 +1526,18 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       {/* Delete Confirmation Modal */}
       {deletingProduct && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--color-error)' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px', padding: '2rem' }}>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-error)', margin: '0 0 1rem 0' }}>
               Confirm Product Deletion
             </h3>
-            <p style={{ color: 'var(--color-muted)', marginBottom: '1.25rem', fontSize: '14px', lineHeight: 1.5 }}>
-              Are you sure you want to delete product <strong>"{deletingProduct.name}"</strong>?
+            <p style={{ color: 'var(--color-on-surface-variant)', fontSize: '14px', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+              Are you sure you want to delete product <strong>"{deletingProduct.name}"</strong> (ID: #{deletingProduct.id})? All associated content boxes and images will be permanently removed.
             </p>
-
-            {formError && (
-              <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.25rem', fontSize: '13px' }}>
-                {formError}
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
-              <button type="button" onClick={closeModal} className="btn-stitch-ghost">
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+              <button disabled={submitting} onClick={closeModal} className="btn-stitch-ghost">
                 Cancel
               </button>
-              <button type="button" onClick={handleDeleteProduct} disabled={submitting} className="btn-stitch-danger">
+              <button disabled={submitting} onClick={handleDeleteProduct} className="btn-stitch-danger">
                 {submitting ? 'Deleting...' : 'Delete Product'}
               </button>
             </div>
@@ -643,4 +1546,18 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       )}
     </div>
   );
+};
+
+const boxControlBtnStyle: React.CSSProperties = {
+  background: '#ffffff',
+  border: '1px solid #cbd5e1',
+  borderRadius: '4px',
+  padding: '4px 8px',
+  cursor: 'pointer',
+  fontSize: '11px',
+  fontWeight: 600,
+  color: '#334155',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
 };

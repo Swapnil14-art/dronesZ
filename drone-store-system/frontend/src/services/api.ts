@@ -23,6 +23,29 @@ export interface ErrorResponse {
 export type ProductStatus = 'AVAILABLE' | 'OUT_OF_STOCK' | 'COMING_SOON';
 export type ProductType = 'STANDALONE' | 'PARENT' | 'CHILD';
 
+export type ProductContentSectionType = 'WORD' | 'EXCEL';
+
+export interface ProductContentSectionDto {
+  id: number;
+  productId?: number;
+  title: string;
+  type: ProductContentSectionType;
+  content: string;
+  displayOrder: number;
+  enabled: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProductContentSectionRequest {
+  id?: number;
+  title: string;
+  type: ProductContentSectionType;
+  content: string;
+  displayOrder?: number;
+  enabled?: boolean;
+}
+
 export interface CategoryDto {
   id: number;
   name: string;
@@ -48,6 +71,12 @@ export interface ProductDto {
   categoryId?: number | null;
   categoryName?: string | null;
   image?: string | null;
+  dispatchTime?: string;
+  warranty?: string;
+  grade?: string;
+  taxInclusive?: boolean;
+  taxNote?: string;
+  contentSections?: ProductContentSectionDto[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -62,6 +91,12 @@ export interface ProductRequest {
   parentId?: number | null;
   categoryId?: number | null;
   image?: string;
+  dispatchTime?: string;
+  warranty?: string;
+  grade?: string;
+  taxInclusive?: boolean;
+  taxNote?: string;
+  contentSections?: ProductContentSectionRequest[];
 }
 
 export interface PageResponse<T> {
@@ -164,7 +199,47 @@ export interface OrderDto {
   createdAt: string;
 }
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || '';
+const getApiBaseUrl = (): string => {
+  if (typeof (globalThis as any).process !== 'undefined' && (globalThis as any).process?.env?.NEXT_PUBLIC_API_BASE_URL) {
+    return (globalThis as any).process.env.NEXT_PUBLIC_API_BASE_URL;
+  }
+  return 'http://localhost:8070';
+};
+
+export const API_BASE_URL = getApiBaseUrl();
+
+/**
+ * Canonical product-image URL helper.
+ *
+ * Backend returns image paths as relative API routes, e.g.:
+ *   /api/products/15/image?v=1788608619
+ *
+ * These MUST stay relative so the browser loads them from the same origin
+ * (via Next.js rewrites → Spring Boot backend). Prepending API_BASE_URL
+ * (http://localhost:8070) would create a cross-origin request that the
+ * Content-Security-Policy `img-src 'self'` directive blocks — which is
+ * the root cause of images not rendering while "Open in new tab" works.
+ *
+ * blob:/data: URLs (local upload previews) are passed through as-is.
+ */
+export const getProductImageUrl = (imagePath?: string | null): string | null => {
+  if (!imagePath || !imagePath.trim()) return null;
+  const path = imagePath.trim();
+
+  // Absolute URLs / local previews — pass through unchanged
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
+    return path;
+  }
+
+  // Relative API paths (e.g. /api/products/15/image?v=...) — keep relative
+  // so the request goes through Next.js rewrites → backend, staying same-origin.
+  if (path.startsWith('/')) {
+    return path;
+  }
+
+  // Bare relative path — prefix with /
+  return `/${path}`;
+};
 
 /* Admin Login Route */
 export async function loginAdmin(email: String, password: String): Promise<LoginResponse> {
@@ -688,3 +763,143 @@ export async function deleteProduct(token: string, id: number): Promise<void> {
     throw new Error(err.message || 'Failed to delete product');
   }
 }
+
+export async function uploadOrReplaceProductImage(token: string, id: number, file: File): Promise<ProductDto> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${id}/image`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to upload/replace product image', timestamp: '' }));
+    throw new Error(err.message || 'Failed to upload/replace product image');
+  }
+
+  return response.json();
+}
+
+export async function deleteProductImage(token: string, id: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${id}/image`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to delete product image', timestamp: '' }));
+    throw new Error(err.message || 'Failed to delete product image');
+  }
+}
+
+/* Product Content Sections APIs */
+export async function fetchProductContentSections(token: string, productId: number): Promise<ProductContentSectionDto[]> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/content-sections`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to fetch content sections', timestamp: '' }));
+    throw new Error(err.message || 'Failed to fetch content sections');
+  }
+
+  return response.json();
+}
+
+export async function createProductContentSection(token: string, productId: number, data: ProductContentSectionRequest): Promise<ProductContentSectionDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/content-sections`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to create content section', timestamp: '' }));
+    throw new Error(err.message || 'Failed to create content section');
+  }
+
+  return response.json();
+}
+
+export async function updateProductContentSection(token: string, productId: number, sectionId: number, data: ProductContentSectionRequest): Promise<ProductContentSectionDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/content-sections/${sectionId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to update content section', timestamp: '' }));
+    throw new Error(err.message || 'Failed to update content section');
+  }
+
+  return response.json();
+}
+
+export async function deleteProductContentSection(token: string, productId: number, sectionId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/content-sections/${sectionId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to delete content section', timestamp: '' }));
+    throw new Error(err.message || 'Failed to delete content section');
+  }
+}
+
+export async function reorderProductContentSections(token: string, productId: number, sectionIds: number[]): Promise<ProductContentSectionDto[]> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/content-sections/reorder`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ sectionIds }),
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to reorder content sections', timestamp: '' }));
+    throw new Error(err.message || 'Failed to reorder content sections');
+  }
+
+  return response.json();
+}
+
+export async function toggleProductContentSection(token: string, productId: number, sectionId: number): Promise<ProductContentSectionDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${productId}/content-sections/${sectionId}/toggle`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to toggle content section', timestamp: '' }));
+    throw new Error(err.message || 'Failed to toggle content section');
+  }
+
+  return response.json();
+}
+
+

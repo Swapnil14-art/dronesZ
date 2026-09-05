@@ -3,6 +3,8 @@ package com.dronestore.system.entity;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -43,6 +45,25 @@ public class Product {
     @Column(length = 500)
     private String image;
 
+    @Column(name = "dispatch_time", length = 100)
+    private String dispatchTime = "24-48 Hours";
+
+    @Column(length = 100)
+    private String warranty = "1-Yr Factory";
+
+    @Column(length = 100)
+    private String grade = "Aero Precision";
+
+    @Column(name = "tax_inclusive", nullable = false)
+    private Boolean taxInclusive = true;
+
+    @Column(name = "tax_note", length = 150)
+    private String taxNote = "GST & Taxes Included";
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OrderBy("displayOrder ASC")
+    private List<ProductContentSection> contentSections = new ArrayList<>();
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -60,6 +81,21 @@ public class Product {
         if (this.productType == null) {
             this.productType = ProductType.STANDALONE;
         }
+        if (this.taxInclusive == null) {
+            this.taxInclusive = true;
+        }
+        if (this.dispatchTime == null) {
+            this.dispatchTime = "24-48 Hours";
+        }
+        if (this.warranty == null) {
+            this.warranty = "1-Yr Factory";
+        }
+        if (this.grade == null) {
+            this.grade = "Aero Precision";
+        }
+        if (this.taxNote == null) {
+            this.taxNote = "GST & Taxes Included";
+        }
     }
 
     @PreUpdate
@@ -67,6 +103,21 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
         if (this.productType == null) {
             this.productType = ProductType.STANDALONE;
+        }
+        if (this.taxInclusive == null) {
+            this.taxInclusive = true;
+        }
+        if (this.dispatchTime == null) {
+            this.dispatchTime = "24-48 Hours";
+        }
+        if (this.warranty == null) {
+            this.warranty = "1-Yr Factory";
+        }
+        if (this.grade == null) {
+            this.grade = "Aero Precision";
+        }
+        if (this.taxNote == null) {
+            this.taxNote = "GST & Taxes Included";
         }
     }
 
@@ -148,6 +199,54 @@ public class Product {
 
     public void setImage(String image) {
         this.image = image;
+    }
+
+    public String getDispatchTime() {
+        return dispatchTime;
+    }
+
+    public void setDispatchTime(String dispatchTime) {
+        this.dispatchTime = dispatchTime;
+    }
+
+    public String getWarranty() {
+        return warranty;
+    }
+
+    public void setWarranty(String warranty) {
+        this.warranty = warranty;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+
+    public Boolean getTaxInclusive() {
+        return taxInclusive;
+    }
+
+    public void setTaxInclusive(Boolean taxInclusive) {
+        this.taxInclusive = taxInclusive;
+    }
+
+    public String getTaxNote() {
+        return taxNote;
+    }
+
+    public void setTaxNote(String taxNote) {
+        this.taxNote = taxNote;
+    }
+
+    public List<ProductContentSection> getContentSections() {
+        return contentSections;
+    }
+
+    public void setContentSections(List<ProductContentSection> contentSections) {
+        this.contentSections = contentSections;
     }
 
     public LocalDateTime getCreatedAt() {

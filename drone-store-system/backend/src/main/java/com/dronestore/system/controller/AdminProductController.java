@@ -1,17 +1,23 @@
 package com.dronestore.system.controller;
 
 import com.dronestore.system.dto.PageResponse;
+import com.dronestore.system.dto.ProductContentSectionDto;
+import com.dronestore.system.dto.ProductContentSectionRequest;
 import com.dronestore.system.dto.ProductDto;
 import com.dronestore.system.dto.ProductRequest;
+import com.dronestore.system.dto.ReorderSectionsRequest;
 import com.dronestore.system.entity.ProductStatus;
 import com.dronestore.system.entity.ProductType;
+import com.dronestore.system.service.ProductImageService;
 import com.dronestore.system.service.ProductService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/products")
@@ -20,9 +26,9 @@ import javax.validation.Valid;
 public class AdminProductController {
 
     private final ProductService productService;
-    private final com.dronestore.system.service.ProductImageService productImageService;
+    private final ProductImageService productImageService;
 
-    public AdminProductController(ProductService productService, com.dronestore.system.service.ProductImageService productImageService) {
+    public AdminProductController(ProductService productService, ProductImageService productImageService) {
         this.productService = productService;
         this.productImageService = productImageService;
     }
@@ -46,7 +52,7 @@ public class AdminProductController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductDto> getProductById(@PathVariable("id") Long id) {
-        ProductDto product = productService.getProductById(id);
+        ProductDto product = productService.getAdminProductById(id);
         return ResponseEntity.ok(product);
     }
 
@@ -65,9 +71,9 @@ public class AdminProductController {
     @PostMapping("/{id}/image")
     public ResponseEntity<ProductDto> uploadOrReplaceProductImage(
             @PathVariable("id") Long id,
-            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+            @RequestParam("file") MultipartFile file) {
         productImageService.uploadOrReplaceProductImage(id, file);
-        ProductDto updatedProduct = productService.getProductById(id);
+        ProductDto updatedProduct = productService.getAdminProductById(id);
         return ResponseEntity.ok(updatedProduct);
     }
 
@@ -81,5 +87,54 @@ public class AdminProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable("id") Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ================= Dynamic Content Sections Endpoints =================
+
+    @GetMapping("/{id}/content-sections")
+    public ResponseEntity<List<ProductContentSectionDto>> getContentSections(@PathVariable("id") Long id) {
+        List<ProductContentSectionDto> sections = productService.getContentSections(id, false);
+        return ResponseEntity.ok(sections);
+    }
+
+    @PostMapping("/{id}/content-sections")
+    public ResponseEntity<ProductContentSectionDto> addContentSection(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody ProductContentSectionRequest request) {
+        ProductContentSectionDto created = productService.addContentSection(id, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}/content-sections/{sectionId}")
+    public ResponseEntity<ProductContentSectionDto> updateContentSection(
+            @PathVariable("id") Long id,
+            @PathVariable("sectionId") Long sectionId,
+            @Valid @RequestBody ProductContentSectionRequest request) {
+        ProductContentSectionDto updated = productService.updateContentSection(id, sectionId, request);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}/content-sections/{sectionId}")
+    public ResponseEntity<Void> deleteContentSection(
+            @PathVariable("id") Long id,
+            @PathVariable("sectionId") Long sectionId) {
+        productService.deleteContentSection(id, sectionId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/content-sections/reorder")
+    public ResponseEntity<List<ProductContentSectionDto>> reorderContentSections(
+            @PathVariable("id") Long id,
+            @RequestBody ReorderSectionsRequest request) {
+        List<ProductContentSectionDto> reordered = productService.reorderContentSections(id, request.getSectionIds());
+        return ResponseEntity.ok(reordered);
+    }
+
+    @PatchMapping("/{id}/content-sections/{sectionId}/toggle")
+    public ResponseEntity<ProductContentSectionDto> toggleContentSection(
+            @PathVariable("id") Long id,
+            @PathVariable("sectionId") Long sectionId) {
+        ProductContentSectionDto toggled = productService.toggleContentSection(id, sectionId);
+        return ResponseEntity.ok(toggled);
     }
 }
