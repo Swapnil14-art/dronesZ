@@ -15,13 +15,16 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/admin/products")
+@CrossOrigin(origins = "*")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminProductController {
 
     private final ProductService productService;
+    private final com.dronestore.system.service.ProductImageService productImageService;
 
-    public AdminProductController(ProductService productService) {
+    public AdminProductController(ProductService productService, com.dronestore.system.service.ProductImageService productImageService) {
         this.productService = productService;
+        this.productImageService = productImageService;
     }
 
     @GetMapping
@@ -57,6 +60,21 @@ public class AdminProductController {
     public ResponseEntity<ProductDto> updateProduct(@PathVariable("id") Long id, @Valid @RequestBody ProductRequest request) {
         ProductDto updated = productService.updateProduct(id, request);
         return ResponseEntity.ok(updated);
+    }
+
+    @PostMapping("/{id}/image")
+    public ResponseEntity<ProductDto> uploadOrReplaceProductImage(
+            @PathVariable("id") Long id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        productImageService.uploadOrReplaceProductImage(id, file);
+        ProductDto updatedProduct = productService.getProductById(id);
+        return ResponseEntity.ok(updatedProduct);
+    }
+
+    @DeleteMapping("/{id}/image")
+    public ResponseEntity<Void> deleteProductImage(@PathVariable("id") Long id) {
+        productImageService.deleteProductImage(id);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")

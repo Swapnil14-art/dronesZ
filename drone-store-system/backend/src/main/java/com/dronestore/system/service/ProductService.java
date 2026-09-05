@@ -32,10 +32,14 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final com.dronestore.system.repository.ProductImageRepository productImageRepository;
 
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductService(ProductRepository productRepository,
+                          CategoryRepository categoryRepository,
+                          com.dronestore.system.repository.ProductImageRepository productImageRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.productImageRepository = productImageRepository;
     }
 
     @Transactional(readOnly = true)
@@ -284,7 +288,14 @@ public class ProductService {
         dto.setQuantity(product.getQuantity());
         dto.setStatus(product.getStatus());
         dto.setProductType(product.getProductType());
-        dto.setImage(product.getImage());
+        String img = product.getImage();
+        boolean hasDbImage = productImageRepository.findFirstByProductId(product.getId()).isPresent();
+        if (hasDbImage) {
+            img = "/api/products/" + product.getId() + "/image";
+        } else if (img != null && img.startsWith("/api/products/")) {
+            img = null;
+        }
+        dto.setImage(img);
         dto.setCreatedAt(product.getCreatedAt());
         dto.setUpdatedAt(product.getUpdatedAt());
 

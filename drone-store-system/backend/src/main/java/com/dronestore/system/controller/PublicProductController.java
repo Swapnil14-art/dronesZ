@@ -11,12 +11,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
+@CrossOrigin(origins = "*")
 public class PublicProductController {
 
     private final ProductService productService;
+    private final com.dronestore.system.service.ProductImageService productImageService;
 
-    public PublicProductController(ProductService productService) {
+    public PublicProductController(ProductService productService, com.dronestore.system.service.ProductImageService productImageService) {
         this.productService = productService;
+        this.productImageService = productImageService;
     }
 
     @GetMapping
@@ -37,6 +40,17 @@ public class PublicProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductDto> getProductById(@PathVariable("id") Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
+    }
+
+    @GetMapping(value = "/{id}/image", produces = {org.springframework.http.MediaType.IMAGE_JPEG_VALUE, org.springframework.http.MediaType.IMAGE_PNG_VALUE, org.springframework.http.MediaType.ALL_VALUE})
+    public ResponseEntity<byte[]> getProductImage(@PathVariable("id") Long id) {
+        byte[] imageData = productImageService.getImageDataByProductId(id);
+        String mimeType = productImageService.getMimeTypeByProductId(id);
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(mimeType))
+                .contentLength(imageData.length)
+                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                .body(imageData);
     }
 
     @GetMapping("/{id}/children")

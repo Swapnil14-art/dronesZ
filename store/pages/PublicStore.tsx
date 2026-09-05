@@ -3,7 +3,8 @@ import {
   ProductDto,
   fetchPublicProducts,
   fetchPublicChildProducts,
-  fetchPublicProductById
+  fetchPublicProductById,
+  getProductImageUrl
 } from '../services/api';
 import { useUserAuth } from '../context/UserAuthContext';
 import { UserAuthModal } from '../components/UserAuthModal';
@@ -280,7 +281,7 @@ export const PublicStore: React.FC = () => {
 
   return (
     <div className="blueprint-bg min-h-screen flex flex-col pt-24" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      
+
       {/* Shared Stitch Header Navigation */}
       <StitchHeader activePage="store" />
 
@@ -355,6 +356,7 @@ export const PublicStore: React.FC = () => {
         ) : activeProductDetail ? (
           <div className="product-detail-page-container" style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
             {/* Breadcrumb & Navigation Header */}
+            <br></br>
             <nav style={{
               display: 'flex',
               alignItems: 'center',
@@ -420,7 +422,7 @@ export const PublicStore: React.FC = () => {
                 }}>
                   {activeProductDetail.image ? (
                     <img
-                      src={activeProductDetail.image}
+                      src={getProductImageUrl(activeProductDetail.image)!}
                       alt={activeProductDetail.name}
                       className="product-img"
                       style={{ maxHeight: '400px', width: '100%', objectFit: 'contain', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15))' }}
@@ -627,8 +629,8 @@ export const PublicStore: React.FC = () => {
                     {addingToCartId === activeProductDetail.id
                       ? 'Adding to Cart...'
                       : activeProductDetail.status === 'AVAILABLE'
-                      ? `Add ${selectedQuantity} ${selectedQuantity > 1 ? 'Units' : 'Unit'} to Cart`
-                      : 'Currently Out of Stock'}
+                        ? `Add ${selectedQuantity} ${selectedQuantity > 1 ? 'Units' : 'Unit'} to Cart`
+                        : 'Currently Out of Stock'}
                   </button>
 
                   {activeProductDetail.status === 'AVAILABLE' && (
@@ -837,7 +839,7 @@ export const PublicStore: React.FC = () => {
                   >
                     <div className="image-void-stage">
                       {child.image ? (
-                        <img src={child.image} alt={child.name} className="product-img" />
+                        <img src={getProductImageUrl(child.image)!} alt={child.name} className="product-img" />
                       ) : (
                         <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: '#94a3b8', textTransform: 'uppercase' }}>
                           DRONESZ SPECIMEN
@@ -1019,7 +1021,7 @@ export const PublicStore: React.FC = () => {
                     >
                       <div className="image-void-stage">
                         {p.image ? (
-                          <img src={p.image} alt={p.name} className="product-img" />
+                          <img src={getProductImageUrl(p.image)!} alt={p.name} className="product-img" />
                         ) : (
                           <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: '#94a3b8', textTransform: 'uppercase' }}>
                             DRONESZ SPECIMEN

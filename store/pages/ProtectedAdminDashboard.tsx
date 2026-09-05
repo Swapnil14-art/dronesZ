@@ -17,11 +17,12 @@ export const ProtectedAdminDashboard: React.FC = () => {
   return (
     <div className="stitch-admin-container">
       {/* Sidebar Navigation */}
+
       <aside className="stitch-admin-sidebar">
         <div>
           {/* Brand Identity Header */}
           <div style={{ padding: '0.5rem 0.5rem 1.5rem 0.5rem', borderBottom: '1px solid #334155', marginBottom: '1.5rem' }}>
-            <div style={{ fontSize: '1.25rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: '#ffffff' }}>
+            <br></br><br></br><div style={{ fontSize: '1.25rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '-0.02em', color: '#ffffff' }}>
               DRONES<span style={{ color: 'var(--color-primary)' }}>Z</span> ADMIN
             </div>
             <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -35,21 +36,21 @@ export const ProtectedAdminDashboard: React.FC = () => {
               className={`stitch-admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
-              <span style={{ fontSize: '1.1rem' }}>📊</span> Overview
+              <span style={{ fontSize: '1.1rem' }}></span> Overview
             </div>
 
             <div
               className={`stitch-admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
               onClick={() => setActiveTab('products')}
             >
-              <span style={{ fontSize: '1.1rem' }}>📦</span> Products
+              <span style={{ fontSize: '1.1rem' }}></span> Products
             </div>
 
             <div
               className={`stitch-admin-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
               onClick={() => setActiveTab('categories')}
             >
-              <span style={{ fontSize: '1.1rem' }}>🏷️</span> Categories
+              <span style={{ fontSize: '1.1rem' }}></span> Categories
             </div>
           </nav>
         </div>
@@ -78,7 +79,7 @@ export const ProtectedAdminDashboard: React.FC = () => {
       </aside>
 
       {/* Main View Area */}
-      <main className="stitch-admin-main blueprint-bg">
+      <main className="stitch-admin-main blueprint-bg"><br></br><br></br>
         {activeTab === 'overview' && (
           <DashboardOverview token={token} onNavigateTab={(tab) => setActiveTab(tab)} />
         )}

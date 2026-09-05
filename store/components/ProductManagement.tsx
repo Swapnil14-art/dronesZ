@@ -9,7 +9,10 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-  fetchCategories
+  fetchCategories,
+  uploadOrReplaceProductImage,
+  deleteProductImage,
+  getProductImageUrl
 } from '../services/api';
 
 interface Props {
@@ -38,8 +41,9 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [editingProduct, setEditingProduct] = useState<ProductDto | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductDto | null>(null);
+  const [deletingImageProduct, setDeletingImageProduct] = useState<ProductDto | null>(null);
 
-  // Form state
+  // Form & Image upload state
   const [formName, setFormName] = useState<string>('');
   const [formDescription, setFormDescription] = useState<string>('');
   const [formProductType, setFormProductType] = useState<ProductType>('STANDALONE');
@@ -48,10 +52,32 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [formStatus, setFormStatus] = useState<ProductStatus>('AVAILABLE');
   const [formCategoryId, setFormCategoryId] = useState<string>('');
   const [formParentId, setFormParentId] = useState<string>('');
-  const [formImage, setFormImage] = useState<string>('');
+  
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [imageInfo, setImageInfo] = useState<{
+    name: string;
+    type: string;
+    originalSize: string;
+    optimizedSize?: string;
+  } | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
+
+  // Lock background body scrolling when any modal is open
+  useEffect(() => {
+    const isAnyModalOpen = Boolean(isAddModalOpen || editingProduct || deletingProduct || deletingImageProduct);
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAddModalOpen, editingProduct, deletingProduct, deletingImageProduct]);
 
   useEffect(() => {
     loadCategoriesList();
@@ -97,6 +123,85 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     }
   };
 
+  const handleFileSelect = (file: File) => {
+    const MAX_SIZE = 10 * 1024 * 1024; // 10 MB limit
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+
+    if (file.size > MAX_SIZE) {
+      setFileError(`Selected file exceeds maximum allowed limit of 10 MB. File size: ${(file.size / (1024 * 1024)).toFixed(2)} MB.`);
+      return;
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      setFileError(`Unsupported file format '${file.type}'. Allowed image formats are JPEG, PNG, WEBP, and GIF.`);
+      return;
+    }
+
+    setFileError(null);
+    setSelectedImageFile(file);
+
+    const origSizeStr = file.size >= 1024 * 1024
+      ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+      : `${(file.size / 1024).toFixed(1)} KB`;
+
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreviewUrl(previewUrl);
+
+    // Client-side image optimization estimation (max 1600x1600 preserving aspect ratio)
+    const img = new Image();
+    img.src = previewUrl;
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+      const MAX_DIM = 1600;
+
+      if (width > MAX_DIM || height > MAX_DIM) {
+        const scale = Math.min(MAX_DIM / width, MAX_DIM / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        const format = file.type.includes('png') ? 'image/png' : 'image/jpeg';
+        canvas.toBlob((blob) => {
+          if (blob) {
+            // Send the optimized File over HTTP!
+            const optimizedFile = new File([blob], file.name, {
+              type: blob.type || file.type,
+              lastModified: Date.now(),
+            });
+            setSelectedImageFile(optimizedFile);
+
+            const optSizeStr = blob.size >= 1024 * 1024
+              ? `${(blob.size / (1024 * 1024)).toFixed(2)} MB`
+              : `${(blob.size / 1024).toFixed(1)} KB`;
+            setImageInfo({
+              name: file.name,
+              type: file.type.split('/')[1]?.toUpperCase() || 'IMAGE',
+              originalSize: origSizeStr,
+              optimizedSize: optSizeStr,
+            });
+          }
+        }, format, 0.85);
+      }
+    };
+  };
+
+  const clearSelectedImage = () => {
+    if (imagePreviewUrl && imagePreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setSelectedImageFile(null);
+    setImagePreviewUrl(editingProduct?.image || null);
+    setImageInfo(null);
+    setFileError(null);
+  };
+
   const openAddModal = () => {
     setEditingProduct(null);
     setFormName('');
@@ -107,7 +212,10 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormStatus('AVAILABLE');
     setFormCategoryId('');
     setFormParentId('');
-    setFormImage('');
+    setSelectedImageFile(null);
+    setImagePreviewUrl(null);
+    setImageInfo(null);
+    setFileError(null);
     setFormError(null);
     setIsAddModalOpen(true);
   };
@@ -122,7 +230,10 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormStatus(product.status);
     setFormCategoryId(product.categoryId ? product.categoryId.toString() : '');
     setFormParentId(product.parentId ? product.parentId.toString() : '');
-    setFormImage(product.image || '');
+    setSelectedImageFile(null);
+    setImagePreviewUrl(product.image ? getProductImageUrl(product.image) : null);
+    setImageInfo(null);
+    setFileError(null);
     setFormError(null);
   };
 
@@ -130,11 +241,65 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setIsAddModalOpen(false);
     setEditingProduct(null);
     setDeletingProduct(null);
+    setDeletingImageProduct(null);
+    if (imagePreviewUrl && imagePreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setSelectedImageFile(null);
+    setImagePreviewUrl(null);
+    setImageInfo(null);
+    setFileError(null);
     setFormError(null);
+  };
+
+  const handleConfirmDeleteImage = async () => {
+    if (!deletingImageProduct) return;
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      await deleteProductImage(token, deletingImageProduct.id);
+      setSuccessMsg(`Image for product "${deletingImageProduct.name}" deleted successfully.`);
+      closeModal();
+      await loadProductsList();
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setFormError(err.message || 'Failed to delete product image');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDirectImageReplace = async (product: ProductDto, file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Selected image size exceeds 10MB limit.');
+      return;
+    }
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowed.includes(file.type.toLowerCase())) {
+      setError(`Unsupported format ${file.type}. Allowed: JPEG, PNG, WEBP, GIF.`);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await uploadOrReplaceProductImage(token, product.id, file);
+      setSuccessMsg(`Image for "${product.name}" replaced successfully.`);
+      await loadProductsList();
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to replace image');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (fileError) {
+      setFormError('Please fix file validation errors before saving.');
+      return;
+    }
+
     if (!formName.trim()) {
       setFormError('Product name is required');
       return;
@@ -183,15 +348,21 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       status: formStatus,
       categoryId: formCategoryId ? Number(formCategoryId) : null,
       parentId: formProductType === 'CHILD' && formParentId ? Number(formParentId) : null,
-      image: formImage.trim() || undefined,
     };
 
     try {
+      let savedProduct: ProductDto;
       if (editingProduct) {
-        await updateProduct(token, editingProduct.id, payload);
+        savedProduct = await updateProduct(token, editingProduct.id, payload);
+        if (selectedImageFile) {
+          savedProduct = await uploadOrReplaceProductImage(token, editingProduct.id, selectedImageFile);
+        }
         setSuccessMsg(`Product "${payload.name}" updated successfully`);
       } else {
-        await createProduct(token, payload);
+        savedProduct = await createProduct(token, payload);
+        if (selectedImageFile) {
+          savedProduct = await uploadOrReplaceProductImage(token, savedProduct.id, selectedImageFile);
+        }
         setSuccessMsg(`Product "${payload.name}" created successfully`);
       }
       closeModal();
@@ -344,12 +515,27 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                   return (
                     <tr key={p.id}>
                       <td>
-                        <div style={{ fontWeight: 700, color: 'var(--color-on-surface)' }}>{p.name}</div>
-                        {p.description && (
-                          <div style={{ fontSize: '12px', color: 'var(--color-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {p.description}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          {p.image ? (
+                            <img
+                              src={getProductImageUrl(p.image)!}
+                              alt={p.name}
+                              style={{ width: '42px', height: '42px', objectFit: 'contain', borderRadius: '0.375rem', border: '1px solid var(--color-outline)', background: '#f8fafc', flexShrink: 0 }}
+                            />
+                          ) : (
+                            <div style={{ width: '42px', height: '42px', borderRadius: '0.375rem', border: '1px dashed #cbd5e1', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+                              🛸
+                            </div>
+                          )}
+                          <div>
+                            <div style={{ fontWeight: 700, color: 'var(--color-on-surface)' }}>{p.name}</div>
+                            {p.description && (
+                              <div style={{ fontSize: '12px', color: 'var(--color-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {p.description}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </td>
                       <td>
                         <span className={p.productType === 'PARENT' ? 'badge-parent' : p.productType === 'CHILD' ? 'badge-category' : 'badge-category'}
@@ -402,7 +588,29 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                         </span>
                       </td>
                       <td style={{ textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                        <div style={{ display: 'inline-flex', gap: '0.35rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                          <label className="btn-stitch-ghost" style={{ padding: '0.35rem 0.65rem', fontSize: '12px', cursor: 'pointer', margin: 0 }}>
+                            Replace Image
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                              style={{ display: 'none' }}
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleDirectImageReplace(p, e.target.files[0]);
+                                }
+                              }}
+                            />
+                          </label>
+                          {p.image && (
+                            <button
+                              onClick={() => setDeletingImageProduct(p)}
+                              className="btn-stitch-ghost"
+                              style={{ padding: '0.35rem 0.65rem', fontSize: '12px', color: 'var(--color-error)' }}
+                            >
+                              Delete Image
+                            </button>
+                          )}
                           <button onClick={() => openEditModal(p)} className="btn-stitch-ghost" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
                             Edit
                           </button>
@@ -445,19 +653,47 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
       {/* Add / Edit Product Modal */}
       {(isAddModalOpen || editingProduct) && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '1.5rem', color: 'var(--color-on-surface)' }}>
-              {editingProduct ? `Edit Product #${editingProduct.id}` : 'Create New Product'}
-            </h3>
+        <div className="modal-overlay" onClick={closeModal} style={{ overscrollBehavior: 'contain', touchAction: 'none' }}>
+          <div
+            className="modal-content"
+            style={{
+              maxWidth: '640px',
+              width: '100%',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: 0,
+              overflow: 'hidden',
+              overscrollBehavior: 'contain'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Fixed Modal Header */}
+            <div style={{ padding: '1.5rem 2rem 1rem 2rem', borderBottom: '1px solid var(--color-outline)', flexShrink: 0 }}>
+              <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-on-surface)', margin: 0 }}>
+                {editingProduct ? `Edit Product #${editingProduct.id}` : 'Create New Product'}
+              </h3>
 
-            {formError && (
-              <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.25rem', fontSize: '13px' }}>
-                {formError}
-              </div>
-            )}
+              {formError && (
+                <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginTop: '1rem', fontSize: '13px' }}>
+                  {formError}
+                </div>
+              )}
+            </div>
 
-            <form onSubmit={handleSaveProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {/* Scrollable Form Body */}
+            <form
+              onSubmit={handleSaveProduct}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                overflowY: 'auto',
+                padding: '1.5rem 2rem',
+                gap: '1rem',
+                overscrollBehavior: 'contain'
+              }}
+            >
               <div className="stitch-form-group">
                 <label className="stitch-label">Product Name *</label>
                 <input
@@ -578,15 +814,105 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                 </div>
               </div>
 
-              <div className="stitch-form-group">
-                <label className="stitch-label">Image Asset URL (Optional)</label>
-                <input
-                  type="text"
-                  className="stitch-input"
-                  placeholder="e.g. /assets/products/motor-2207.jpg"
-                  value={formImage}
-                  onChange={(e) => setFormImage(e.target.value)}
-                />
+              {/* Upload Product Image Section */}
+              <div className="stitch-form-group" style={{ background: 'var(--color-surface-container-low, #f8fafc)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))' }}>
+                <label className="stitch-label" style={{ marginBottom: '0.25rem' }}>Upload Product Image</label>
+                <p style={{ fontSize: '12px', color: 'var(--color-muted)', marginBottom: '0.75rem' }}>
+                  Supported: JPEG, PNG, WEBP, GIF (Max limit: 10 MB. Auto-optimized to max 1600×1600 resolution).
+                </p>
+
+                {fileError && (
+                  <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.5rem 0.75rem', borderRadius: '0.375rem', marginBottom: '0.75rem', fontSize: '12px' }}>
+                    {fileError}
+                  </div>
+                )}
+
+                {imagePreviewUrl ? (
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', background: '#ffffff', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid var(--color-outline)' }}>
+                    <div style={{ width: '80px', height: '80px', borderRadius: '0.375rem', overflow: 'hidden', border: '1px solid var(--color-outline)', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <img src={imagePreviewUrl} alt="Product Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    </div>
+                    <div style={{ flex: 1, fontSize: '13px' }}>
+                      {imageInfo ? (
+                        <div>
+                          <div style={{ fontWeight: 600, color: 'var(--color-on-surface)', wordBreak: 'break-all' }}>{imageInfo.name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
+                            Format: <strong>{imageInfo.type}</strong> | Original: <strong>{imageInfo.originalSize}</strong>
+                            {imageInfo.optimizedSize && (
+                              <span style={{ color: 'var(--color-tertiary)', marginLeft: '0.35rem', fontWeight: 600 }}>
+                                ➔ Optimized: ~{imageInfo.optimizedSize}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ color: 'var(--color-muted)' }}>Current saved primary image from database</div>
+                      )}
+
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                        <label className="btn-stitch-ghost" style={{ padding: '0.25rem 0.6rem', fontSize: '11px', cursor: 'pointer', margin: 0 }}>
+                          Replace File
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                handleFileSelect(e.target.files[0]);
+                              }
+                            }}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={clearSelectedImage}
+                          className="btn-stitch-ghost"
+                          style={{ padding: '0.25rem 0.6rem', fontSize: '11px', color: 'var(--color-error)' }}
+                        >
+                          Remove Selection
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label
+                      className="btn-stitch-ghost"
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '1.25rem',
+                        border: '2px dashed var(--color-outline)',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        background: '#ffffff'
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--color-primary)', marginBottom: '0.35rem' }}>
+                        cloud_upload
+                      </span>
+                      <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-on-surface)' }}>
+                        Click to choose product image file
+                      </span>
+                      <span style={{ fontSize: '11px', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
+                        JPEG, PNG, WEBP or GIF up to 10 MB
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleFileSelect(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
               </div>
 
               <div className="stitch-form-group">
@@ -600,7 +926,18 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              {/* Fixed Modal Footer Action Buttons */}
+              <div
+                style={{
+                  display: 'flex',
+                  justify: 'flex-end',
+                  gap: '0.75rem',
+                  marginTop: '0.5rem',
+                  paddingTop: '1rem',
+                  borderTop: '1px solid var(--color-outline)',
+                  flexShrink: 0
+                }}
+              >
                 <button type="button" onClick={closeModal} className="btn-stitch-ghost">
                   Cancel
                 </button>
@@ -615,8 +952,8 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
       {/* Delete Confirmation Modal */}
       {deletingProduct && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={closeModal} style={{ overscrollBehavior: 'contain', touchAction: 'none' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ overscrollBehavior: 'contain', padding: '1.75rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--color-error)' }}>
               Confirm Product Deletion
             </h3>
@@ -636,6 +973,35 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
               </button>
               <button type="button" onClick={handleDeleteProduct} disabled={submitting} className="btn-stitch-danger">
                 {submitting ? 'Deleting...' : 'Delete Product'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Image Confirmation Modal */}
+      {deletingImageProduct && (
+        <div className="modal-overlay" onClick={closeModal} style={{ overscrollBehavior: 'contain', touchAction: 'none' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ overscrollBehavior: 'contain', padding: '1.75rem' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--color-error)' }}>
+              Confirm Image Deletion
+            </h3>
+            <p style={{ color: 'var(--color-muted)', marginBottom: '1.25rem', fontSize: '14px', lineHeight: 1.5 }}>
+              Are you sure you want to permanently delete the image for product <strong>"{deletingImageProduct.name}"</strong>? This action will remove the binary data from the database and cannot be undone.
+            </p>
+
+            {formError && (
+              <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1.25rem', fontSize: '13px' }}>
+                {formError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <button type="button" onClick={closeModal} className="btn-stitch-ghost">
+                Cancel
+              </button>
+              <button type="button" onClick={handleConfirmDeleteImage} disabled={submitting} className="btn-stitch-danger">
+                {submitting ? 'Deleting Image...' : 'Delete Image'}
               </button>
             </div>
           </div>

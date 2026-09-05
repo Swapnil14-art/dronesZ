@@ -171,7 +171,19 @@ const getApiBaseUrl = (): string => {
   return 'http://localhost:8070';
 };
 
-const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL = getApiBaseUrl();
+
+export const getProductImageUrl = (imagePath?: string | null): string | null => {
+  if (!imagePath || !imagePath.trim()) return null;
+  const path = imagePath.trim();
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
+    return path;
+  }
+  if (path.startsWith('/')) {
+    return `${API_BASE_URL}${path}`;
+  }
+  return `${API_BASE_URL}/${path}`;
+};
 
 /* Admin Login Route */
 export async function loginAdmin(email: String, password: String): Promise<LoginResponse> {
@@ -695,3 +707,38 @@ export async function deleteProduct(token: string, id: number): Promise<void> {
     throw new Error(err.message || 'Failed to delete product');
   }
 }
+
+export async function uploadOrReplaceProductImage(token: string, id: number, file: File): Promise<ProductDto> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${id}/image`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to upload/replace product image', timestamp: '' }));
+    throw new Error(err.message || 'Failed to upload/replace product image');
+  }
+
+  return response.json();
+}
+
+export async function deleteProductImage(token: string, id: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${id}/image`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to delete product image', timestamp: '' }));
+    throw new Error(err.message || 'Failed to delete product image');
+  }
+}
+
