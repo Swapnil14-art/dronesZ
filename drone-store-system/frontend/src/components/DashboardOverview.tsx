@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, fetchCategories, ProductDto, CategoryDto } from '../services/api';
+import { fetchProducts, fetchCategories, ProductDto, CategoryDto, getEffectiveProductStatus } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 interface Props {
@@ -35,9 +35,9 @@ export const DashboardOverview: React.FC<Props> = ({ token, onNavigateTab }) => 
     }
   };
 
-  const availableCount = products.filter((p) => p.status === 'AVAILABLE').length;
-  const outOfStockCount = products.filter((p) => p.status === 'OUT_OF_STOCK').length;
-  const comingSoonCount = products.filter((p) => p.status === 'COMING_SOON').length;
+  const availableCount = products.filter((p) => getEffectiveProductStatus(p) === 'AVAILABLE').length;
+  const outOfStockCount = products.filter((p) => getEffectiveProductStatus(p) === 'OUT_OF_STOCK').length;
+  const comingSoonCount = products.filter((p) => getEffectiveProductStatus(p) === 'COMING_SOON').length;
 
   return (
     <div>

@@ -23,6 +23,22 @@ export interface ErrorResponse {
 export type ProductStatus = 'AVAILABLE' | 'OUT_OF_STOCK' | 'COMING_SOON';
 export type ProductType = 'STANDALONE' | 'PARENT' | 'CHILD';
 
+export function getEffectiveProductStatus(product?: {
+  status?: string;
+  quantity?: number;
+  productType?: string;
+} | null): ProductStatus {
+  if (!product) return 'OUT_OF_STOCK';
+  if (product.productType === 'PARENT') {
+    return (product.status as ProductStatus) || 'AVAILABLE';
+  }
+  const qty = product.quantity !== undefined && product.quantity !== null ? product.quantity : 0;
+  if (qty <= 0) {
+    return 'OUT_OF_STOCK';
+  }
+  return (product.status as ProductStatus) || 'AVAILABLE';
+}
+
 export type ProductContentSectionType = 'WORD' | 'EXCEL';
 
 export interface ProductContentSectionDto {

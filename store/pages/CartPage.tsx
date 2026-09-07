@@ -81,6 +81,9 @@ export const CartPage: React.FC = () => {
   const shippingFee = subtotal >= 5000 || subtotal === 0 ? 0 : 150;
   const grandTotal = subtotal + estimatedTax + shippingFee;
 
+  const hasOutOfStockItems = cart?.items.some((item) => (item.stockAvailable || 0) <= 0 || item.status === 'OUT_OF_STOCK');
+  const hasOverStockItems = cart?.items.some((item) => item.quantity > (item.stockAvailable || 0));
+
   return (
     <div className="blueprint-bg min-h-screen flex flex-col pt-24" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <StitchHeader activePage="cart" />
@@ -102,7 +105,16 @@ export const CartPage: React.FC = () => {
 
         {error && (
           <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.375rem', marginBottom: '2rem' }}>
-            {error}
+            ✕ {error}
+          </div>
+        )}
+
+        {hasOutOfStockItems && (
+          <div style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem 1.25rem', borderRadius: '0.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+            <div>
+              <strong>One or more items in your cart are currently out of stock.</strong> Please remove them to proceed with checkout.
+            </div>
           </div>
         )}
 
@@ -125,97 +137,125 @@ export const CartPage: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '2rem' }}>
             {/* Cart Item List */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {cart.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="stitch-card"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '90px 1fr auto auto',
-                    gap: '1.5rem',
-                    alignItems: 'center',
-                    padding: '1.25rem',
-                  }}
-                >
-                  {/* Thumbnail Void Container */}
+              {cart.items.map((item) => {
+                const stock = item.stockAvailable !== undefined && item.stockAvailable !== null ? item.stockAvailable : 0;
+                const isItemOutOfStock = stock <= 0 || item.status === 'OUT_OF_STOCK';
+                const isMaxStockInCart = !isItemOutOfStock && item.quantity >= stock;
+
+                return (
                   <div
-                    className="image-void-stage"
+                    key={item.id}
+                    className="stitch-card"
                     style={{
-                      width: '90px',
-                      height: '90px',
-                      borderRadius: '0.375rem',
-                      fontSize: '1.75rem',
-                      padding: '0.25rem'
+                      display: 'grid',
+                      gridTemplateColumns: '90px 1fr auto auto',
+                      gap: '1.5rem',
+                      alignItems: 'center',
+                      padding: '1.25rem',
+                      border: isItemOutOfStock ? '1px solid #fca5a5' : undefined,
+                      background: isItemOutOfStock ? '#fff5f5' : undefined
                     }}
                   >
-                    {item.productImage ? (
-                      <img src={getProductImageUrl(item.productImage)!} alt={item.productName} className="product-img" />
-                    ) : (
-                      <span>🚁</span>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div>
-                    <span className="badge-category" style={{ marginBottom: '0.4rem', display: 'inline-block' }}>
-                      {item.productType}
-                    </span>
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-on-surface)', marginBottom: '0.25rem' }}>
-                      {item.productName}
-                    </h3>
-                    <div style={{ fontSize: '12px', color: 'var(--color-muted)' }}>
-                      Stock available: <strong>{item.stockAvailable} units</strong>
-                    </div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--color-primary)', marginTop: '0.4rem' }}>
-                      ₹{item.price.toLocaleString('en-IN')}
-                    </div>
-                  </div>
-
-                  {/* Quantity controls */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <button
-                      className="btn-stitch-ghost"
-                      style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      disabled={updatingId === item.id || item.quantity <= 1}
-                      onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity - 1, item.stockAvailable)}
-                    >
-                      -
-                    </button>
-                    <span style={{ fontWeight: 700, width: '28px', textAlign: 'center', fontSize: '1rem' }}>{item.quantity}</span>
-                    <button
-                      className="btn-stitch-ghost"
-                      style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      disabled={updatingId === item.id || item.quantity >= item.stockAvailable}
-                      onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity + 1, item.stockAvailable)}
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  {/* Subtotal & Delete */}
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--color-on-surface)' }}>
-                      ₹{item.subtotal.toLocaleString('en-IN')}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(item.id)}
-                      disabled={updatingId === item.id}
+                    {/* Thumbnail Void Container */}
+                    <div
+                      className="image-void-stage"
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--color-error)',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        padding: 0,
+                        width: '90px',
+                        height: '90px',
+                        borderRadius: '0.375rem',
+                        fontSize: '1.75rem',
+                        padding: '0.25rem'
                       }}
                     >
-                      Remove 🗑️
-                    </button>
+                      {item.productImage ? (
+                        <img src={getProductImageUrl(item.productImage)!} alt={item.productName} className="product-img" />
+                      ) : (
+                        <span>🚁</span>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                        <span className="badge-category" style={{ display: 'inline-block' }}>
+                          {item.productType}
+                        </span>
+                        {isItemOutOfStock ? (
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', background: '#fee2e2', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                            OUT OF STOCK
+                          </span>
+                        ) : isMaxStockInCart ? (
+                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', background: '#fef3c7', padding: '2px 8px', borderRadius: '4px' }}>
+                            MAX STOCK IN CART
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-on-surface)', marginBottom: '0.25rem' }}>
+                        {item.productName}
+                      </h3>
+
+                      <div style={{ fontSize: '12px', color: isItemOutOfStock ? 'var(--color-error)' : 'var(--color-muted)', fontWeight: isItemOutOfStock ? 700 : 400 }}>
+                        {isItemOutOfStock
+                          ? 'Item is currently unavailable in inventory'
+                          : `Stock available: ${stock} unit${stock === 1 ? '' : 's'}`}
+                      </div>
+
+                      <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--color-primary)', marginTop: '0.4rem' }}>
+                        ₹{item.price.toLocaleString('en-IN')}
+                      </div>
+                    </div>
+
+                    {/* Quantity controls */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button
+                        className="btn-stitch-ghost"
+                        style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        disabled={updatingId === item.id || item.quantity <= 1 || isItemOutOfStock}
+                        onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity - 1, stock)}
+                        title="Decrease quantity"
+                      >
+                        -
+                      </button>
+                      <span style={{ fontWeight: 700, width: '28px', textAlign: 'center', fontSize: '1rem', color: isItemOutOfStock ? 'var(--color-muted)' : 'inherit' }}>
+                        {item.quantity}
+                      </span>
+                      <button
+                        className="btn-stitch-ghost"
+                        style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        disabled={updatingId === item.id || item.quantity >= stock || isItemOutOfStock}
+                        onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity + 1, stock)}
+                        title={item.quantity >= stock ? `Cannot exceed available stock (${stock})` : "Increase quantity"}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Subtotal & Delete */}
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--color-on-surface)' }}>
+                        ₹{item.subtotal.toLocaleString('en-IN')}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(item.id)}
+                        disabled={updatingId === item.id}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--color-error)',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          padding: 0,
+                        }}
+                      >
+                        Remove 🗑️
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Order Summary Box */}
@@ -268,10 +308,18 @@ export const CartPage: React.FC = () => {
 
                 <button
                   className="btn-stitch-primary"
+                  disabled={hasOutOfStockItems || hasOverStockItems}
                   onClick={() => navigateTo('/checkout')}
-                  style={{ width: '100%', padding: '0.85rem', fontSize: '0.9rem', fontWeight: 700 }}
+                  style={{
+                    width: '100%',
+                    padding: '0.85rem',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    opacity: (hasOutOfStockItems || hasOverStockItems) ? 0.6 : 1,
+                    cursor: (hasOutOfStockItems || hasOverStockItems) ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  Proceed to Checkout →
+                  {hasOutOfStockItems ? 'Remove Out-of-Stock Items' : 'Proceed to Checkout →'}
                 </button>
               </div>
             </div>

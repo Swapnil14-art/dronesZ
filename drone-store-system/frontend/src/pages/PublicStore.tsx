@@ -5,7 +5,8 @@ import {
   fetchPublicProducts,
   fetchPublicChildProducts,
   fetchPublicProductById,
-  getProductImageUrl
+  getProductImageUrl,
+  getEffectiveProductStatus
 } from '../services/api';
 import { useUserAuth } from '../context/UserAuthContext';
 import { UserAuthModal } from '../components/UserAuthModal';
@@ -195,7 +196,7 @@ function slugify(name: string): string {
 }
 
 export const PublicStore: React.FC = () => {
-  const { isAuthenticated, addToCart } = useUserAuth();
+  const { isAuthenticated, addToCart, cart } = useUserAuth();
 
   // Main catalog products (STANDALONE & PARENT)
   const [products, setProducts] = useState<ProductDto[]>([]);
@@ -360,6 +361,25 @@ export const PublicStore: React.FC = () => {
 
   const handleAddToCart = async (product: ProductDto, quantity: number = 1) => {
     setCartFeedbackMsg(null);
+    const effStatus = getEffectiveProductStatus(product);
+    const availableStock = product.quantity !== undefined && product.quantity !== null ? product.quantity : 0;
+    
+    if (effStatus !== 'AVAILABLE' || availableStock <= 0) {
+      alert(`"${product.name}" is currently out of stock.`);
+      return;
+    }
+
+    const currentInCart = cart?.items?.find((i) => i.productId === product.id)?.quantity || 0;
+    if (currentInCart + quantity > availableStock) {
+      const remaining = Math.max(0, availableStock - currentInCart);
+      if (remaining === 0) {
+        alert(`You already have the maximum available stock (${availableStock} units) of "${product.name}" in your cart.`);
+      } else {
+        alert(`Cannot add ${quantity} units. Only ${remaining} more unit(s) available for "${product.name}" (you already have ${currentInCart} in your cart).`);
+      }
+      return;
+    }
+
     if (!isAuthenticated) {
       setUserAuthMode('login');
       setIsUserAuthOpen(true);
@@ -379,11 +399,11 @@ export const PublicStore: React.FC = () => {
   };
 
   const parentProducts = products.filter((p) => p.productType === 'PARENT');
-  const standaloneProducts = products.filter((p) => p.productType === 'STANDALONE');
 
   const filteredChildProducts = childProducts.filter((c) => {
+    const effStatus = getEffectiveProductStatus(c);
     const matchesSearch = !search || c.name.toLowerCase().includes(search.toLowerCase()) || (c.description && c.description.toLowerCase().includes(search.toLowerCase()));
-    const matchesStatus = !selectedStatus || c.status === selectedStatus;
+    const matchesStatus = !selectedStatus || effStatus === selectedStatus;
     return matchesSearch && matchesStatus;
   });
 
@@ -512,52 +532,15 @@ export const PublicStore: React.FC = () => {
               width: '100%',
               minWidth: 0
             }}>
-              {/* Left Column: Media Stage & Specimen Visualizer */}
+              {/* Left Column: Multi-Image Amazon-style Product Gallery */}
               <div style={{ width: '100%', minWidth: 0 }}>
-                <div className="image-void-stage" style={{
-                  borderRadius: '0.75rem',
-                  minHeight: '420px',
-                  maxHeight: '500px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  border: '1px solid var(--color-outline)',
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  height: '500px'
-                }}>
-                  {activeProductDetail.image ? (
-                    <img
-                      src={getProductImageUrl(activeProductDetail.image)!}
-                      alt={activeProductDetail.name}
-                      className="product-img"
-                      style={{ borderRadius: '0.75rem' }}
-                    />
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: '2rem' }}>
-                      <div style={{ fontSize: '48px', marginBottom: '1rem', opacity: 0.8 }}>🛸</div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                        DRONESZ SPECIMEN CAD MODEL
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#64748b' }}>
-                        Hardware ID #{activeProductDetail.id.toString().padStart(4, '0')}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Corner Specimen Identifier Badge */}
-                  <div style={{ position: 'absolute', top: '16px', left: '16px' }}>
-                    <span className="badge-category" style={{ letterSpacing: '0.08em', padding: '0.35rem 0.75rem' }}>
-                      {activeProductDetail.productType.replace('_', ' ')}
-                    </span>
-                  </div>
-
-                  <div style={{ position: 'absolute', top: '16px', right: '16px', fontSize: '11px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>
-                    REF #{activeProductDetail.id}
-                  </div>
-                </div>
+                <ProductGallery
+                  productId={activeProductDetail.id}
+                  productName={activeProductDetail.name}
+                  productType={activeProductDetail.productType}
+                  images={activeProductDetail.images}
+                  primaryImageUrl={activeProductDetail.image}
+                />
 
                 {/* Feature Badges Grid underneath image */}
                 <div style={{
@@ -603,164 +586,198 @@ export const PublicStore: React.FC = () => {
                 </h1>
 
                 {/* Stock & Status Bar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.75rem', flexWrap: 'wrap' }}>
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    padding: '0.35rem 0.85rem',
-                    borderRadius: '9999px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    background: activeProductDetail.status === 'AVAILABLE' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                    color: activeProductDetail.status === 'AVAILABLE' ? 'var(--color-tertiary)' : 'var(--color-error)',
-                    border: `1px solid ${activeProductDetail.status === 'AVAILABLE' ? 'var(--color-tertiary)' : 'var(--color-error)'}`
-                  }}>
-                    ● {activeProductDetail.status.replace('_', ' ')}
-                  </span>
+                {(() => {
+                  const effectiveStatus = getEffectiveProductStatus(activeProductDetail);
+                  const availableStock = activeProductDetail.quantity !== undefined && activeProductDetail.quantity !== null ? activeProductDetail.quantity : 0;
+                  const cartItem = cart?.items?.find((i) => i.productId === activeProductDetail.id);
+                  const currentInCart = cartItem ? cartItem.quantity : 0;
+                  const remainingStock = Math.max(0, availableStock - currentInCart);
+                  const isOutOfStock = effectiveStatus !== 'AVAILABLE' || availableStock <= 0;
+                  const isMaxInCart = remainingStock <= 0 && currentInCart > 0;
 
-                  <span style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>
-                    Inventory Level: <strong style={{ color: 'var(--color-on-surface)' }}>{activeProductDetail.quantity} units in stock</strong>
-                  </span>
-                </div>
-
-                {/* Price Card */}
-                <div style={{
-                  background: 'var(--color-surface-container-low)',
-                  border: '1px solid var(--color-outline)',
-                  padding: '1.5rem',
-                  borderRadius: '0.75rem',
-                  marginBottom: '2rem'
-                }}>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-on-surface-variant)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                    Unit Retail Price
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem' }}>
-                    <span style={{ fontSize: '2.75rem', fontWeight: 900, color: 'var(--color-primary)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
-                      ₹{activeProductDetail.price.toFixed(2)}
-                    </span>
-                    <span style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>
-                      ({activeProductDetail.taxNote || (activeProductDetail.taxInclusive !== false ? 'GST & Taxes Included' : 'Excl. Taxes')})
-                    </span>
-                  </div>
-                </div>
-
-                {/* Quantity Stepper & Add to Cart Action */}
-                <div style={{ marginBottom: '2rem' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
-                    Select Quantity
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {/* Quantity Stepper */}
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      border: '1px solid var(--color-outline)',
-                      borderRadius: '0.5rem',
-                      background: '#fff',
-                      overflow: 'hidden'
-                    }}>
-                      <button
-                        disabled={selectedQuantity <= 1}
-                        onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
-                        style={{
-                          padding: '0.75rem 1rem',
-                          border: 'none',
-                          background: 'none',
-                          cursor: selectedQuantity <= 1 ? 'not-allowed' : 'pointer',
-                          fontWeight: 800,
-                          fontSize: '1.1rem',
-                          color: 'var(--color-on-surface)'
-                        }}
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min={1}
-                        max={activeProductDetail.quantity || 99}
-                        value={selectedQuantity}
-                        onChange={(e) => setSelectedQuantity(Math.max(1, Math.min(activeProductDetail.quantity || 99, parseInt(e.target.value) || 1)))}
-                        style={{
-                          width: '50px',
-                          textAlign: 'center',
-                          border: 'none',
+                  return (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.75rem', flexWrap: 'wrap' }}>
+                        <span style={{
+                          fontSize: '12px',
                           fontWeight: 700,
-                          fontSize: '1rem',
-                          outline: 'none',
-                          color: 'var(--color-on-surface)'
-                        }}
-                      />
-                      <button
-                        disabled={selectedQuantity >= (activeProductDetail.quantity || 99)}
-                        onClick={() => setSelectedQuantity(selectedQuantity + 1)}
-                        style={{
-                          padding: '0.75rem 1rem',
-                          border: 'none',
-                          background: 'none',
-                          cursor: selectedQuantity >= (activeProductDetail.quantity || 99) ? 'not-allowed' : 'pointer',
-                          fontWeight: 800,
-                          fontSize: '1.1rem',
-                          color: 'var(--color-on-surface)'
-                        }}
-                      >
-                        +
-                      </button>
-                    </div>
+                          padding: '0.35rem 0.85rem',
+                          borderRadius: '9999px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          background: effectiveStatus === 'AVAILABLE' ? 'rgba(16, 185, 129, 0.12)' : (effectiveStatus === 'OUT_OF_STOCK' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)'),
+                          color: effectiveStatus === 'AVAILABLE' ? 'var(--color-tertiary)' : (effectiveStatus === 'OUT_OF_STOCK' ? 'var(--color-error)' : 'var(--color-amber)'),
+                          border: `1px solid ${effectiveStatus === 'AVAILABLE' ? 'var(--color-tertiary)' : (effectiveStatus === 'OUT_OF_STOCK' ? 'var(--color-error)' : 'var(--color-amber)')}`
+                        }}>
+                          ● {effectiveStatus.replace('_', ' ')}
+                        </span>
 
-                    {/* Total Price preview */}
-                    <div style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>
-                      Total: <strong style={{ color: 'var(--color-primary)', fontSize: '1.1rem' }}>₹{(activeProductDetail.price * selectedQuantity).toFixed(2)}</strong>
-                    </div>
-                  </div>
-                </div>
+                        <span style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>
+                          Inventory Level:{' '}
+                          <strong style={{ color: isOutOfStock ? 'var(--color-error)' : 'var(--color-on-surface)' }}>
+                            {isOutOfStock ? '0 units (Out of Stock)' : `${availableStock} units in stock`}
+                          </strong>
+                          {currentInCart > 0 && (
+                            <span style={{ color: isMaxInCart ? 'var(--color-error)' : 'var(--color-primary)', marginLeft: '0.5rem', fontSize: '13px', fontWeight: 700 }}>
+                              ({currentInCart} in cart{isMaxInCart ? ' - max reached' : `, ${remainingStock} more available`})
+                            </span>
+                          )}
+                        </span>
+                      </div>
 
-                {/* Action Buttons */}
-                <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
-                  <button
-                    disabled={activeProductDetail.status !== 'AVAILABLE' || addingToCartId === activeProductDetail.id}
-                    onClick={() => handleAddToCart(activeProductDetail, selectedQuantity)}
-                    className="btn-stitch-primary"
-                    style={{
-                      width: '100%',
-                      padding: '1.1rem 2rem',
-                      fontSize: '1.15rem',
-                      fontWeight: 800,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.75rem',
-                      borderRadius: '0.5rem'
-                    }}
-                  >
-                    <CartIcon size={22} />
-                    {addingToCartId === activeProductDetail.id
-                      ? 'Adding to Cart...'
-                      : activeProductDetail.status === 'AVAILABLE'
-                        ? `Add ${selectedQuantity} ${selectedQuantity > 1 ? 'Units' : 'Unit'} to Cart`
-                        : 'Currently Out of Stock'}
-                  </button>
+                      {/* Price Card */}
+                      <div style={{
+                        background: 'var(--color-surface-container-low)',
+                        border: '1px solid var(--color-outline)',
+                        padding: '1.5rem',
+                        borderRadius: '0.75rem',
+                        marginBottom: '2rem'
+                      }}>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-on-surface-variant)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
+                          Unit Retail Price
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem' }}>
+                          <span style={{ fontSize: '2.75rem', fontWeight: 900, color: 'var(--color-primary)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
+                            ₹{activeProductDetail.price.toFixed(2)}
+                          </span>
+                          <span style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>
+                            ({activeProductDetail.taxNote || (activeProductDetail.taxInclusive !== false ? 'GST & Taxes Included' : 'Excl. Taxes')})
+                          </span>
+                        </div>
+                      </div>
 
-                  {activeProductDetail.status === 'AVAILABLE' && (
-                    <button
-                      onClick={async () => {
-                        await handleAddToCart(activeProductDetail, selectedQuantity);
-                        navigateTo('/checkout');
-                      }}
-                      className="btn-stitch-ghost"
-                      style={{
-                        width: '100%',
-                        padding: '0.85rem 2rem',
-                        fontSize: '1rem',
-                        fontWeight: 700,
-                        textAlign: 'center',
-                        border: '1px solid var(--color-outline)'
-                      }}
-                    >
-                      Proceed directly to Buy Now &rarr;
-                    </button>
-                  )}
-                </div>
+                      {/* Quantity Stepper & Add to Cart Action */}
+                      <div style={{ marginBottom: '2rem' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
+                          Select Quantity
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                          {/* Quantity Stepper */}
+                          <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            border: '1px solid var(--color-outline)',
+                            borderRadius: '0.5rem',
+                            background: isOutOfStock || isMaxInCart ? '#f1f5f9' : '#fff',
+                            overflow: 'hidden',
+                            opacity: isOutOfStock || isMaxInCart ? 0.6 : 1
+                          }}>
+                            <button
+                              disabled={isOutOfStock || isMaxInCart || selectedQuantity <= 1}
+                              onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                border: 'none',
+                                background: 'none',
+                                cursor: (isOutOfStock || isMaxInCart || selectedQuantity <= 1) ? 'not-allowed' : 'pointer',
+                                fontWeight: 800,
+                                fontSize: '1.1rem',
+                                color: 'var(--color-on-surface)'
+                              }}
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              disabled={isOutOfStock || isMaxInCart}
+                              min={1}
+                              max={Math.max(1, remainingStock)}
+                              value={isOutOfStock ? 0 : Math.min(selectedQuantity, Math.max(1, remainingStock))}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value) || 1;
+                                setSelectedQuantity(Math.max(1, Math.min(remainingStock, val)));
+                              }}
+                              style={{
+                                width: '50px',
+                                textAlign: 'center',
+                                border: 'none',
+                                fontWeight: 700,
+                                fontSize: '1rem',
+                                outline: 'none',
+                                background: 'transparent',
+                                color: 'var(--color-on-surface)'
+                              }}
+                            />
+                            <button
+                              disabled={isOutOfStock || isMaxInCart || selectedQuantity >= remainingStock}
+                              onClick={() => setSelectedQuantity(Math.min(remainingStock, selectedQuantity + 1))}
+                              style={{
+                                padding: '0.75rem 1rem',
+                                border: 'none',
+                                background: 'none',
+                                cursor: (isOutOfStock || isMaxInCart || selectedQuantity >= remainingStock) ? 'not-allowed' : 'pointer',
+                                fontWeight: 800,
+                                fontSize: '1.1rem',
+                                color: 'var(--color-on-surface)'
+                              }}
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          {/* Total Price preview */}
+                          <div style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>
+                            Total: <strong style={{ color: 'var(--color-primary)', fontSize: '1.1rem' }}>
+                              ₹{(activeProductDetail.price * (isOutOfStock ? 0 : Math.min(selectedQuantity, Math.max(1, remainingStock)))).toFixed(2)}
+                            </strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+                        <button
+                          disabled={isOutOfStock || isMaxInCart || remainingStock <= 0 || addingToCartId === activeProductDetail.id}
+                          onClick={() => handleAddToCart(activeProductDetail, Math.min(selectedQuantity, remainingStock))}
+                          className="btn-stitch-primary"
+                          style={{
+                            width: '100%',
+                            padding: '1.1rem 2rem',
+                            fontSize: '1.15rem',
+                            fontWeight: 800,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.75rem',
+                            borderRadius: '0.5rem',
+                            opacity: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 0.6 : 1,
+                            cursor: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          <CartIcon size={22} />
+                          {addingToCartId === activeProductDetail.id
+                            ? 'Adding to Cart...'
+                            : isOutOfStock
+                              ? 'Currently Out of Stock'
+                              : isMaxInCart
+                                ? `Max Available Stock in Cart (${currentInCart})`
+                                : `Add ${Math.min(selectedQuantity, remainingStock)} ${Math.min(selectedQuantity, remainingStock) > 1 ? 'Units' : 'Unit'} to Cart`}
+                        </button>
+
+                        {effectiveStatus === 'AVAILABLE' && remainingStock > 0 && (
+                          <button
+                            onClick={async () => {
+                              await handleAddToCart(activeProductDetail, Math.min(selectedQuantity, remainingStock));
+                              navigateTo('/checkout');
+                            }}
+                            className="btn-stitch-ghost"
+                            style={{
+                              width: '100%',
+                              padding: '0.85rem 2rem',
+                              fontSize: '1rem',
+                              fontWeight: 700,
+                              textAlign: 'center',
+                              border: '1px solid var(--color-outline)'
+                            }}
+                          >
+                            Proceed directly to Buy Now &rarr;
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
@@ -814,55 +831,6 @@ export const PublicStore: React.FC = () => {
                     No additional text description provided for this product specimen in the database catalog.
                   </p>
                 )}
-              </div>
-
-              {/* Specifications Table Panel */}
-              <div style={{
-                background: '#fff',
-                border: '1px solid var(--color-outline)',
-                padding: '2rem',
-                borderRadius: '0.75rem',
-                width: '100%',
-                minWidth: 0,
-                boxSizing: 'border-box',
-                overflowWrap: 'break-word',
-                wordBreak: 'break-word'
-              }}>
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 700,
-                  color: 'var(--color-on-surface)',
-                  marginBottom: '1rem',
-                  paddingBottom: '0.75rem',
-                  borderBottom: '1px solid var(--color-outline)'
-                }}>
-                  Technical Specifications Matrixs
-                </h3>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '14px', width: '100%', minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>System Product ID</span>
-                    <strong style={{ color: 'var(--color-on-surface)' }}>#{activeProductDetail.id}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Classification Category</span>
-                    <strong style={{ color: 'var(--color-on-surface)', textTransform: 'uppercase' }}>{activeProductDetail.productType.replace('_', ' ')}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Inventory Quantity</span>
-                    <strong style={{ color: 'var(--color-on-surface)' }}>{activeProductDetail.quantity} Units</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Availability State</span>
-                    <strong style={{ color: activeProductDetail.status === 'AVAILABLE' ? 'var(--color-tertiary)' : 'var(--color-error)' }}>
-                      {activeProductDetail.status.replace('_', ' ')}
-                    </strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Database Reference</span>
-                    <strong style={{ color: 'var(--color-on-surface)' }}>Live Synchronized</strong>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -985,44 +953,76 @@ export const PublicStore: React.FC = () => {
                         {child.name}
                       </h4>
 
-                      <div style={{
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        color: child.status === 'AVAILABLE' ? 'var(--color-tertiary)' : (child.status === 'OUT_OF_STOCK' ? 'var(--color-error)' : 'var(--color-amber)'),
-                        marginBottom: '0.75rem',
-                        textTransform: 'uppercase'
-                      }}>
-                        {child.status.replace('_', ' ')}
-                      </div>
+                      {(() => {
+                        const childEffectiveStatus = getEffectiveProductStatus(child);
+                        const childStock = child.quantity !== undefined && child.quantity !== null ? child.quantity : 0;
+                        const childCartItem = cart?.items?.find((i) => i.productId === child.id);
+                        const childInCart = childCartItem ? childCartItem.quantity : 0;
+                        const childRemaining = Math.max(0, childStock - childInCart);
+                        const isChildOutOfStock = childEffectiveStatus !== 'AVAILABLE' || childStock <= 0;
+                        const isChildMaxInCart = childRemaining <= 0 && childInCart > 0;
 
-                      <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: 'auto', marginBottom: '1rem' }}>
-                        ₹{child.price.toFixed(2)}
-                      </div>
+                        return (
+                          <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                              <div style={{
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                color: childEffectiveStatus === 'AVAILABLE' ? 'var(--color-tertiary)' : (childEffectiveStatus === 'OUT_OF_STOCK' ? 'var(--color-error)' : 'var(--color-amber)'),
+                                textTransform: 'uppercase'
+                              }}>
+                                ● {childEffectiveStatus.replace('_', ' ')}
+                              </div>
+                              <div style={{ fontSize: '11px', color: 'var(--color-muted)', fontWeight: 600 }}>
+                                {isChildOutOfStock ? '0 in stock' : `${childStock} in stock`}
+                              </div>
+                            </div>
 
-                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
-                        <button
-                          disabled={child.status !== 'AVAILABLE' || addingToCartId === child.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToCart(child);
-                          }}
-                          className="btn-stitch-primary"
-                          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
-                        >
-                          <CartIcon size={18} />
-                          {addingToCartId === child.id ? 'Adding...' : (child.status === 'AVAILABLE' ? 'Add to Cart' : 'Out of Stock')}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigateToProductDetail(child.id);
-                          }}
-                          className="btn-stitch-ghost"
-                          title="View Product Details"
-                        >
-                          Specs
-                        </button>
-                      </div>
+                            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: 'auto', marginBottom: '1rem' }}>
+                              ₹{child.price.toFixed(2)}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                              <button
+                                disabled={isChildOutOfStock || isChildMaxInCart || addingToCartId === child.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddToCart(child);
+                                }}
+                                className="btn-stitch-primary"
+                                style={{
+                                  flex: 1,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '0.4rem',
+                                  opacity: (isChildOutOfStock || isChildMaxInCart) ? 0.6 : 1,
+                                  cursor: (isChildOutOfStock || isChildMaxInCart) ? 'not-allowed' : 'pointer'
+                                }}
+                              >
+                                <CartIcon size={18} />
+                                {addingToCartId === child.id
+                                  ? 'Adding...'
+                                  : isChildOutOfStock
+                                    ? 'Out of Stock'
+                                    : isChildMaxInCart
+                                      ? 'Max in Cart'
+                                      : 'Add to Cart'}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigateToProductDetail(child.id);
+                                }}
+                                className="btn-stitch-ghost"
+                                title="View Product Details"
+                              >
+                                Specs
+                              </button>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
@@ -1119,6 +1119,16 @@ export const PublicStore: React.FC = () => {
                 </div>
               </section>
             )}
+
+            {loading ? (
+              <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
+                Loading DronesZ storefront catalog...
+              </div>
+            ) : parentProducts.length === 0 ? (
+              <div style={{ background: '#fff', border: '1px solid var(--color-outline)', padding: '4rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '0.5rem' }}>
+                No product series found matching your search query.
+              </div>
+            ) : null}
           </div>
         )}
       </main>

@@ -45,14 +45,33 @@ public class CartService {
                 });
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public CartDto getUserCart(String userEmail) {
         User user = userService.getUserByEmail(userEmail);
         Optional<Cart> cartOpt = cartRepository.findByUserId(user.getId());
         if (!cartOpt.isPresent()) {
             return new CartDto(null, java.util.Collections.emptyList(), BigDecimal.ZERO, 0);
         }
-        return mapToDto(cartOpt.get());
+        Cart cart = cartOpt.get();
+
+        // Auto-restrict cart quantities to current available stock
+        boolean modified = false;
+        for (CartItem item : cart.getItems()) {
+            Product p = item.getProduct();
+            int currentStock = (p != null && p.getQuantity() != null) ? p.getQuantity() : 0;
+            if (p != null && p.getStatus() == ProductStatus.AVAILABLE && currentStock > 0) {
+                if (item.getQuantity() > currentStock) {
+                    item.setQuantity(currentStock);
+                    cartItemRepository.save(item);
+                    modified = true;
+                }
+            }
+        }
+        if (modified) {
+            cart = cartRepository.findById(cart.getId()).orElse(cart);
+        }
+
+        return mapToDto(cart);
     }
 
     @Transactional
@@ -68,19 +87,28 @@ public class CartService {
             throw new BusinessRuleException("Cannot add product series header directly to cart. Please select a specific model variant.");
         }
 
-        // Rule 2: Check availability status
-        if (product.getStatus() != ProductStatus.AVAILABLE) {
-            throw new BusinessRuleException("Product '" + product.getName() + "' is currently " + product.getStatus().name().replace('_', ' ') + " and cannot be added to cart.");
+        int availableStock = product.getQuantity() != null ? product.getQuantity() : 0;
+
+        // Rule 2: Check availability status and stock
+        if (product.getStatus() != ProductStatus.AVAILABLE || availableStock <= 0) {
+            throw new BusinessRuleException("Product '" + product.getName() + "' is currently out of stock and cannot be added to cart.");
         }
 
         // Rule 3: Check stock quantity
         int requestQty = request.getQuantity() != null ? request.getQuantity() : 1;
+        if (requestQty <= 0) {
+            throw new BusinessRuleException("Quantity must be at least 1.");
+        }
+
         Optional<CartItem> existingItemOpt = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId());
         int currentInCart = existingItemOpt.isPresent() ? existingItemOpt.get().getQuantity() : 0;
         int totalRequested = currentInCart + requestQty;
 
-        if (totalRequested > product.getQuantity()) {
-            throw new BusinessRuleException("Requested quantity (" + totalRequested + ") exceeds available stock (" + product.getQuantity() + ") for '" + product.getName() + "'.");
+        if (totalRequested > availableStock) {
+            if (currentInCart >= availableStock) {
+                throw new BusinessRuleException("You already have the maximum available stock (" + availableStock + " units) of '" + product.getName() + "' in your cart.");
+            }
+            throw new BusinessRuleException("Cannot add " + requestQty + " more units. Total in cart (" + totalRequested + ") would exceed available stock (" + availableStock + ") for '" + product.getName() + "'.");
         }
 
         if (existingItemOpt.isPresent()) {
@@ -110,8 +138,16 @@ public class CartService {
         }
 
         Product product = item.getProduct();
-        if (quantity > product.getQuantity()) {
-            throw new BusinessRuleException("Requested quantity (" + quantity + ") exceeds available stock (" + product.getQuantity() + ") for '" + product.getName() + "'.");
+        int availableStock = (product != null && product.getQuantity() != null) ? product.getQuantity() : 0;
+        if (product == null || product.getStatus() != ProductStatus.AVAILABLE || availableStock <= 0) {
+            cartItemRepository.delete(item);
+            throw new BusinessRuleException("Product '" + (product != null ? product.getName() : "Item") + "' is currently out of stock.");
+        }
+
+        if (quantity > availableStock) {
+            item.setQuantity(availableStock);
+            cartItemRepository.save(item);
+            throw new BusinessRuleException("Requested quantity (" + quantity + ") exceeds available stock (" + availableStock + ") for '" + product.getName() + "'. Quantity adjusted to " + availableStock + ".");
         }
 
         item.setQuantity(quantity);
@@ -144,19 +180,28 @@ public class CartService {
     public CartDto mapToDto(Cart cart) {
         List<CartItemDto> items = cart.getItems().stream().map(item -> {
             Product p = item.getProduct();
-            BigDecimal price = p.getPrice() != null ? p.getPrice() : BigDecimal.ZERO;
+            BigDecimal price = (p != null && p.getPrice() != null) ? p.getPrice() : BigDecimal.ZERO;
+            int stock = (p != null && p.getQuantity() != null) ? p.getQuantity() : 0;
             BigDecimal subtotal = price.multiply(BigDecimal.valueOf(item.getQuantity()));
+            String effectiveStatus = "OUT_OF_STOCK";
+            if (p != null) {
+                if (p.getStatus() == ProductStatus.AVAILABLE && stock > 0) {
+                    effectiveStatus = "AVAILABLE";
+                } else if (p.getStatus() == ProductStatus.COMING_SOON) {
+                    effectiveStatus = "COMING_SOON";
+                }
+            }
             return new CartItemDto(
                     item.getId(),
-                    p.getId(),
-                    p.getName(),
-                    p.getImage(),
+                    p != null ? p.getId() : null,
+                    p != null ? p.getName() : "Unknown Product",
+                    p != null ? p.getImage() : null,
                     price,
                     item.getQuantity(),
                     subtotal,
-                    p.getStatus() != null ? p.getStatus().name() : "OUT_OF_STOCK",
-                    p.getProductType() != null ? p.getProductType().name() : "STANDALONE",
-                    p.getQuantity()
+                    effectiveStatus,
+                    p != null && p.getProductType() != null ? p.getProductType().name() : "STANDALONE",
+                    stock
             );
         }).collect(Collectors.toList());
 

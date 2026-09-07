@@ -22,7 +22,8 @@ import {
   uploadOrReplaceProductImage,
   deleteProductImage,
   getProductImageUrl,
-  fetchProductContentSections
+  fetchProductContentSections,
+  getEffectiveProductStatus
 } from '../services/api';
 import { RichTextEditor } from './RichTextEditor';
 import { TableEditor } from './TableEditor';
@@ -937,9 +938,18 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                       )}
                     </td>
                     <td>
-                      <span className={`status-pill status-${p.status.toLowerCase()}`}>
-                        {p.status.replace('_', ' ')}
-                      </span>
+                      {(() => {
+                        const effStatus = getEffectiveProductStatus(p);
+                        const isZeroStock = p.productType !== 'PARENT' && (p.quantity === undefined || p.quantity === null || p.quantity <= 0);
+                        return (
+                          <span className={`status-pill status-${effStatus.toLowerCase()}`}>
+                            {effStatus.replace('_', ' ')}
+                            {isZeroStock && p.status === 'AVAILABLE' && (
+                              <span style={{ fontSize: '10px', display: 'block', opacity: 0.8 }}>(0 stock)</span>
+                            )}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>

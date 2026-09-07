@@ -70,7 +70,31 @@ public class ProductService {
             }
 
             if (status != null) {
-                predicates.add(cb.equal(root.get("status"), status));
+                if (status == ProductStatus.AVAILABLE) {
+                    Predicate isParentAvailable = cb.and(
+                            cb.equal(root.get("productType"), ProductType.PARENT),
+                            cb.equal(root.get("status"), ProductStatus.AVAILABLE)
+                    );
+                    Predicate isNonParentAvailable = cb.and(
+                            cb.notEqual(root.get("productType"), ProductType.PARENT),
+                            cb.equal(root.get("status"), ProductStatus.AVAILABLE),
+                            cb.isNotNull(root.get("quantity")),
+                            cb.greaterThan(root.get("quantity"), 0)
+                    );
+                    predicates.add(cb.or(isParentAvailable, isNonParentAvailable));
+                } else if (status == ProductStatus.OUT_OF_STOCK) {
+                    Predicate isDirectOutOfStock = cb.equal(root.get("status"), ProductStatus.OUT_OF_STOCK);
+                    Predicate isZeroStockNonParent = cb.and(
+                            cb.notEqual(root.get("productType"), ProductType.PARENT),
+                            cb.or(
+                                    cb.isNull(root.get("quantity")),
+                                    cb.lessThanOrEqualTo(root.get("quantity"), 0)
+                            )
+                    );
+                    predicates.add(cb.or(isDirectOutOfStock, isZeroStockNonParent));
+                } else {
+                    predicates.add(cb.equal(root.get("status"), status));
+                }
             }
 
             if (productType != null) {
@@ -121,7 +145,31 @@ public class ProductService {
             }
 
             if (status != null) {
-                predicates.add(cb.equal(root.get("status"), status));
+                if (status == ProductStatus.AVAILABLE) {
+                    Predicate isParentAvailable = cb.and(
+                            cb.equal(root.get("productType"), ProductType.PARENT),
+                            cb.equal(root.get("status"), ProductStatus.AVAILABLE)
+                    );
+                    Predicate isNonParentAvailable = cb.and(
+                            cb.notEqual(root.get("productType"), ProductType.PARENT),
+                            cb.equal(root.get("status"), ProductStatus.AVAILABLE),
+                            cb.isNotNull(root.get("quantity")),
+                            cb.greaterThan(root.get("quantity"), 0)
+                    );
+                    predicates.add(cb.or(isParentAvailable, isNonParentAvailable));
+                } else if (status == ProductStatus.OUT_OF_STOCK) {
+                    Predicate isDirectOutOfStock = cb.equal(root.get("status"), ProductStatus.OUT_OF_STOCK);
+                    Predicate isZeroStockNonParent = cb.and(
+                            cb.notEqual(root.get("productType"), ProductType.PARENT),
+                            cb.or(
+                                    cb.isNull(root.get("quantity")),
+                                    cb.lessThanOrEqualTo(root.get("quantity"), 0)
+                            )
+                    );
+                    predicates.add(cb.or(isDirectOutOfStock, isZeroStockNonParent));
+                } else {
+                    predicates.add(cb.equal(root.get("status"), status));
+                }
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -460,7 +508,13 @@ public class ProductService {
         dto.setDescription(product.getDescription());
         dto.setPrice(product.getPrice());
         dto.setQuantity(product.getQuantity());
-        dto.setStatus(product.getStatus());
+        ProductStatus effectiveStatus = product.getStatus();
+        if (product.getProductType() != ProductType.PARENT) {
+            if (product.getQuantity() == null || product.getQuantity() <= 0) {
+                effectiveStatus = ProductStatus.OUT_OF_STOCK;
+            }
+        }
+        dto.setStatus(effectiveStatus);
         dto.setProductType(product.getProductType());
 
         dto.setDispatchTime(product.getDispatchTime() != null ? product.getDispatchTime() : "24-48 Hours");
