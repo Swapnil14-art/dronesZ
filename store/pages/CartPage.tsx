@@ -164,11 +164,31 @@ export const CartPage: React.FC = () => {
                         height: '90px',
                         borderRadius: '0.375rem',
                         fontSize: '1.75rem',
-                        padding: '0.25rem'
+                        padding: '0.25rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        background: 'var(--color-surface, #f8fafc)',
+                        border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))'
                       }}
                     >
                       {item.productImage ? (
-                        <img src={getProductImageUrl(item.productImage)!} alt={item.productName} className="product-img" />
+                        <img
+                          src={getProductImageUrl(item.productImage)!}
+                          alt={item.productName}
+                          className="product-img"
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          onError={(e) => {
+                            // Fallback to emoji if image cannot be loaded
+                            (e.target as HTMLElement).style.display = 'none';
+                            if ((e.target as HTMLElement).parentElement) {
+                              const fallback = document.createElement('span');
+                              fallback.innerText = '🚁';
+                              (e.target as HTMLElement).parentElement?.appendChild(fallback);
+                            }
+                          }}
+                        />
                       ) : (
                         <span>🚁</span>
                       )}
@@ -244,13 +264,19 @@ export const CartPage: React.FC = () => {
                           background: 'none',
                           border: 'none',
                           color: 'var(--color-error)',
-                          cursor: 'pointer',
+                          cursor: updatingId === item.id ? 'wait' : 'pointer',
                           fontSize: '12px',
                           fontWeight: 600,
-                          padding: 0,
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          opacity: updatingId === item.id ? 0.6 : 1,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
                         }}
+                        title="Remove item from cart"
                       >
-                        Remove 🗑️
+                        {updatingId === item.id ? 'Removing...' : 'Remove 🗑️'}
                       </button>
                     </div>
                   </div>

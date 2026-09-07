@@ -8,6 +8,7 @@ import com.dronestore.system.exception.BusinessRuleException;
 import com.dronestore.system.exception.ResourceNotFoundException;
 import com.dronestore.system.repository.CartItemRepository;
 import com.dronestore.system.repository.CartRepository;
+import com.dronestore.system.repository.ProductImageRepository;
 import com.dronestore.system.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +24,18 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final ProductImageRepository productImageRepository;
     private final UserService userService;
 
     public CartService(CartRepository cartRepository,
                        CartItemRepository cartItemRepository,
                        ProductRepository productRepository,
+                       ProductImageRepository productImageRepository,
                        UserService userService) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
+        this.productImageRepository = productImageRepository;
         this.userService = userService;
     }
 
@@ -121,6 +125,7 @@ public class CartService {
             item.setProduct(product);
             item.setQuantity(requestQty);
             cartItemRepository.save(item);
+            cart.getItems().add(item);
         }
 
         return getUserCart(userEmail);
@@ -129,40 +134,66 @@ public class CartService {
     @Transactional
     public CartDto updateCartItemQuantity(String userEmail, Long itemId, Integer quantity) {
         User user = userService.getUserByEmail(userEmail);
-        CartItem item = cartItemRepository.findByIdAndCartUserId(itemId, user.getId())
+        Optional<Cart> cartOpt = cartRepository.findByUserId(user.getId());
+        if (!cartOpt.isPresent()) {
+            throw new ResourceNotFoundException("Cart not found for user");
+        }
+        Cart cart = cartOpt.get();
+
+        CartItem item = cart.getItems().stream()
+                .filter(ci -> ci.getId().equals(itemId))
+                .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found with ID: " + itemId));
 
         if (quantity == null || quantity <= 0) {
+            cart.getItems().remove(item);
             cartItemRepository.delete(item);
-            return getUserCart(userEmail);
+            cartItemRepository.flush();
+            cartRepository.saveAndFlush(cart);
+            return mapToDto(cart);
         }
 
         Product product = item.getProduct();
         int availableStock = (product != null && product.getQuantity() != null) ? product.getQuantity() : 0;
         if (product == null || product.getStatus() != ProductStatus.AVAILABLE || availableStock <= 0) {
+            cart.getItems().remove(item);
             cartItemRepository.delete(item);
+            cartItemRepository.flush();
+            cartRepository.saveAndFlush(cart);
             throw new BusinessRuleException("Product '" + (product != null ? product.getName() : "Item") + "' is currently out of stock.");
         }
 
         if (quantity > availableStock) {
             item.setQuantity(availableStock);
-            cartItemRepository.save(item);
+            cartItemRepository.saveAndFlush(item);
             throw new BusinessRuleException("Requested quantity (" + quantity + ") exceeds available stock (" + availableStock + ") for '" + product.getName() + "'. Quantity adjusted to " + availableStock + ".");
         }
 
         item.setQuantity(quantity);
-        cartItemRepository.save(item);
-        return getUserCart(userEmail);
+        cartItemRepository.saveAndFlush(item);
+        return mapToDto(cart);
     }
 
     @Transactional
     public CartDto removeCartItem(String userEmail, Long itemId) {
         User user = userService.getUserByEmail(userEmail);
-        CartItem item = cartItemRepository.findByIdAndCartUserId(itemId, user.getId())
+        Optional<Cart> cartOpt = cartRepository.findByUserId(user.getId());
+        if (!cartOpt.isPresent()) {
+            throw new ResourceNotFoundException("Cart not found for user");
+        }
+        Cart cart = cartOpt.get();
+
+        CartItem item = cart.getItems().stream()
+                .filter(ci -> ci.getId().equals(itemId))
+                .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found with ID: " + itemId));
 
+        cart.getItems().remove(item);
         cartItemRepository.delete(item);
-        return getUserCart(userEmail);
+        cartItemRepository.flush();
+        cartRepository.saveAndFlush(cart);
+
+        return mapToDto(cart);
     }
 
     @Transactional
@@ -172,7 +203,9 @@ public class CartService {
         if (cartOpt.isPresent()) {
             Cart cart = cartOpt.get();
             cart.getItems().clear();
-            cartRepository.save(cart);
+            cartItemRepository.flush();
+            cartRepository.saveAndFlush(cart);
+            return mapToDto(cart);
         }
         return getUserCart(userEmail);
     }
@@ -191,11 +224,31 @@ public class CartService {
                     effectiveStatus = "COMING_SOON";
                 }
             }
+
+            // Resolve primary image from ProductImage entity table or parent or product.image
+            String itemImage = null;
+            if (p != null) {
+                List<ProductImage> imgs = productImageRepository.findByProductIdOrderByIsPrimaryDescDisplayOrderAsc(p.getId());
+                if (imgs.isEmpty() && p.getParent() != null) {
+                    imgs = productImageRepository.findByProductIdOrderByIsPrimaryDescDisplayOrderAsc(p.getParent().getId());
+                }
+                if (!imgs.isEmpty()) {
+                    ProductImage primaryImg = imgs.get(0);
+                    long timestamp = primaryImg.getUpdatedAt() != null
+                            ? primaryImg.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toEpochSecond()
+                            : System.currentTimeMillis();
+                    Long ownerId = primaryImg.getProduct() != null ? primaryImg.getProduct().getId() : p.getId();
+                    itemImage = "/api/products/" + ownerId + "/images/" + primaryImg.getId() + "?v=" + timestamp;
+                } else {
+                    itemImage = p.getImage();
+                }
+            }
+
             return new CartItemDto(
                     item.getId(),
                     p != null ? p.getId() : null,
                     p != null ? p.getName() : "Unknown Product",
-                    p != null ? p.getImage() : null,
+                    itemImage,
                     price,
                     item.getQuantity(),
                     subtotal,

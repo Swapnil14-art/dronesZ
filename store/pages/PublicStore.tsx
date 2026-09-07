@@ -363,7 +363,7 @@ export const PublicStore: React.FC = () => {
     setCartFeedbackMsg(null);
     const effStatus = getEffectiveProductStatus(product);
     const availableStock = product.quantity !== undefined && product.quantity !== null ? product.quantity : 0;
-    
+
     if (effStatus !== 'AVAILABLE' || availableStock <= 0) {
       alert(`"${product.name}" is currently out of stock.`);
       return;
@@ -610,18 +610,6 @@ export const PublicStore: React.FC = () => {
                           border: `1px solid ${effectiveStatus === 'AVAILABLE' ? 'var(--color-tertiary)' : (effectiveStatus === 'OUT_OF_STOCK' ? 'var(--color-error)' : 'var(--color-amber)')}`
                         }}>
                           ● {effectiveStatus.replace('_', ' ')}
-                        </span>
-
-                        <span style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>
-                          Inventory Level:{' '}
-                          <strong style={{ color: isOutOfStock ? 'var(--color-error)' : 'var(--color-on-surface)' }}>
-                            {isOutOfStock ? '0 units (Out of Stock)' : `${availableStock} units in stock`}
-                          </strong>
-                          {currentInCart > 0 && (
-                            <span style={{ color: isMaxInCart ? 'var(--color-error)' : 'var(--color-primary)', marginLeft: '0.5rem', fontSize: '13px', fontWeight: 700 }}>
-                              ({currentInCart} in cart{isMaxInCart ? ' - max reached' : `, ${remainingStock} more available`})
-                            </span>
-                          )}
                         </span>
                       </div>
 
