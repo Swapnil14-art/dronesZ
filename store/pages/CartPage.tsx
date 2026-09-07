@@ -95,7 +95,7 @@ export const CartPage: React.FC = () => {
           <div>
             <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
               CUSTOMER SHOPPING CART
-            </div>
+            </div><br></br><br></br>
             <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
               Selected Components &amp; Hardware
             </h1>
