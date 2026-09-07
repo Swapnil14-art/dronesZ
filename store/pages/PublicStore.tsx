@@ -777,55 +777,6 @@ export const PublicStore: React.FC = () => {
                   </p>
                 )}
               </div>
-
-              {/* Specifications Table Panel */}
-              <div style={{
-                background: '#fff',
-                border: '1px solid var(--color-outline)',
-                padding: '2rem',
-                borderRadius: '0.75rem',
-                width: '100%',
-                minWidth: 0,
-                boxSizing: 'border-box',
-                overflowWrap: 'break-word',
-                wordBreak: 'break-word'
-              }}>
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 700,
-                  color: 'var(--color-on-surface)',
-                  marginBottom: '1rem',
-                  paddingBottom: '0.75rem',
-                  borderBottom: '1px solid var(--color-outline)'
-                }}>
-                  Technical Specifications Matrix
-                </h3>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '14px', width: '100%', minWidth: 0 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>System Product ID</span>
-                    <strong style={{ color: 'var(--color-on-surface)' }}>#{activeProductDetail.id}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Classification Category</span>
-                    <strong style={{ color: 'var(--color-on-surface)', textTransform: 'uppercase' }}>{activeProductDetail.productType.replace('_', ' ')}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Inventory Quantity</span>
-                    <strong style={{ color: 'var(--color-on-surface)' }}>{activeProductDetail.quantity} Units</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', borderBottom: '1px dashed var(--color-outline)', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Availability State</span>
-                    <strong style={{ color: activeProductDetail.status === 'AVAILABLE' ? 'var(--color-tertiary)' : 'var(--color-error)' }}>
-                      {activeProductDetail.status.replace('_', ' ')}
-                    </strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.5rem', gap: '1rem', flexWrap: 'wrap' }}>
-                    <span style={{ color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>Database Reference</span>
-                    <strong style={{ color: 'var(--color-on-surface)' }}>Live Synchronized</strong>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Dynamic Product Content Boxes (WORD & EXCEL) */}
