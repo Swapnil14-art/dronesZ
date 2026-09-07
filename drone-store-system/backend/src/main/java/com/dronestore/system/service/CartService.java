@@ -10,6 +10,9 @@ import com.dronestore.system.repository.CartItemRepository;
 import com.dronestore.system.repository.CartRepository;
 import com.dronestore.system.repository.ProductImageRepository;
 import com.dronestore.system.repository.ProductRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +23,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class CartService {
+
+    private static final Logger log = LoggerFactory.getLogger(CartService.class);
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
@@ -118,14 +123,29 @@ public class CartService {
         if (existingItemOpt.isPresent()) {
             CartItem item = existingItemOpt.get();
             item.setQuantity(totalRequested);
-            cartItemRepository.save(item);
+            cartItemRepository.saveAndFlush(item);
         } else {
-            CartItem item = new CartItem();
-            item.setCart(cart);
-            item.setProduct(product);
-            item.setQuantity(requestQty);
-            cartItemRepository.save(item);
-            cart.getItems().add(item);
+            try {
+                CartItem item = new CartItem();
+                item.setCart(cart);
+                item.setProduct(product);
+                item.setQuantity(requestQty);
+                cartItemRepository.saveAndFlush(item);
+                cart.getItems().add(item);
+            } catch (DataIntegrityViolationException ex) {
+                // Race condition: another concurrent request inserted the same (cart_id, product_id).
+                // Re-fetch the existing row and update its quantity instead.
+                log.warn("Concurrent cart insert detected for cart={} product={}, retrying as update.",
+                        cart.getId(), product.getId());
+                CartItem existing = cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId())
+                        .orElseThrow(() -> new BusinessRuleException("Failed to add item to cart. Please try again."));
+                int newTotal = existing.getQuantity() + requestQty;
+                if (newTotal > availableStock) {
+                    newTotal = availableStock;
+                }
+                existing.setQuantity(newTotal);
+                cartItemRepository.saveAndFlush(existing);
+            }
         }
 
         return getUserCart(userEmail);

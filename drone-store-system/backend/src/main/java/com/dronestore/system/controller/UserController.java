@@ -58,7 +58,7 @@ public class UserController {
 
     @PutMapping("/addresses/{id}")
     public ResponseEntity<UserAddressDto> updateAddress(Authentication authentication,
-                                                        @PathVariable Long id,
+                                                        @PathVariable("id") Long id,
                                                         @Valid @RequestBody UserAddressRequest request) {
         String email = authentication.getName();
         UserAddressDto updated = addressService.updateAddress(email, id, request);
@@ -66,14 +66,14 @@ public class UserController {
     }
 
     @DeleteMapping("/addresses/{id}")
-    public ResponseEntity<Void> deleteAddress(Authentication authentication, @PathVariable Long id) {
+    public ResponseEntity<Void> deleteAddress(Authentication authentication, @PathVariable("id") Long id) {
         String email = authentication.getName();
         addressService.deleteAddress(email, id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/addresses/{id}/default")
-    public ResponseEntity<UserAddressDto> setDefaultAddress(Authentication authentication, @PathVariable Long id) {
+    public ResponseEntity<UserAddressDto> setDefaultAddress(Authentication authentication, @PathVariable("id") Long id) {
         String email = authentication.getName();
         UserAddressDto address = addressService.setDefaultAddress(email, id);
         return ResponseEntity.ok(address);

@@ -18,7 +18,9 @@ export const CartPage: React.FC = () => {
 
   const handleQuantityChange = async (itemId: number, currentQty: number, newQty: number, maxStock: number) => {
     setError(null);
-    if (newQty < 1) return;
+    if (newQty <= 0) {
+      return handleRemove(itemId);
+    }
     if (newQty > maxStock) {
       setError(`Cannot set quantity above available stock (${maxStock}).`);
       return;
@@ -231,9 +233,9 @@ export const CartPage: React.FC = () => {
                       <button
                         className="btn-stitch-ghost"
                         style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        disabled={updatingId === item.id || item.quantity <= 1 || isItemOutOfStock}
+                        disabled={updatingId === item.id || isItemOutOfStock}
                         onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity - 1, stock)}
-                        title="Decrease quantity"
+                        title={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
                       >
                         -
                       </button>

@@ -34,7 +34,7 @@ public class UserOrderController {
     }
 
     @GetMapping("/orders/{id}")
-    public ResponseEntity<OrderDto> getOrderById(Authentication authentication, @PathVariable Long id) {
+    public ResponseEntity<OrderDto> getOrderById(Authentication authentication, @PathVariable("id") Long id) {
         String email = authentication.getName();
         OrderDto order = orderService.getOrderById(email, id);
         return ResponseEntity.ok(order);

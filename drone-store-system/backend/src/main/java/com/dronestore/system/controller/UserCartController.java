@@ -37,7 +37,7 @@ public class UserCartController {
 
     @PutMapping("/items/{id}")
     public ResponseEntity<CartDto> updateCartItemQuantity(Authentication authentication,
-                                                          @PathVariable Long id,
+                                                          @PathVariable("id") Long id,
                                                           @RequestBody Map<String, Integer> payload) {
         String email = authentication.getName();
         Integer quantity = payload != null ? payload.get("quantity") : 1;
@@ -46,7 +46,7 @@ public class UserCartController {
     }
 
     @DeleteMapping("/items/{id}")
-    public ResponseEntity<CartDto> removeCartItem(Authentication authentication, @PathVariable Long id) {
+    public ResponseEntity<CartDto> removeCartItem(Authentication authentication, @PathVariable("id") Long id) {
         String email = authentication.getName();
         CartDto updatedCart = cartService.removeCartItem(email, id);
         return ResponseEntity.ok(updatedCart);
