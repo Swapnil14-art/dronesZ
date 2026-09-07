@@ -625,7 +625,7 @@ export const PublicStore: React.FC = () => {
                           Unit Retail Price
                         </div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem' }}>
-                          <span style={{ fontSize: '2.75rem', fontWeight: 900, color: 'var(--color-primary)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
+                          <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--color-primary)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
                             ₹{activeProductDetail.price.toFixed(2)}
                           </span>
                           <span style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>
@@ -714,16 +714,17 @@ export const PublicStore: React.FC = () => {
                       </div>
 
                       {/* Action Buttons */}
-                      <div style={{ display: 'flex', gap: '1rem', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
                         <button
                           disabled={isOutOfStock || isMaxInCart || remainingStock <= 0 || addingToCartId === activeProductDetail.id}
                           onClick={() => handleAddToCart(activeProductDetail, Math.min(selectedQuantity, remainingStock))}
                           className="btn-stitch-primary"
                           style={{
-                            width: '100%',
-                            padding: '1.1rem 2rem',
-                            fontSize: '1.15rem',
-                            fontWeight: 800,
+                            width: '50%',
+                            height: '8%',
+                            padding: '1rem 2rem',
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -751,10 +752,11 @@ export const PublicStore: React.FC = () => {
                             }}
                             className="btn-stitch-ghost"
                             style={{
-                              width: '100%',
-                              padding: '0.85rem 2rem',
+                              width: '50%',
+                              height: '10%',
+                              padding: '0.85rem 1rem',
                               fontSize: '1rem',
-                              fontWeight: 700,
+                              fontWeight: 650,
                               textAlign: 'center',
                               border: '1px solid var(--color-outline)'
                             }}
