@@ -1,5 +1,6 @@
 package com.dronestore.system.service;
 
+import com.dronestore.system.config.CacheNames;
 import com.dronestore.system.dto.ProductImageDto;
 import com.dronestore.system.entity.Product;
 import com.dronestore.system.entity.ProductImage;
@@ -7,6 +8,7 @@ import com.dronestore.system.exception.BadRequestException;
 import com.dronestore.system.exception.ResourceNotFoundException;
 import com.dronestore.system.repository.ProductImageRepository;
 import com.dronestore.system.repository.ProductRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,12 +41,17 @@ public class ProductImageService {
 
     private final ProductImageRepository productImageRepository;
     private final ProductRepository productRepository;
+    private final CacheEvictionService cacheEvictionService;
 
-    public ProductImageService(ProductImageRepository productImageRepository, ProductRepository productRepository) {
+    public ProductImageService(ProductImageRepository productImageRepository,
+                               ProductRepository productRepository,
+                               CacheEvictionService cacheEvictionService) {
         this.productImageRepository = productImageRepository;
         this.productRepository = productRepository;
+        this.cacheEvictionService = cacheEvictionService;
     }
 
+    @Cacheable(value = CacheNames.PRODUCT_IMAGES, key = "#productId", sync = true)
     @Transactional(readOnly = true)
     public List<ProductImageDto> getProductImages(Long productId) {
         List<ProductImage> images = productImageRepository.findByProductIdOrderByDisplayOrderAsc(productId);
@@ -105,6 +112,7 @@ public class ProductImageService {
 
         // Update product primary image reference
         updateProductImageReference(product);
+        cacheEvictionService.evictProductContentOrImageChange(productId, product.getParent() != null ? product.getParent().getId() : null);
 
         return getProductImages(productId);
     }
@@ -145,6 +153,7 @@ public class ProductImageService {
 
                 ProductImage saved = productImageRepository.save(existing);
                 updateProductImageReference(product);
+                cacheEvictionService.evictProductContentOrImageChange(productId, product.getParent() != null ? product.getParent().getId() : null);
                 return saved;
             } else {
                 int nextOrder = productImageRepository.findTopByProductIdOrderByDisplayOrderDesc(productId)
@@ -163,6 +172,7 @@ public class ProductImageService {
 
                 ProductImage saved = productImageRepository.save(newImage);
                 updateProductImageReference(product);
+                cacheEvictionService.evictProductContentOrImageChange(productId, product.getParent() != null ? product.getParent().getId() : null);
                 return saved;
             }
         } catch (IOException e) {
@@ -190,6 +200,7 @@ public class ProductImageService {
         ProductImage savedTarget = productImageRepository.saveAndFlush(targetImage);
 
         updateProductImageReference(product);
+        cacheEvictionService.evictProductContentOrImageChange(productId, product.getParent() != null ? product.getParent().getId() : null);
         return mapToDto(savedTarget);
     }
 
@@ -217,6 +228,9 @@ public class ProductImageService {
         }
 
         productImageRepository.saveAll(allImages);
+        productRepository.findById(productId).ifPresent(p -> {
+            cacheEvictionService.evictProductContentOrImageChange(productId, p.getParent() != null ? p.getParent().getId() : null);
+        });
         return getProductImages(productId);
     }
 
@@ -247,7 +261,10 @@ public class ProductImageService {
 
             ProductImage saved = productImageRepository.save(targetImage);
 
-            productRepository.findById(productId).ifPresent(this::updateProductImageReference);
+            productRepository.findById(productId).ifPresent(p -> {
+                updateProductImageReference(p);
+                cacheEvictionService.evictProductContentOrImageChange(productId, p.getParent() != null ? p.getParent().getId() : null);
+            });
 
             return mapToDto(saved);
         } catch (IOException e) {
@@ -281,6 +298,7 @@ public class ProductImageService {
             } else {
                 updateProductImageReference(product);
             }
+            cacheEvictionService.evictProductContentOrImageChange(productId, product.getParent() != null ? product.getParent().getId() : null);
         }
     }
 
@@ -291,6 +309,7 @@ public class ProductImageService {
         productRepository.findById(productId).ifPresent(p -> {
             p.setImage(null);
             productRepository.save(p);
+            cacheEvictionService.evictProductContentOrImageChange(productId, p.getParent() != null ? p.getParent().getId() : null);
         });
     }
 

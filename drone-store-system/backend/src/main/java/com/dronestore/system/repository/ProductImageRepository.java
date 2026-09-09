@@ -27,6 +27,13 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
 
     List<ProductImage> findByProductIdOrderByIsPrimaryDescDisplayOrderAsc(Long productId);
 
+    @Query("SELECT new com.dronestore.system.dto.ProductImageDto(pi.id, pi.product.id, pi.fileName, pi.fileSize, pi.mimeType, pi.isPrimary, pi.displayOrder, pi.createdAt, pi.updatedAt) FROM ProductImage pi WHERE pi.product.id IN :productIds ORDER BY pi.displayOrder ASC, pi.id ASC")
+    List<com.dronestore.system.dto.ProductImageDto> findImageDtosByProductIdIn(@Param("productIds") java.util.Collection<Long> productIds);
+
+    @Query("SELECT new com.dronestore.system.dto.ProductImageDto(pi.id, pi.product.id, pi.fileName, pi.fileSize, pi.mimeType, pi.isPrimary, pi.displayOrder, pi.createdAt, pi.updatedAt) FROM ProductImage pi WHERE pi.product.id = :productId ORDER BY pi.displayOrder ASC, pi.id ASC")
+    List<com.dronestore.system.dto.ProductImageDto> findImageDtosByProductId(@Param("productId") Long productId);
+
+
     long countByProductId(Long productId);
 
     @Query("SELECT pi.imageData FROM ProductImage pi WHERE pi.product.id = :productId ORDER BY pi.isPrimary DESC, pi.displayOrder ASC, pi.id ASC")

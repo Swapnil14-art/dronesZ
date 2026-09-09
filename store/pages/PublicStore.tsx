@@ -311,24 +311,31 @@ export const PublicStore: React.FC = () => {
     setLoadingChildren(true);
     setError(null);
     try {
-      const parentRes = await fetchPublicProducts({ size: 100 });
-      const parents = parentRes.content.filter((p) => p.productType === 'PARENT');
-
-      let matchedParent = parents.find((p) => slugify(p.name) === param || `${slugify(p.name)}-${p.id}` === param || p.id.toString() === param);
+      let matchedParent = products.find(
+        (p) => p.productType === 'PARENT' && (slugify(p.name) === param || `${slugify(p.name)}-${p.id}` === param || p.id.toString() === param)
+      );
 
       if (!matchedParent) {
         const idMatch = param.match(/\d+$/);
-        if (idMatch) {
-          const id = Number(idMatch[0]);
-          try {
-            const prod = await fetchPublicProductById(id);
-            if (prod && prod.productType === 'PARENT') {
-              matchedParent = prod;
-            }
-          } catch (e) {
-            // ignore
+        const numericId = idMatch ? Number(idMatch[0]) : (!isNaN(Number(param)) ? Number(param) : null);
+
+        if (numericId) {
+          const [prod, children] = await Promise.all([
+            fetchPublicProductById(numericId).catch(() => null),
+            fetchPublicChildProducts(numericId).catch(() => [])
+          ]);
+          if (prod && prod.productType === 'PARENT') {
+            setActiveParent(prod);
+            setChildProducts(children);
+            return;
           }
         }
+
+        const parentRes = await fetchPublicProducts({ size: 50 });
+        const parents = parentRes.content.filter((p) => p.productType === 'PARENT');
+        matchedParent = parents.find(
+          (p) => slugify(p.name) === param || `${slugify(p.name)}-${p.id}` === param || p.id.toString() === param
+        );
       }
 
       if (matchedParent) {
@@ -345,6 +352,7 @@ export const PublicStore: React.FC = () => {
       setLoadingChildren(false);
     }
   };
+
 
   const navigateToMainStore = () => {
     setActiveParent(null);

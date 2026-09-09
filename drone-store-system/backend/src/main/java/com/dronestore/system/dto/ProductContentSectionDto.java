@@ -19,6 +19,19 @@ public class ProductContentSectionDto {
     public ProductContentSectionDto() {
     }
 
+    public ProductContentSectionDto(Long id, Long productId, String title, ProductContentSectionType type, String content, Integer displayOrder, Boolean enabled, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.productId = productId;
+        this.title = title;
+        this.type = type;
+        this.content = content;
+        this.displayOrder = displayOrder != null ? displayOrder : 0;
+        this.enabled = enabled != null ? enabled : true;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+
     public Long getId() {
         return id;
     }

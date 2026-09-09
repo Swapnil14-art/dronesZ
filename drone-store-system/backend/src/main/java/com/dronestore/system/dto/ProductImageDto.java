@@ -18,6 +18,23 @@ public class ProductImageDto {
     public ProductImageDto() {
     }
 
+    public ProductImageDto(Long id, Long productId, String fileName, Long fileSize, String mimeType, Boolean isPrimary, Integer displayOrder, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.productId = productId;
+        this.fileName = fileName;
+        this.fileSize = fileSize;
+        this.mimeType = mimeType;
+        this.isPrimary = isPrimary != null ? isPrimary : false;
+        this.displayOrder = displayOrder != null ? displayOrder : 0;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        long timestamp = updatedAt != null
+                ? updatedAt.atZone(java.time.ZoneId.systemDefault()).toEpochSecond()
+                : System.currentTimeMillis();
+        this.url = "/api/products/" + (productId != null ? productId : 0) + "/images/" + id + "?v=" + timestamp;
+    }
+
+
     public Long getId() {
         return id;
     }

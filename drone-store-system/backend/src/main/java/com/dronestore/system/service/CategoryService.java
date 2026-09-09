@@ -1,5 +1,6 @@
 package com.dronestore.system.service;
 
+import com.dronestore.system.config.CacheNames;
 import com.dronestore.system.dto.CategoryDto;
 import com.dronestore.system.dto.CategoryRequest;
 import com.dronestore.system.entity.Category;
@@ -7,6 +8,7 @@ import com.dronestore.system.exception.ResourceConflictException;
 import com.dronestore.system.exception.ResourceNotFoundException;
 import com.dronestore.system.repository.CategoryRepository;
 import com.dronestore.system.repository.ProductRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +20,17 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final CacheEvictionService cacheEvictionService;
 
-    public CategoryService(CategoryRepository categoryRepository, ProductRepository productRepository) {
+    public CategoryService(CategoryRepository categoryRepository,
+                           ProductRepository productRepository,
+                           CacheEvictionService cacheEvictionService) {
         this.categoryRepository = categoryRepository;
         this.productRepository = productRepository;
+        this.cacheEvictionService = cacheEvictionService;
     }
 
+    @Cacheable(value = CacheNames.CATEGORIES_LIST, key = "'all'", sync = true)
     @Transactional(readOnly = true)
     public List<CategoryDto> getAllCategories() {
         return categoryRepository.findAll().stream()
@@ -31,6 +38,7 @@ public class CategoryService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = CacheNames.CATEGORY_DETAIL, key = "#id", sync = true)
     @Transactional(readOnly = true)
     public CategoryDto getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
@@ -47,6 +55,7 @@ public class CategoryService {
 
         Category category = new Category(trimmedName, request.getDescription());
         Category saved = categoryRepository.save(category);
+        cacheEvictionService.evictCategoryComplete(saved.getId());
         return mapToDto(saved);
     }
 
@@ -64,6 +73,7 @@ public class CategoryService {
         category.setDescription(request.getDescription());
 
         Category updated = categoryRepository.save(category);
+        cacheEvictionService.evictCategoryComplete(id);
         return mapToDto(updated);
     }
 
@@ -77,6 +87,7 @@ public class CategoryService {
         }
 
         categoryRepository.delete(category);
+        cacheEvictionService.evictCategoryComplete(id);
     }
 
     private CategoryDto mapToDto(Category category) {

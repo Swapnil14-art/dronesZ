@@ -1,5 +1,6 @@
 package com.dronestore.system.service;
 
+import com.dronestore.system.config.CacheNames;
 import com.dronestore.system.dto.PageResponse;
 import com.dronestore.system.dto.ProductContentSectionDto;
 import com.dronestore.system.dto.ProductContentSectionRequest;
@@ -19,6 +20,7 @@ import com.dronestore.system.repository.CategoryRepository;
 import com.dronestore.system.repository.ProductContentSectionRepository;
 import com.dronestore.system.repository.ProductImageRepository;
 import com.dronestore.system.repository.ProductRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,8 +33,11 @@ import javax.persistence.criteria.Predicate;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
 
 @Service
 public class ProductService {
@@ -41,15 +46,18 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
     private final ProductContentSectionRepository productContentSectionRepository;
+    private final CacheEvictionService cacheEvictionService;
 
     public ProductService(ProductRepository productRepository,
                           CategoryRepository categoryRepository,
                           ProductImageRepository productImageRepository,
-                          ProductContentSectionRepository productContentSectionRepository) {
+                          ProductContentSectionRepository productContentSectionRepository,
+                          CacheEvictionService cacheEvictionService) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productImageRepository = productImageRepository;
         this.productContentSectionRepository = productContentSectionRepository;
+        this.cacheEvictionService = cacheEvictionService;
     }
 
     @Transactional(readOnly = true)
@@ -113,9 +121,7 @@ public class ProductService {
         };
 
         Page<Product> productPage = productRepository.findAll(spec, pageable);
-        List<ProductDto> content = productPage.getContent().stream()
-                .map(p -> mapToDto(p, false))
-                .collect(Collectors.toList());
+        List<ProductDto> content = mapToDtoBatch(productPage.getContent(), false);
 
         return new PageResponse<>(
                 content,
@@ -126,6 +132,7 @@ public class ProductService {
         );
     }
 
+    @Cacheable(value = CacheNames.PRODUCTS_CATALOG, key = "'p:' + #page + ':s:' + #size + ':q:' + (#search != null ? #search : '') + ':st:' + (#status != null ? #status : '') + ':sb:' + #sortBy + ':sd:' + #sortDir", sync = true)
     @Transactional(readOnly = true)
     public PageResponse<ProductDto> getPublicProducts(int page, int size, String search, ProductStatus status,
                                                       String sortBy, String sortDir) {
@@ -176,9 +183,7 @@ public class ProductService {
         };
 
         Page<Product> productPage = productRepository.findAll(spec, pageable);
-        List<ProductDto> content = productPage.getContent().stream()
-                .map(p -> mapToDto(p, true))
-                .collect(Collectors.toList());
+        List<ProductDto> content = mapToDtoBatch(productPage.getContent(), true);
 
         return new PageResponse<>(
                 content,
@@ -189,6 +194,7 @@ public class ProductService {
         );
     }
 
+    @Cacheable(value = CacheNames.PRODUCT_DETAIL, key = "#id", sync = true)
     @Transactional(readOnly = true)
     public ProductDto getProductById(Long id) {
         Product product = productRepository.findById(id)
@@ -203,6 +209,7 @@ public class ProductService {
         return mapToDto(product, false);
     }
 
+    @Cacheable(value = CacheNames.PRODUCT_CHILDREN, key = "#parentId", sync = true)
     @Transactional(readOnly = true)
     public List<ProductDto> getChildProducts(Long parentId) {
         Product parent = productRepository.findById(parentId)
@@ -212,10 +219,10 @@ public class ProductService {
             throw new BadRequestException("Product ID " + parentId + " is not a PARENT product series.");
         }
 
-        return productRepository.findByParentIdAndProductType(parentId, ProductType.CHILD).stream()
-                .map(p -> mapToDto(p, true))
-                .collect(Collectors.toList());
+        List<Product> children = productRepository.findByParentIdAndProductType(parentId, ProductType.CHILD);
+        return mapToDtoBatch(children, true);
     }
+
 
     @Transactional
     public ProductDto createProduct(ProductRequest request) {
@@ -266,6 +273,8 @@ public class ProductService {
                 order++;
             }
         }
+
+        cacheEvictionService.evictProductComplete(saved.getId(), saved.getParent() != null ? saved.getParent().getId() : null);
 
         return mapToDto(saved, false);
     }
@@ -335,7 +344,15 @@ public class ProductService {
             }
         }
 
+        Long oldParentId = product.getParent() != null ? product.getParent().getId() : null;
+
         Product updated = productRepository.save(product);
+        Long newParentId = updated.getParent() != null ? updated.getParent().getId() : null;
+        cacheEvictionService.evictProductComplete(id, oldParentId != null ? oldParentId : newParentId);
+        if (newParentId != null && !newParentId.equals(oldParentId)) {
+            cacheEvictionService.evictProductChildren(newParentId);
+        }
+
         return mapToDto(updated, false);
     }
 
@@ -348,11 +365,14 @@ public class ProductService {
             throw new ResourceConflictException("Cannot delete product ID " + id + " because child products are associated with it. Reassign or delete child products first.");
         }
 
+        Long parentId = product.getParent() != null ? product.getParent().getId() : null;
         productRepository.delete(product);
+        cacheEvictionService.evictProductComplete(id, parentId);
     }
 
     // ----------------- Content Sections CRUD & Reordering -----------------
 
+    @Cacheable(value = CacheNames.PRODUCT_SECTIONS, key = "#productId + ':' + #onlyEnabled", sync = true)
     @Transactional(readOnly = true)
     public List<ProductContentSectionDto> getContentSections(Long productId, boolean onlyEnabled) {
         if (!productRepository.existsById(productId)) {
@@ -387,6 +407,7 @@ public class ProductService {
         section.setEnabled(request.getEnabled() != null ? request.getEnabled() : true);
 
         ProductContentSection saved = productContentSectionRepository.save(section);
+        cacheEvictionService.evictProductContentOrImageChange(productId, null);
         return mapSectionToDto(saved);
     }
 
@@ -410,6 +431,7 @@ public class ProductService {
         }
 
         ProductContentSection updated = productContentSectionRepository.save(section);
+        cacheEvictionService.evictProductContentOrImageChange(productId, null);
         return mapSectionToDto(updated);
     }
 
@@ -423,6 +445,7 @@ public class ProductService {
         }
 
         productContentSectionRepository.delete(section);
+        cacheEvictionService.evictProductContentOrImageChange(productId, null);
     }
 
     @Transactional
@@ -443,6 +466,8 @@ public class ProductService {
             }
         }
 
+        cacheEvictionService.evictProductContentOrImageChange(productId, null);
+
         return productContentSectionRepository.findByProductIdOrderByDisplayOrderAsc(productId).stream()
                 .map(this::mapSectionToDto)
                 .collect(Collectors.toList());
@@ -459,6 +484,7 @@ public class ProductService {
 
         section.setEnabled(!Boolean.TRUE.equals(section.getEnabled()));
         ProductContentSection updated = productContentSectionRepository.save(section);
+        cacheEvictionService.evictProductContentOrImageChange(productId, null);
         return mapSectionToDto(updated);
     }
 
@@ -501,13 +527,54 @@ public class ProductService {
         return false;
     }
 
+    public List<ProductDto> mapToDtoBatch(List<Product> products, boolean onlyEnabledSections) {
+        if (products == null || products.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> productIds = products.stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+
+        // Batch query 1: Fetch lightweight Image DTOs for all products without BYTEA blob transfer
+        List<ProductImageDto> allImages = productImageRepository.findImageDtosByProductIdIn(productIds);
+        Map<Long, List<ProductImageDto>> imagesByProductId = allImages.stream()
+                .collect(Collectors.groupingBy(ProductImageDto::getProductId, Collectors.toList()));
+
+        // Batch query 2: Fetch Content Section DTOs for all products in 1 query
+        List<ProductContentSectionDto> allSections = onlyEnabledSections
+                ? productContentSectionRepository.findSectionDtosByProductIdInAndEnabledTrue(productIds)
+                : productContentSectionRepository.findSectionDtosByProductIdIn(productIds);
+        Map<Long, List<ProductContentSectionDto>> sectionsByProductId = allSections.stream()
+                .collect(Collectors.groupingBy(ProductContentSectionDto::getProductId, Collectors.toList()));
+
+        return products.stream()
+                .map(p -> mapToDtoWithPreloaded(
+                        p,
+                        imagesByProductId.getOrDefault(p.getId(), Collections.<ProductImageDto>emptyList()),
+                        sectionsByProductId.getOrDefault(p.getId(), Collections.<ProductContentSectionDto>emptyList())
+                ))
+                .collect(Collectors.toList());
+    }
+
     public ProductDto mapToDto(Product product, boolean onlyEnabledSections) {
+        if (product == null) return null;
+        List<ProductImageDto> images = productImageRepository.findImageDtosByProductId(product.getId());
+        List<ProductContentSectionDto> sections = onlyEnabledSections
+                ? productContentSectionRepository.findSectionDtosByProductIdAndEnabledTrue(product.getId())
+                : productContentSectionRepository.findSectionDtosByProductIdIn(Collections.singletonList(product.getId()));
+        return mapToDtoWithPreloaded(product, images, sections);
+    }
+
+
+    private ProductDto mapToDtoWithPreloaded(Product product, List<ProductImageDto> imageDtos, List<ProductContentSectionDto> sectionDtos) {
         ProductDto dto = new ProductDto();
         dto.setId(product.getId());
         dto.setName(product.getName());
         dto.setDescription(product.getDescription());
         dto.setPrice(product.getPrice());
         dto.setQuantity(product.getQuantity());
+
         ProductStatus effectiveStatus = product.getStatus();
         if (product.getProductType() != ProductType.PARENT) {
             if (product.getQuantity() == null || product.getQuantity() <= 0) {
@@ -523,20 +590,21 @@ public class ProductService {
         dto.setTaxInclusive(product.getTaxInclusive() != null ? product.getTaxInclusive() : true);
         dto.setTaxNote(product.getTaxNote() != null ? product.getTaxNote() : "GST & Taxes Included");
 
-        // Fetch ordered images
-        List<ProductImage> imageEntities = productImageRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
-        List<ProductImageDto> imageDtos = imageEntities.stream().map(this::mapImageToDto).collect(Collectors.toList());
-        dto.setImages(imageDtos);
+        dto.setImages(imageDtos != null ? imageDtos : Collections.emptyList());
 
-        ProductImageDto primaryDto = imageDtos.stream()
+        ProductImageDto primaryDto = imageDtos != null
+                ? imageDtos.stream()
                 .filter(imgDto -> Boolean.TRUE.equals(imgDto.getIsPrimary()))
                 .findFirst()
-                .orElse(imageDtos.isEmpty() ? null : imageDtos.get(0));
+                .orElse(imageDtos.isEmpty() ? null : imageDtos.get(0))
+                : null;
         dto.setPrimaryImage(primaryDto);
 
         String img = primaryDto != null ? primaryDto.getUrl() : product.getImage();
         if (img != null && img.startsWith("/api/products/") && !img.contains("?")) {
-            long timestamp = product.getUpdatedAt() != null ? product.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toEpochSecond() : System.currentTimeMillis();
+            long timestamp = product.getUpdatedAt() != null
+                    ? product.getUpdatedAt().atZone(java.time.ZoneId.systemDefault()).toEpochSecond()
+                    : System.currentTimeMillis();
             img = img + "?v=" + timestamp;
         }
         dto.setImage(img);
@@ -552,14 +620,7 @@ public class ProductService {
             dto.setParentId(product.getParent().getId());
         }
 
-        // Fetch sections
-        List<ProductContentSection> sections = onlyEnabledSections
-                ? productContentSectionRepository.findByProductIdAndEnabledTrueOrderByDisplayOrderAsc(product.getId())
-                : productContentSectionRepository.findByProductIdOrderByDisplayOrderAsc(product.getId());
-
-        if (sections != null) {
-            dto.setContentSections(sections.stream().map(this::mapSectionToDto).collect(Collectors.toList()));
-        }
+        dto.setContentSections(sectionDtos != null ? sectionDtos : Collections.emptyList());
 
         return dto;
     }
@@ -598,3 +659,4 @@ public class ProductService {
         return dto;
     }
 }
+
