@@ -424,7 +424,7 @@ export const PublicStore: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        background: activeProductDetail ? '#ffffff' : undefined
+        background: activeProductDetail ? '#f3f3f3ff' : undefined
       }}
     >
       {/* Shared Stitch Header Navigation */}
@@ -440,7 +440,6 @@ export const PublicStore: React.FC = () => {
             background: 'var(--color-primary)',
             color: '#fff',
             padding: '1rem 1.5rem',
-            borderRadius: '0.375rem',
             fontWeight: 700,
             boxShadow: '0 12px 30px rgba(0,0,0,0.2)',
             zIndex: 1000,
