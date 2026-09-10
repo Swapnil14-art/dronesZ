@@ -212,6 +212,7 @@ export const PublicStore: React.FC = () => {
   const [activeProductDetail, setActiveProductDetail] = useState<ProductDto | null>(null);
   const [loadingProductDetail, setLoadingProductDetail] = useState<boolean>(false);
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
+  const [selectedPackage, setSelectedPackage] = useState<'single' | 'quad'>('single');
 
   // Search & Availability Filters
   const [search, setSearch] = useState<string>('');
@@ -280,6 +281,7 @@ export const PublicStore: React.FC = () => {
     setLoadingProductDetail(true);
     setError(null);
     setSelectedQuantity(1);
+    setSelectedPackage('single');
     try {
       const idMatch = param.match(/\d+$/);
       const id = idMatch ? Number(idMatch[0]) : Number(param);
@@ -416,8 +418,15 @@ export const PublicStore: React.FC = () => {
   });
 
   return (
-    <div className="blueprint-bg min-h-screen flex flex-col pt-24" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-
+    <div
+      className={`${activeProductDetail ? '' : 'blueprint-bg'} min-h-screen flex flex-col pt-24`}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        background: activeProductDetail ? '#ffffff' : undefined
+      }}
+    >
       {/* Shared Stitch Header Navigation */}
       <StitchHeader activePage="store" />
 
@@ -491,56 +500,48 @@ export const PublicStore: React.FC = () => {
           </div>
         ) : activeProductDetail ? (
           <div className="product-detail-page-container" style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
-            {/* Breadcrumb & Navigation Header */}
-            <br></br>
+            {/* Breadcrumb Navigation */}
             <nav style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
+              fontSize: '13px',
+              color: '#64748b',
+              gap: '0.45rem',
               marginBottom: '2rem',
               flexWrap: 'wrap',
-              gap: '1rem',
-              paddingBottom: '1rem',
-              borderBottom: '1px solid var(--color-outline)'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '14px', color: 'var(--color-on-surface-variant)', flexWrap: 'wrap' }}>
-                <span
-                  onClick={navigateToMainStore}
-                  style={{ cursor: 'pointer', fontWeight: 600, color: 'var(--color-primary)' }}
-                >
-                  Store Catalog
-                </span>
-                <span>/</span>
-                <span style={{ textTransform: 'capitalize' }}>
-                  {activeProductDetail.productType.toLowerCase().replace('_', ' ')}
-                </span>
-                <span>/</span>
-                <span style={{ fontWeight: 700, color: 'var(--color-on-surface)', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
-                  {activeProductDetail.name}
-                </span>
-              </div>
-
-              <button
+              <span
                 onClick={navigateToMainStore}
-                className="btn-stitch-ghost"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem' }}
+                style={{ cursor: 'pointer', color: '#64748b', transition: 'color 0.15s ease' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#0f172a')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
               >
-                <ArrowLeftIcon size={18} />
-                Back to Store Catalog
-              </button>
+                Catalog
+              </span>
+              <span style={{ color: '#cbd5e1' }}>/</span>
+              <span style={{ color: '#64748b' }}>
+                {activeProductDetail.categoryName || 'FPV Propulsion'}
+              </span>
+              <span style={{ color: '#cbd5e1' }}>/</span>
+              <span style={{ color: '#64748b' }}>
+                {activeProductDetail.productType === 'CHILD' ? 'Stators & Motors' : (activeProductDetail.productType?.toLowerCase().replace('_', ' ') || 'Stators & Motors')}
+              </span>
+              <span style={{ color: '#cbd5e1' }}>/</span>
+              <span style={{ fontWeight: 700, color: '#0f172a', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                {activeProductDetail.name}
+              </span>
             </nav>
 
-            {/* Primary Hero Section: 2-Column Responsive E-Commerce Grid */}
+            {/* Primary Hero Section: 2-Column Responsive Blueprint & Spec Layout */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
               gap: '3rem',
-              marginBottom: '4rem',
               alignItems: 'start',
               width: '100%',
               minWidth: 0
             }}>
-              {/* Left Column: Multi-Image Amazon-style Product Gallery */}
+              {/* Left Column: CAD Specimen Image Showcase */}
               <div style={{ width: '100%', minWidth: 0 }}>
                 <ProductGallery
                   productId={activeProductDetail.id}
@@ -548,44 +549,40 @@ export const PublicStore: React.FC = () => {
                   productType={activeProductDetail.productType}
                   images={activeProductDetail.images}
                   primaryImageUrl={activeProductDetail.image}
+                  sku={activeProductDetail.name.includes('DZ-') ? activeProductDetail.name : `DZ-M${activeProductDetail.id > 0 ? activeProductDetail.id : 2207}-1850-PRO`}
                 />
-
-                {/* Feature Badges Grid underneath image */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '1rem',
-                  marginTop: '1.25rem',
-                  textAlign: 'center'
-                }}>
-                  <div style={{ background: 'var(--color-surface-container-low)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Dispatched</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>{activeProductDetail.dispatchTime || '24-48 Hours'}</div>
-                  </div>
-                  <div style={{ background: 'var(--color-surface-container-low)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Warranty</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>{activeProductDetail.warranty || '1-Yr Factory'}</div>
-                  </div>
-                  <div style={{ background: 'var(--color-surface-container-low)', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-outline)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600, textTransform: 'uppercase' }}>Grade</div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.2rem' }}>{activeProductDetail.grade || 'Aero Precision'}</div>
-                  </div>
-                </div>
               </div>
 
-              {/* Right Column: E-Commerce Product Meta & Purchasing Options */}
+              {/* Right Column: Spec Metadata, Pricing & Order Execution */}
               <div style={{ display: 'flex', flexDirection: 'column', width: '100%', minWidth: 0 }}>
-                <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                  DRONESZ PRECISION MULTIROTOR
+                {/* Class Badge & Series Line */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.6rem', flexWrap: 'wrap' }}>
+                  <span style={{
+                    background: '#f1f5f9',
+                    border: '1px solid #e2e8f0',
+                    color: '#475569',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase'
+                  }}>
+                    CINEMATIC CLASS
+                  </span>
+                  <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 500 }}>
+                    • {activeProductDetail.categoryName || (activeProductDetail.productType === 'CHILD' ? 'Series 7 Flight Stator' : 'Series 7 Flight Stator')}
+                  </span>
                 </div>
 
+                {/* Title */}
                 <h1 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 'clamp(2rem, 1.6rem + 1.8vw, 2.75rem)',
+                  fontFamily: 'var(--font-display, "Space Grotesk", sans-serif)',
+                  fontSize: 'clamp(1.85rem, 1.5rem + 1.6vw, 2.5rem)',
                   fontWeight: 800,
                   letterSpacing: '-0.02em',
-                  color: 'var(--color-on-surface)',
-                  marginBottom: '1rem',
+                  color: '#0f172a',
+                  marginBottom: '0.6rem',
                   lineHeight: 1.15,
                   overflowWrap: 'anywhere',
                   wordBreak: 'break-word'
@@ -593,7 +590,21 @@ export const PublicStore: React.FC = () => {
                   {activeProductDetail.name}
                 </h1>
 
-                {/* Stock & Status Bar */}
+                {/* SKU & Spec Bar */}
+                <div style={{
+                  fontSize: '12px',
+                  color: '#64748b',
+                  fontWeight: 500,
+                  marginBottom: '1.75rem',
+                  lineHeight: 1.5,
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  gap: '0.35rem'
+                }}>
+                </div>
+
+                {/* Stock & Purchasing Form Controls */}
                 {(() => {
                   const effectiveStatus = getEffectiveProductStatus(activeProductDetail);
                   const availableStock = activeProductDetail.quantity !== undefined && activeProductDetail.quantity !== null ? activeProductDetail.quantity : 0;
@@ -603,175 +614,281 @@ export const PublicStore: React.FC = () => {
                   const isOutOfStock = effectiveStatus !== 'AVAILABLE' || availableStock <= 0;
                   const isMaxInCart = remainingStock <= 0 && currentInCart > 0;
 
+                  const multiplier = selectedPackage === 'quad' ? 4 : 1;
+                  const singleUnitPrice = activeProductDetail.price;
+                  const quadBundlePrice = activeProductDetail.price * 3.8; // ~5% quad bundle discount
+
                   return (
                     <>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.75rem', flexWrap: 'wrap' }}>
+                      {/* Big Price Display */}
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                         <span style={{
-                          fontSize: '12px',
-                          fontWeight: 700,
-                          padding: '0.35rem 0.85rem',
-                          borderRadius: '9999px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em',
-                          background: effectiveStatus === 'AVAILABLE' ? 'rgba(16, 185, 129, 0.12)' : (effectiveStatus === 'OUT_OF_STOCK' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)'),
-                          color: effectiveStatus === 'AVAILABLE' ? 'var(--color-tertiary)' : (effectiveStatus === 'OUT_OF_STOCK' ? 'var(--color-error)' : 'var(--color-amber)'),
-                          border: `1px solid ${effectiveStatus === 'AVAILABLE' ? 'var(--color-tertiary)' : (effectiveStatus === 'OUT_OF_STOCK' ? 'var(--color-error)' : 'var(--color-amber)')}`
+                          fontSize: 'clamp(1.75rem, 1.75rem + 1vw, 2.2rem)',
+                          fontWeight: 800,
+                          color: '#0f172a',
+                          fontFamily: 'var(--font-display, "Space Grotesk", sans-serif)',
+                          lineHeight: 1,
+                          letterSpacing: '-0.02em'
                         }}>
-                          ● {effectiveStatus.replace('_', ' ')}
+                          ${singleUnitPrice.toFixed(2)}
+                        </span>
+                        <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                          USD / Unit (Customs Duty Paid)
                         </span>
                       </div>
+                      {/* Technical Specifications Section Header */}
+                      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem', width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
 
-                      {/* Price Card */}
-                      <div style={{
-                        background: 'var(--color-surface-container-low)',
-                        border: '1px solid var(--color-outline)',
-                        padding: '1.5rem',
-                        borderRadius: '0.75rem',
-                        marginBottom: '2rem'
-                      }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-on-surface-variant)', letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '0.3rem' }}>
-                          Unit Retail Price
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem' }}>
-                          <span style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--color-primary)', fontFamily: 'var(--font-display)', lineHeight: 1 }}>
-                            ₹{activeProductDetail.price.toFixed(2)}
-                          </span>
-                          <span style={{ fontSize: '13px', color: 'var(--color-on-surface-variant)', fontWeight: 500 }}>
-                            ({activeProductDetail.taxNote || (activeProductDetail.taxInclusive !== false ? 'GST & Taxes Included' : 'Excl. Taxes')})
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Quantity Stepper & Add to Cart Action */}
-                      <div style={{ marginBottom: '2rem' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
-                          Select Quantity
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                          {/* Quantity Stepper */}
-                          <div style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            border: '1px solid var(--color-outline)',
-                            borderRadius: '0.5rem',
-                            background: isOutOfStock || isMaxInCart ? '#f1f5f9' : '#fff',
-                            overflow: 'hidden',
-                            opacity: isOutOfStock || isMaxInCart ? 0.6 : 1
-                          }}>
-                            <button
-                              disabled={isOutOfStock || isMaxInCart || selectedQuantity <= 1}
-                              onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
-                              style={{
-                                padding: '0.75rem 1rem',
-                                border: 'none',
-                                background: 'none',
-                                cursor: (isOutOfStock || isMaxInCart || selectedQuantity <= 1) ? 'not-allowed' : 'pointer',
-                                fontWeight: 800,
-                                fontSize: '1.1rem',
-                                color: 'var(--color-on-surface)'
-                              }}
-                            >
-                              -
-                            </button>
-                            <input
-                              type="number"
-                              disabled={isOutOfStock || isMaxInCart}
-                              min={1}
-                              max={Math.max(1, remainingStock)}
-                              value={isOutOfStock ? 0 : Math.min(selectedQuantity, Math.max(1, remainingStock))}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value) || 1;
-                                setSelectedQuantity(Math.max(1, Math.min(remainingStock, val)));
-                              }}
-                              style={{
-                                width: '50px',
-                                textAlign: 'center',
-                                border: 'none',
+                          {/* Below Fold: Detailed Specifications & Technical Documentation */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', maxWidth: '100%' }}>
+                            {/* Description Panel */}
+                            <div style={{
+                              background: '#fff',
+                              border: '1px solid var(--color-outline)',
+                              padding: '2rem',
+                              borderRadius: '0.75rem',
+                              width: '100%',
+                              minWidth: 0,
+                              boxSizing: 'border-box',
+                              overflowWrap: 'break-word',
+                              wordBreak: 'break-word'
+                            }}>
+                              <h3 style={{
+                                fontSize: '1.25rem',
                                 fontWeight: 700,
-                                fontSize: '1rem',
-                                outline: 'none',
-                                background: 'transparent',
-                                color: 'var(--color-on-surface)'
-                              }}
-                            />
-                            <button
-                              disabled={isOutOfStock || isMaxInCart || selectedQuantity >= remainingStock}
-                              onClick={() => setSelectedQuantity(Math.min(remainingStock, selectedQuantity + 1))}
-                              style={{
-                                padding: '0.75rem 1rem',
-                                border: 'none',
-                                background: 'none',
-                                cursor: (isOutOfStock || isMaxInCart || selectedQuantity >= remainingStock) ? 'not-allowed' : 'pointer',
-                                fontWeight: 800,
-                                fontSize: '1.1rem',
-                                color: 'var(--color-on-surface)'
-                              }}
-                            >
-                              +
-                            </button>
-                          </div>
+                                color: 'var(--color-on-surface)',
+                                marginBottom: '1rem',
+                                paddingBottom: '0.75rem',
+                                borderBottom: '1px solid var(--color-outline)'
+                              }}>
+                                Overview
+                              </h3>
 
-                          {/* Total Price preview */}
-                          <div style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>
-                            Total: <strong style={{ color: 'var(--color-primary)', fontSize: '1.1rem' }}>
-                              ₹{(activeProductDetail.price * (isOutOfStock ? 0 : Math.min(selectedQuantity, Math.max(1, remainingStock)))).toFixed(2)}
-                            </strong>
+                              {activeProductDetail.description ? (
+                                <p style={{
+                                  fontSize: '1rem',
+                                  color: 'var(--color-on-surface-variant)',
+                                  lineHeight: 1.7,
+                                  whiteSpace: 'pre-wrap',
+                                  overflowWrap: 'anywhere',
+                                  wordBreak: 'break-word',
+                                  maxWidth: '100%',
+                                  margin: 0
+                                }}>
+                                  {activeProductDetail.description}
+                                </p>
+                              ) : (
+                                <p style={{ fontSize: '0.95rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
+                                  No additional text description provided for this product specimen in the database catalog.
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div style={{ display: 'flex', gap: '1rem', flexDirection: 'row' }}>
-                        <button
-                          disabled={isOutOfStock || isMaxInCart || remainingStock <= 0 || addingToCartId === activeProductDetail.id}
-                          onClick={() => handleAddToCart(activeProductDetail, Math.min(selectedQuantity, remainingStock))}
-                          className="btn-stitch-primary"
-                          style={{
-                            width: '50%',
-                            height: '8%',
-                            padding: '1rem 2rem',
-                            fontSize: '0.8rem',
-                            fontWeight: 600,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.75rem',
-                            borderRadius: '0.5rem',
-                            opacity: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 0.6 : 1,
-                            cursor: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 'not-allowed' : 'pointer'
-                          }}
-                        >
-                          <CartIcon size={22} />
-                          {addingToCartId === activeProductDetail.id
-                            ? 'Adding to Cart...'
-                            : isOutOfStock
-                              ? 'Currently Out of Stock'
-                              : isMaxInCart
-                                ? `Max Available Stock in Cart (${currentInCart})`
-                                : `Add ${Math.min(selectedQuantity, remainingStock)} ${Math.min(selectedQuantity, remainingStock) > 1 ? 'Units' : 'Unit'} to Cart`}
-                        </button>
-
-                        {effectiveStatus === 'AVAILABLE' && remainingStock > 0 && (
+                      {/* Quantity Stepper + Add to Cart + Buy Now Action Row */}
+                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+                        {/* Quantity Stepper */}
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '6px',
+                          background: isOutOfStock || isMaxInCart ? '#f1f5f9' : '#ffffff',
+                          height: '44px',
+                          overflow: 'hidden',
+                          opacity: isOutOfStock || isMaxInCart ? 0.6 : 1
+                        }}>
                           <button
-                            onClick={async () => {
-                              await handleAddToCart(activeProductDetail, Math.min(selectedQuantity, remainingStock));
-                              navigateTo('/checkout');
-                            }}
-                            className="btn-stitch-ghost"
+                            type="button"
+                            disabled={isOutOfStock || isMaxInCart || selectedQuantity <= 1}
+                            onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
                             style={{
-                              width: '50%',
-                              height: '10%',
-                              padding: '0.85rem 1rem',
-                              fontSize: '1rem',
-                              fontWeight: 650,
+                              width: '38px',
+                              height: '100%',
+                              border: 'none',
+                              background: 'none',
+                              cursor: (isOutOfStock || isMaxInCart || selectedQuantity <= 1) ? 'not-allowed' : 'pointer',
+                              fontWeight: 600,
+                              fontSize: '1.1rem',
+                              color: '#64748b',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'color 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => { if (selectedQuantity > 1) e.currentTarget.style.color = '#0f172a'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; }}
+                          >
+                            −
+                          </button>
+                          <span
+                            style={{
+                              minWidth: '32px',
                               textAlign: 'center',
-                              border: '1px solid var(--color-outline)'
+                              fontWeight: 700,
+                              fontSize: '14px',
+                              color: '#0f172a',
+                              userSelect: 'none'
                             }}
                           >
-                            Proceed directly to Buy Now &rarr;
+                            {isOutOfStock ? 0 : selectedQuantity}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={isOutOfStock || isMaxInCart || (selectedQuantity + 1) * multiplier > remainingStock}
+                            onClick={() => setSelectedQuantity(selectedQuantity + 1)}
+                            style={{
+                              width: '38px',
+                              height: '100%',
+                              border: 'none',
+                              background: 'none',
+                              cursor: (isOutOfStock || isMaxInCart || (selectedQuantity + 1) * multiplier > remainingStock) ? 'not-allowed' : 'pointer',
+                              fontWeight: 600,
+                              fontSize: '1.1rem',
+                              color: '#64748b',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'color 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = '#0f172a'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; }}
+                          >
+                            +
                           </button>
-                        )}
+                        </div>
+
+                        {/* Add to Cart Button */}
+                        <button
+                          type="button"
+                          disabled={isOutOfStock || isMaxInCart || remainingStock <= 0 || addingToCartId === activeProductDetail.id}
+                          onClick={() => handleAddToCart(activeProductDetail, selectedQuantity * multiplier)}
+                          style={{
+                            flex: '1 1 170px',
+                            height: '44px',
+                            background: '#dc2626',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem',
+                            cursor: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 'not-allowed' : 'pointer',
+                            opacity: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 0.6 : 1,
+                            padding: '0 1.25rem',
+                            boxShadow: '0 1px 2px rgba(220, 38, 38, 0.2)',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isOutOfStock && !isMaxInCart && remainingStock > 0) {
+                              e.currentTarget.style.background = '#b91c1c';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#dc2626';
+                          }}
+                        >
+                          <CartIcon size={18} style={{ stroke: '#ffffff' }} />
+                          <span>
+                            {addingToCartId === activeProductDetail.id
+                              ? 'Adding...'
+                              : isOutOfStock
+                                ? 'Out of Stock'
+                                : 'Add to Cart'}
+                          </span>
+                        </button>
+
+                        {/* Buy Now Button */}
+                        <button
+                          type="button"
+                          disabled={isOutOfStock || isMaxInCart || remainingStock <= 0}
+                          onClick={async () => {
+                            await handleAddToCart(activeProductDetail, selectedQuantity * multiplier);
+                            navigateTo('/checkout');
+                          }}
+                          style={{
+                            flex: '1 1 130px',
+                            height: '44px',
+                            background: '#ffffff',
+                            border: '1px solid #cbd5e1',
+                            color: '#0f172a',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 'not-allowed' : 'pointer',
+                            opacity: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 0.6 : 1,
+                            padding: '0 1.25rem',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isOutOfStock && !isMaxInCart && remainingStock > 0) {
+                              e.currentTarget.style.background = '#f8fafc';
+                              e.currentTarget.style.borderColor = '#94a3b8';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#ffffff';
+                            e.currentTarget.style.borderColor = '#cbd5e1';
+                          }}
+                        >
+                          Buy Now
+                        </button>
+                      </div>
+
+                      {/* Trust Badges */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1.25rem',
+                        marginTop: '0.75rem',
+                        paddingTop: '0.5rem',
+                        flexWrap: 'wrap',
+                      }}>
+                        {/* Free Express Dispatch */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '12px', color: '#475569', fontWeight: 500 }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="1" y="3" width="15" height="13"></rect>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                          </svg>
+                          <span>Free Express Dispatch</span>
+                        </div>
+
+                        {/* 2-Year Warranty */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '12px', color: '#475569', fontWeight: 500 }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <path d="M9 12l2 2 4-4"></path>
+                          </svg>
+                          <span>2-Year Precision Warranty</span>
+                        </div>
+
+                        {/* Flight Sim Profile Included */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '12px', color: '#475569', fontWeight: 500 }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                            <rect x="9" y="9" width="6" height="6"></rect>
+                            <line x1="9" y1="1" x2="9" y2="4"></line>
+                            <line x1="15" y1="1" x2="15" y2="4"></line>
+                            <line x1="9" y1="20" x2="9" y2="23"></line>
+                            <line x1="15" y1="20" x2="15" y2="23"></line>
+                            <line x1="20" y1="9" x2="23" y2="9"></line>
+                            <line x1="20" y1="14" x2="23" y2="14"></line>
+                            <line x1="1" y1="9" x2="4" y2="9"></line>
+                            <line x1="1" y1="14" x2="4" y2="14"></line>
+                          </svg>
+                          <span>Flight Sim Profile Included</span>
+                        </div>
                       </div>
                     </>
                   );
@@ -779,72 +896,12 @@ export const PublicStore: React.FC = () => {
               </div>
             </div>
 
-            {/* Below Fold: Detailed Specifications & Technical Documentation */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '2.5rem',
-              marginBottom: '4rem',
-              width: '100%',
-              minWidth: 0
-            }}>
-              {/* Description Panel */}
-              <div style={{
-                background: '#fff',
-                border: '1px solid var(--color-outline)',
-                padding: '2rem',
-                borderRadius: '0.75rem',
-                width: '100%',
-                minWidth: 0,
-                boxSizing: 'border-box',
-                overflowWrap: 'break-word',
-                wordBreak: 'break-word'
-              }}>
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 700,
-                  color: 'var(--color-on-surface)',
-                  marginBottom: '1rem',
-                  paddingBottom: '0.75rem',
-                  borderBottom: '1px solid var(--color-outline)'
-                }}>
-                  Overview &amp; Product Description
-                </h3>
-
-                {activeProductDetail.description ? (
-                  <p style={{
-                    fontSize: '1rem',
-                    color: 'var(--color-on-surface-variant)',
-                    lineHeight: 1.7,
-                    whiteSpace: 'pre-wrap',
-                    overflowWrap: 'anywhere',
-                    wordBreak: 'break-word',
-                    maxWidth: '100%',
-                    margin: 0
-                  }}>
-                    {activeProductDetail.description}
-                  </p>
-                ) : (
-                  <p style={{ fontSize: '0.95rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
-                    No additional text description provided for this product specimen in the database catalog.
-                  </p>
-                )}
-              </div>
-            </div>
-
             {/* Dynamic Product Content Boxes (WORD & EXCEL) */}
+            <br></br>
+            <br></br>
             {activeProductDetail.contentSections && activeProductDetail.contentSections.filter(s => s.enabled !== false).length > 0 && (
               <div style={{ marginTop: '1rem', marginBottom: '4rem', width: '100%' }}>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  color: 'var(--color-primary)',
-                  textTransform: 'uppercase',
-                  marginBottom: '1.25rem'
-                }}>
-                  Product Documentation &amp; Technical Reports
-                </div>
+
                 {activeProductDetail.contentSections
                   .filter(s => s.enabled !== false)
                   .sort((a, b) => a.displayOrder - b.displayOrder)

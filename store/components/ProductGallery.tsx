@@ -7,35 +7,59 @@ interface ProductGalleryProps {
   productType?: string;
   images?: ProductImageDto[];
   primaryImageUrl?: string | null;
+  sku?: string;
+  drawingId?: string;
+  tolerance?: string;
+  primaryAxis?: string;
+  scale?: string;
 }
+
+const DEFAULT_VIEW_NAMES = ['Isometric', 'Stator Detail', 'Base Mount', 'Exploded'];
 
 export const ProductGallery: React.FC<ProductGalleryProps> = ({
   productId,
   productName,
-  productType,
   images = [],
   primaryImageUrl,
+  sku,
+  drawingId,
+  tolerance = 'TOLERANCE ±0.002mm',
+  primaryAxis,
+  scale = 'Scale: 1:1 Actual Size',
 }) => {
   // Determine initial list of images
-  const normalizedImages: { id: number | string; url: string; isPrimary: boolean }[] = React.useMemo(() => {
+  const normalizedImages: { id: number | string; url: string; label: string; isPrimary: boolean }[] = React.useMemo(() => {
     if (images && images.length > 0) {
-      return images.map((img) => ({
+      return images.map((img, idx) => ({
         id: img.id,
         url: getProductImageUrl(img.url) || img.url,
+        label: DEFAULT_VIEW_NAMES[idx] || `View ${idx + 1}`,
         isPrimary: Boolean(img.isPrimary),
       }));
     }
     if (primaryImageUrl) {
-      return [{ id: 'primary', url: getProductImageUrl(primaryImageUrl) || primaryImageUrl, isPrimary: true }];
+      const url = getProductImageUrl(primaryImageUrl) || primaryImageUrl;
+      return DEFAULT_VIEW_NAMES.map((name, idx) => ({
+        id: `view-${idx}`,
+        url,
+        label: name,
+        isPrimary: idx === 0,
+      }));
     }
-    return [];
+    // Fallback if no image uploaded
+    return DEFAULT_VIEW_NAMES.map((name, idx) => ({
+      id: `fallback-${idx}`,
+      url: '',
+      label: name,
+      isPrimary: idx === 0,
+    }));
   }, [images, primaryImageUrl]);
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
 
-  // Set initial selected index to the primary image if exists
+  // Set initial selected index
   useEffect(() => {
     if (normalizedImages.length > 0) {
       const primaryIdx = normalizedImages.findIndex((img) => img.isPrimary);
@@ -74,404 +98,186 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isLightboxOpen, handlePrev, handleNext]);
 
-  const activeImage = normalizedImages[selectedIndex];
-
-  if (normalizedImages.length === 0) {
-    return (
-      <div
-        className="image-void-stage"
-        style={{
-          borderRadius: '0.75rem',
-          minHeight: '420px',
-          maxHeight: '500px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          border: '1px solid var(--color-outline, #e2e8f0)',
-          width: '100%',
-          boxSizing: 'border-box',
-          height: '500px',
-          background: 'var(--color-surface-container-low, #f8fafc)',
-        }}
-      >
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <div style={{ fontSize: '48px', marginBottom: '1rem', opacity: 0.8 }}>🛸</div>
-          <div
-            style={{
-              fontSize: '13px',
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              color: 'var(--color-primary, #dc2626)',
-              textTransform: 'uppercase',
-              marginBottom: '0.5rem',
-            }}
-          >
-            DRONESZ SPECIMEN CAD MODEL
-          </div>
-          <div style={{ fontSize: '12px', color: '#64748b' }}>
-            Hardware ID #{productId.toString().padStart(4, '0')}
-          </div>
-        </div>
-
-        {productType && (
-          <div style={{ position: 'absolute', top: '16px', left: '16px' }}>
-            <span className="badge-category" style={{ letterSpacing: '0.08em', padding: '0.35rem 0.75rem' }}>
-              {productType.replace('_', ' ')}
-            </span>
-          </div>
-        )}
-
-        <div
-          style={{
-            position: 'absolute',
-            top: '16px',
-            right: '16px',
-            fontSize: '11px',
-            fontWeight: 700,
-            color: '#94a3b8',
-            letterSpacing: '0.05em',
-          }}
-        >
-          REF #{productId}
-        </div>
-      </div>
-    );
-  }
+  const activeImage = normalizedImages[selectedIndex] || normalizedImages[0];
+  const activeDrawingId = drawingId || (sku ? `DRAWING ID: ${sku}` : `DRAWING ID: DZ-${productId > 0 ? productId : 2207}-V2`);
+  const activePrimaryAxis = primaryAxis || 'Primary Axis: 1850KV Unibell';
 
   return (
-    <div className="amazon-product-gallery" style={{ width: '100%', minWidth: 0 }}>
-      {/* Desktop & Mobile Main Gallery Layout */}
+    <div style={{ width: '100%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Main Product Image Card (1:1 Aspect Ratio, Fully Filled) */}
       <div
         style={{
+          background: '#ffffff',
+          border: '1px solid var(--color-outline, #e2e8f0)',
+          borderRadius: '8px',
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '1 / 1',
+          overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'row',
-          gap: '1rem',
-          alignItems: 'flex-start',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'zoom-in',
+          boxSizing: 'border-box',
+        }}
+        onClick={() => {
+          setIsLightboxOpen(true);
+          setZoomLevel(1);
+        }}
+      >
+        {/* Zoom / Magnifier Icon Button (Top-Right Overlay) */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsLightboxOpen(true);
+            setZoomLevel(1);
+          }}
+          title="Expand Fullscreen Preview"
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            zIndex: 10,
+            width: '34px',
+            height: '34px',
+            border: '1px solid #e2e8f0',
+            borderRadius: '6px',
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: '#64748b',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#0f172a';
+            e.currentTarget.style.background = '#ffffff';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#64748b';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+
+        {activeImage?.url ? (
+          <img
+            src={activeImage.url}
+            alt={`${productName} - ${activeImage.label}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transition: 'transform 0.2s ease-out',
+            }}
+          />
+        ) : (
+          <div style={{ textAlign: 'center', color: '#94a3b8' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🛸</div>
+            <div style={{ fontSize: '12px', fontWeight: 600 }}>DronesZ High-Precision Specimen</div>
+          </div>
+        )}
+      </div>
+
+      {/* 4-Card Horizontal Thumbnail Showcase Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '0.75rem',
           width: '100%',
         }}
-        className="gallery-desktop-container"
       >
-        {/* Desktop Vertical Thumbnails List */}
-        {normalizedImages.length > 1 && (
-          <div
-            className="gallery-vertical-thumbnails"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.65rem',
-              maxHeight: '500px',
-              overflowY: 'auto',
-              paddingRight: '4px',
-              scrollbarWidth: 'thin',
-              flexShrink: 0,
-            }}
-          >
-            {normalizedImages.map((img, idx) => {
-              const isSelected = idx === selectedIndex;
-              return (
-                <button
-                  key={`thumb-${img.id}-${idx}`}
-                  onClick={() => setSelectedIndex(idx)}
-                  onMouseEnter={() => setSelectedIndex(idx)}
-                  aria-label={`View image ${idx + 1}`}
-                  style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '0.5rem',
-                    border: isSelected
-                      ? '2.5px solid var(--color-primary, #dc2626)'
-                      : '1.5px solid var(--color-outline, rgba(15, 23, 42, 0.12))',
-                    padding: '2px',
-                    background: '#ffffff',
-                    cursor: 'pointer',
-                    boxShadow: isSelected ? '0 0 0 2px rgba(220, 38, 38, 0.2)' : 'none',
-                    transition: 'all 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                >
+        {normalizedImages.slice(0, 4).map((img, idx) => {
+          const isSelected = idx === selectedIndex;
+          return (
+            <div
+              key={`showcase-thumb-${img.id}-${idx}`}
+              onClick={() => setSelectedIndex(idx)}
+              style={{
+                background: '#ffffff',
+                border: isSelected ? '1.5px solid #dc2626' : '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                transition: 'all 0.15s ease',
+                boxShadow: isSelected ? '0 0 0 1px #dc2626' : 'none',
+                overflow: 'hidden',
+              }}
+              onMouseEnter={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.borderColor = '#cbd5e1';
+                  e.currentTarget.style.background = '#f8fafc';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isSelected) {
+                  e.currentTarget.style.borderColor = '#e2e8f0';
+                  e.currentTarget.style.background = '#ffffff';
+                }
+              }}
+            >
+              {/* Thumbnail Image Container */}
+              <div
+                style={{
+                  width: '100%',
+                  height: '56px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: '#f8fafc',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                }}
+              >
+                {img.url ? (
                   <img
                     src={img.url}
-                    alt={`${productName} thumbnail ${idx + 1}`}
+                    alt={img.label}
                     style={{
                       width: '100%',
                       height: '100%',
                       objectFit: 'contain',
-                      borderRadius: '0.35rem',
                     }}
                   />
-                  {img.isPrimary && (
-                    <div
-                      title="Primary Image"
-                      style={{
-                        position: 'absolute',
-                        bottom: '2px',
-                        right: '2px',
-                        width: '7px',
-                        height: '7px',
-                        borderRadius: '50%',
-                        background: 'var(--color-primary, #dc2626)',
-                      }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
+                ) : (
+                  <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>CAD #{idx + 1}</span>
+                )}
+              </div>
 
-        {/* Large Main Product Image Stage */}
-        <div
-          style={{
-            flex: 1,
-            minWidth: 0,
-            position: 'relative',
-            background: 'var(--color-surface, #ffffff)',
-            border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.1))',
-            borderRadius: '0.75rem',
-            height: '500px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            cursor: 'zoom-in',
-            userSelect: 'none',
-          }}
-          onClick={() => {
-            setIsLightboxOpen(true);
-            setZoomLevel(1);
-          }}
-        >
-          <img
-            src={activeImage.url}
-            alt={`${productName} view ${selectedIndex + 1}`}
-            style={{
-              maxWidth: '92%',
-              maxHeight: '92%',
-              objectFit: 'contain',
-              transition: 'transform 0.2s ease-out',
-            }}
-          />
-
-          {/* Badges */}
-          {productType && (
-            <div style={{ position: 'absolute', top: '16px', left: '16px', pointerEvents: 'none' }}>
-              <span className="badge-category" style={{ letterSpacing: '0.08em', padding: '0.35rem 0.75rem' }}>
-                {productType.replace('_', ' ')}
-              </span>
+              {/* View Label */}
+              <div
+                style={{
+                  fontSize: '11px',
+                  fontWeight: isSelected ? 700 : 600,
+                  color: isSelected ? '#0f172a' : '#64748b',
+                  marginTop: '5px',
+                  textAlign: 'center',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  width: '100%',
+                }}
+              >
+                {img.label}
+              </div>
             </div>
-          )}
-
-          <div
-            style={{
-              position: 'absolute',
-              top: '16px',
-              right: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              pointerEvents: 'none',
-            }}
-          >
-            <span
-              style={{
-                fontSize: '11px',
-                fontWeight: 700,
-                color: '#64748b',
-                background: 'rgba(255, 255, 255, 0.85)',
-                padding: '0.2rem 0.5rem',
-                borderRadius: '0.35rem',
-                border: '1px solid rgba(15, 23, 42, 0.08)',
-                backdropFilter: 'blur(4px)',
-              }}
-            >
-              {selectedIndex + 1} / {normalizedImages.length}
-            </span>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', letterSpacing: '0.05em' }}>
-              REF #{productId}
-            </span>
-          </div>
-
-          {/* Previous / Next Arrows on Main Image */}
-          {normalizedImages.length > 1 && (
-            <>
-              <button
-                onClick={handlePrev}
-                aria-label="Previous Image"
-                style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.15))',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'var(--color-on-surface, #0f172a)',
-                  transition: 'all 0.15s ease',
-                  zIndex: 2,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#ffffff';
-                  e.currentTarget.style.color = 'var(--color-primary, #dc2626)';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
-                  e.currentTarget.style.color = 'var(--color-on-surface, #0f172a)';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
-
-              <button
-                onClick={handleNext}
-                aria-label="Next Image"
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.15))',
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'var(--color-on-surface, #0f172a)',
-                  transition: 'all 0.15s ease',
-                  zIndex: 2,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#ffffff';
-                  e.currentTarget.style.color = 'var(--color-primary, #dc2626)';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)';
-                  e.currentTarget.style.color = 'var(--color-on-surface, #0f172a)';
-                  e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            </>
-          )}
-
-          {/* Click to Enlarge Hint */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '12px',
-              right: '12px',
-              fontSize: '11px',
-              fontWeight: 600,
-              color: '#64748b',
-              background: 'rgba(255, 255, 255, 0.88)',
-              padding: '0.25rem 0.6rem',
-              borderRadius: '0.35rem',
-              border: '1px solid rgba(15, 23, 42, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              <line x1="11" y1="8" x2="11" y2="14"></line>
-              <line x1="8" y1="11" x2="14" y2="11"></line>
-            </svg>
-            Click to expand
-          </div>
-        </div>
+          );
+        })}
       </div>
-
-      {/* Mobile Horizontal Thumbnail Strip (Shown on smaller screens) */}
-      {normalizedImages.length > 1 && (
-        <div
-          className="gallery-mobile-thumbnails"
-          style={{
-            display: 'none',
-            flexDirection: 'row',
-            gap: '0.65rem',
-            overflowX: 'auto',
-            paddingTop: '0.85rem',
-            paddingBottom: '0.25rem',
-            scrollbarWidth: 'none',
-          }}
-        >
-          {normalizedImages.map((img, idx) => {
-            const isSelected = idx === selectedIndex;
-            return (
-              <button
-                key={`mobile-thumb-${img.id}-${idx}`}
-                onClick={() => setSelectedIndex(idx)}
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  borderRadius: '0.5rem',
-                  border: isSelected
-                    ? '2.5px solid var(--color-primary, #dc2626)'
-                    : '1.5px solid var(--color-outline, rgba(15, 23, 42, 0.12))',
-                  padding: '2px',
-                  background: '#ffffff',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: isSelected ? '0 0 0 2px rgba(220, 38, 38, 0.2)' : 'none',
-                }}
-              >
-                <img
-                  src={img.url}
-                  alt={`${productName} thumbnail ${idx + 1}`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    borderRadius: '0.35rem',
-                  }}
-                />
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Responsive Styles via Inline CSS */}
-      <style>{`
-        @media (max-width: 768px) {
-          .gallery-vertical-thumbnails {
-            display: none !important;
-          }
-          .gallery-mobile-thumbnails {
-            display: flex !important;
-          }
-        }
-      `}</style>
 
       {/* Fullscreen Lightbox / Zoom Modal */}
       {isLightboxOpen && (
@@ -512,7 +318,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
                 {productName}
               </div>
               <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                Image {selectedIndex + 1} of {normalizedImages.length}
+                {activeImage.label} (Image {selectedIndex + 1} of {normalizedImages.length})
               </div>
             </div>
 
@@ -628,18 +434,20 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
               }}
               onClick={() => setZoomLevel((prev) => (prev === 1 ? 2 : 1))}
             >
-              <img
-                src={activeImage.url}
-                alt={`${productName} view ${selectedIndex + 1}`}
-                style={{
-                  maxWidth: zoomLevel === 1 ? '90%' : 'none',
-                  maxHeight: zoomLevel === 1 ? '80vh' : 'none',
-                  transform: `scale(${zoomLevel})`,
-                  transformOrigin: 'center center',
-                  transition: 'transform 0.25s ease-out',
-                  objectFit: 'contain',
-                }}
-              />
+              {activeImage.url && (
+                <img
+                  src={activeImage.url}
+                  alt={`${productName} - ${activeImage.label}`}
+                  style={{
+                    maxWidth: zoomLevel === 1 ? '90%' : 'none',
+                    maxHeight: zoomLevel === 1 ? '80vh' : 'none',
+                    transform: `scale(${zoomLevel})`,
+                    transformOrigin: 'center center',
+                    transition: 'transform 0.25s ease-out',
+                    objectFit: 'contain',
+                  }}
+                />
+              )}
             </div>
 
             {/* Next Arrow */}
@@ -712,16 +520,18 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    <img
-                      src={img.url}
-                      alt={`Thumbnail ${idx + 1}`}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        borderRadius: '0.35rem',
-                      }}
-                    />
+                    {img.url && (
+                      <img
+                        src={img.url}
+                        alt={img.label}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          borderRadius: '0.35rem',
+                        }}
+                      />
+                    )}
                   </button>
                 );
               })}
