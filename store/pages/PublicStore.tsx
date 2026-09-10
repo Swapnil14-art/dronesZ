@@ -15,34 +15,53 @@ import { StitchFooter } from '../components/StitchFooter';
 import { ProductGallery } from '../components/ProductGallery';
 
 const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({ section }) => {
+  const sheetNumber = String(section.displayOrder !== undefined && section.displayOrder !== null ? section.displayOrder : 4).padStart(2, '0');
+
   if (section.type === 'WORD') {
     return (
       <div style={{
         background: '#ffffff',
         border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
-        padding: '2rem',
-        borderRadius: '0.75rem',
+        padding: '2rem 2.5rem',
+        borderRadius: '8px',
         marginBottom: '2rem',
         width: '100%',
         boxSizing: 'border-box',
         overflowWrap: 'break-word',
       }}>
-        <h3 style={{
-          fontSize: '1.25rem',
-          fontWeight: 700,
-          color: 'var(--color-on-surface, #0f172a)',
-          marginBottom: '1rem',
-          paddingBottom: '0.75rem',
-          borderBottom: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
+        {/* Top Header Line */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1.75rem',
         }}>
-          {section.title}
-        </h3>
+          <div style={{
+            fontSize: '13px',
+            fontWeight: 800,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: '#0f172a',
+          }}>
+            {section.title}
+          </div>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: 800,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: '#dc2626',
+          }}>
+            SHEET {sheetNumber}
+          </div>
+        </div>
+
         <div
           className="word-content-box"
           style={{
-            fontSize: '1rem',
-            color: 'var(--color-on-surface-variant, #475569)',
-            lineHeight: 1.7,
+            fontSize: '14px',
+            color: '#334155',
+            lineHeight: 1.75,
           }}
           dangerouslySetInnerHTML={{ __html: section.content }}
         />
@@ -64,23 +83,39 @@ const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({
     <div style={{
       background: '#ffffff',
       border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
-      padding: '2rem',
-      borderRadius: '0.75rem',
+      padding: '2rem 2.5rem',
+      borderRadius: '8px',
       marginBottom: '2rem',
       width: '100%',
       boxSizing: 'border-box',
       overflowWrap: 'break-word',
     }}>
-      <h3 style={{
-        fontSize: '1.25rem',
-        fontWeight: 700,
-        color: 'var(--color-on-surface, #0f172a)',
-        marginBottom: '1.25rem',
-        paddingBottom: '0.75rem',
-        borderBottom: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
+      {/* Top Header Line */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '2rem',
       }}>
-        {section.title}
-      </h3>
+        <div style={{
+          fontSize: '13px',
+          fontWeight: 800,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: '#0f172a',
+        }}>
+          {section.title}
+        </div>
+        <div style={{
+          fontSize: '11px',
+          fontWeight: 800,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: '#dc2626',
+        }}>
+          SHEET {sheetNumber}
+        </div>
+      </div>
 
       <div style={{ overflowX: 'auto', width: '100%' }}>
         <table style={{
@@ -91,9 +126,19 @@ const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({
         }}>
           {tableData.headers && tableData.headers.length > 0 && (
             <thead>
-              <tr style={{ background: 'var(--color-surface-container-low, #f8fafc)', borderBottom: '2px solid var(--color-outline, #e2e8f0)' }}>
+              <tr style={{ borderBottom: '1px solid var(--color-outline, #e2e8f0)' }}>
                 {tableData.headers.map((header, idx) => (
-                  <th key={idx} style={{ padding: '0.85rem 1rem', fontWeight: 700, color: 'var(--color-on-surface, #0f172a)' }}>
+                  <th
+                    key={idx}
+                    style={{
+                      padding: idx === 0 ? '0.75rem 1rem 0.75rem 0' : '0.75rem 1rem',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: '#94a3b8',
+                    }}
+                  >
                     {header}
                   </th>
                 ))}
@@ -103,11 +148,20 @@ const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({
           <tbody>
             {tableData.rows && tableData.rows.map((row, rIdx) => (
               <tr key={rIdx} style={{
-                borderBottom: '1px solid var(--color-outline, #e2e8f0)',
-                background: rIdx % 2 === 1 ? 'rgba(248, 250, 252, 0.5)' : '#ffffff'
+                borderBottom: '1px solid #f1f5f9',
+                background: '#ffffff'
               }}>
                 {row.map((cell, cIdx) => (
-                  <td key={cIdx} style={{ padding: '0.75rem 1rem', color: 'var(--color-on-surface-variant, #475569)' }}>
+                  <td
+                    key={cIdx}
+                    style={{
+                      padding: cIdx === 0 ? '1.1rem 1rem 1.1rem 0' : '1.1rem 1rem',
+                      fontSize: '14px',
+                      fontWeight: cIdx === 0 ? 800 : 600,
+                      color: cIdx === 0 ? '#dc2626' : '#334155',
+                      letterSpacing: cIdx === 0 ? '0.02em' : 'normal',
+                    }}
+                  >
                     {cell}
                   </td>
                 ))}
@@ -440,6 +494,7 @@ export const PublicStore: React.FC = () => {
             background: 'var(--color-primary)',
             color: '#fff',
             padding: '1rem 1.5rem',
+            borderRadius: '0.375rem',
             fontWeight: 700,
             boxShadow: '0 12px 30px rgba(0,0,0,0.2)',
             zIndex: 1000,
@@ -629,10 +684,10 @@ export const PublicStore: React.FC = () => {
                           lineHeight: 1,
                           letterSpacing: '-0.02em'
                         }}>
-                          ${singleUnitPrice.toFixed(2)}
+                          ₹{singleUnitPrice.toFixed(2)}
                         </span>
                         <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
-                          USD / Unit (Customs Duty Paid)
+                          Rupees / Unit
                         </span>
                       </div>
                       {/* Technical Specifications Section Header */}
@@ -678,7 +733,7 @@ export const PublicStore: React.FC = () => {
                                   {activeProductDetail.description}
                                 </p>
                               ) : (
-                                <p style={{ fontSize: '0.95rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', fontStyle: 'italic' }}>
                                   No additional text description provided for this product specimen in the database catalog.
                                 </p>
                               )}
@@ -693,8 +748,7 @@ export const PublicStore: React.FC = () => {
                         <div style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '6px',
+                          border: '1px solid #000000ff',
                           background: isOutOfStock || isMaxInCart ? '#f1f5f9' : '#ffffff',
                           height: '44px',
                           overflow: 'hidden',
@@ -770,8 +824,7 @@ export const PublicStore: React.FC = () => {
                             height: '44px',
                             background: '#dc2626',
                             color: '#ffffff',
-                            border: 'none',
-                            borderRadius: '6px',
+                            border: '1px solid #000000ff',
                             fontSize: '14px',
                             fontWeight: 700,
                             display: 'inline-flex',
@@ -815,9 +868,8 @@ export const PublicStore: React.FC = () => {
                             flex: '1 1 130px',
                             height: '44px',
                             background: '#ffffff',
-                            border: '1px solid #cbd5e1',
+                            border: '1px solid #000000ff',
                             color: '#0f172a',
-                            borderRadius: '6px',
                             fontSize: '14px',
                             fontWeight: 700,
                             display: 'inline-flex',
