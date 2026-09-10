@@ -20,6 +20,9 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
   }, [value]);
 
   const executeCommand = (command: string, arg?: string) => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
     document.execCommand(command, false, arg);
     handleInput();
   };
@@ -30,6 +33,23 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
       const html = editorRef.current.innerHTML;
       onChange(html);
     }
+  };
+
+  // Smart Bullet List Toggle Helper
+  const handleToggleBullets = () => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+    document.execCommand('insertUnorderedList', false);
+    handleInput();
+  };
+
+  const handleToggleNumbers = () => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+    document.execCommand('insertOrderedList', false);
+    handleInput();
   };
 
   return (
@@ -45,14 +65,15 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
-        gap: '4px',
-        padding: '6px 8px',
+        gap: '6px',
+        padding: '8px 10px',
         background: '#f8fafc',
         borderBottom: '1px solid var(--color-outline, #e2e8f0)',
         alignItems: 'center',
       }}>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => executeCommand('bold')}
           title="Bold (Ctrl+B)"
           style={btnStyle}
@@ -61,6 +82,7 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => executeCommand('italic')}
           title="Italic (Ctrl+I)"
           style={btnStyle}
@@ -69,6 +91,7 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => executeCommand('underline')}
           title="Underline (Ctrl+U)"
           style={btnStyle}
@@ -80,6 +103,7 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
 
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => executeCommand('formatBlock', '<h2>')}
           title="Heading 2"
           style={{ ...btnStyle, fontSize: '11px', fontWeight: 700 }}
@@ -88,6 +112,7 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => executeCommand('formatBlock', '<h3>')}
           title="Heading 3"
           style={{ ...btnStyle, fontSize: '11px', fontWeight: 700 }}
@@ -96,6 +121,7 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
         </button>
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => executeCommand('formatBlock', '<p>')}
           title="Paragraph"
           style={{ ...btnStyle, fontSize: '11px' }}
@@ -105,19 +131,33 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
 
         <div style={{ width: '1px', height: '18px', background: '#cbd5e1', margin: '0 4px' }} />
 
+        {/* Bullet List / Bulletins Button */}
         <button
           type="button"
-          onClick={() => executeCommand('insertUnorderedList')}
-          title="Bullet List"
-          style={{ ...btnStyle, fontSize: '13px' }}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={handleToggleBullets}
+          title="Add or Toggle Bulletins (Bullet Points)"
+          style={{
+            ...btnStyle,
+            fontSize: '12px',
+            fontWeight: 600,
+            padding: '4px 10px',
+            background: '#ffffff',
+            borderColor: '#94a3b8',
+            color: '#0f172a',
+            gap: '4px',
+          }}
         >
-          • List
+          <span style={{ color: '#dc2626', fontSize: '12px', lineHeight: 1 }}></span> Bulletins
         </button>
+
+        {/* Numbered List Button */}
         <button
           type="button"
-          onClick={() => executeCommand('insertOrderedList')}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={handleToggleNumbers}
           title="Numbered List"
-          style={{ ...btnStyle, fontSize: '11px' }}
+          style={{ ...btnStyle, fontSize: '12px', fontWeight: 600, padding: '4px 8px' }}
         >
           1. List
         </button>
@@ -126,6 +166,7 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
 
         <button
           type="button"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => executeCommand('removeFormat')}
           title="Clear Formatting"
           style={{ ...btnStyle, fontSize: '11px', color: '#64748b' }}
@@ -134,25 +175,51 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange, placeholder =
         </button>
       </div>
 
-      {/* Editable Area */}
-      <div
-        ref={editorRef}
-        contentEditable
-        onInput={handleInput}
-        onBlur={handleInput}
-        style={{
-          padding: '12px 14px',
-          minHeight: '130px',
-          maxHeight: '280px',
-          overflowY: 'auto',
-          outline: 'none',
-          fontSize: '14px',
-          lineHeight: '1.6',
-          color: '#1e293b',
-          fontFamily: 'inherit',
-        }}
-        data-placeholder={placeholder}
-      />
+      {/* Editable Area with Scoped List CSS */}
+      <div className="rich-editor-wrapper" style={{ position: 'relative' }}>
+        <style>{`
+          .rich-editor-content ul {
+            list-style-type: disc !important;
+            padding-left: 1.5rem !important;
+            margin: 0.5rem 0 !important;
+          }
+          .rich-editor-content ol {
+            list-style-type: decimal !important;
+            padding-left: 1.5rem !important;
+            margin: 0.5rem 0 !important;
+          }
+          .rich-editor-content li {
+            margin-bottom: 0.35rem !important;
+            display: list-item !important;
+          }
+          .rich-editor-content p {
+            margin-bottom: 0.5rem;
+          }
+          .rich-editor-content h2, .rich-editor-content h3 {
+            margin: 0.75rem 0 0.5rem 0;
+            font-weight: 700;
+          }
+        `}</style>
+        <div
+          ref={editorRef}
+          className="rich-editor-content"
+          contentEditable
+          onInput={handleInput}
+          onBlur={handleInput}
+          style={{
+            padding: '12px 14px',
+            minHeight: '140px',
+            maxHeight: '300px',
+            overflowY: 'auto',
+            outline: 'none',
+            fontSize: '14px',
+            lineHeight: '1.6',
+            color: '#1e293b',
+            fontFamily: 'inherit',
+          }}
+          data-placeholder={placeholder}
+        />
+      </div>
     </div>
   );
 };

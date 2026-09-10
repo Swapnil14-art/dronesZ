@@ -505,3 +505,31 @@ h6 {
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+/* Dynamic Word Content Box Styling */
+.word-content-box ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.6rem 0 !important;
+}
+
+.word-content-box ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.6rem 0 !important;
+}
+
+.word-content-box li {
+  margin-bottom: 0.4rem !important;
+  display: list-item !important;
+}
+
+.word-content-box p {
+  margin-bottom: 0.65rem;
+}
+
+.word-content-box h2, .word-content-box h3 {
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}
