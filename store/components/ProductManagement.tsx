@@ -12,6 +12,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  archiveProduct,
+  restoreProduct,
   fetchCategories,
   uploadMultipleProductImages,
   fetchProductImages,
@@ -118,6 +120,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [includeArchived, setIncludeArchived] = useState<boolean>(false);
 
   // Active Tab in Large Modal
   const [activeModalTab, setActiveModalTab] = useState<'details' | 'boxes'>('details');
@@ -146,7 +149,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
   useEffect(() => {
     loadProductsList();
-  }, [token, page, search, statusFilter, categoryFilter, typeFilter]);
+  }, [token, page, search, statusFilter, categoryFilter, typeFilter, includeArchived]);
 
   const loadCategories = async () => {
     try {
@@ -177,6 +180,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         status: statusFilter || undefined,
         categoryId: categoryFilter || undefined,
         productType: (typeFilter as ProductType) || undefined,
+        includeArchived,
       });
       setProducts(res.content);
       setTotalPages(res.totalPages);
@@ -766,13 +770,29 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
     try {
       await deleteProduct(token, deletingProduct.id);
-      setSuccessMsg(`Product "${deletingProduct.name}" deleted successfully.`);
+      setSuccessMsg(`Product "${deletingProduct.name}" archived successfully.`);
       closeModal();
       await loadProductsList();
       await loadParentProducts();
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
-      setFormError(err.message || 'Failed to delete product');
+      setFormError(err.message || 'Failed to archive product');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRestoreProduct = async (product: ProductDto) => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await restoreProduct(token, product.id);
+      setSuccessMsg(`Product "${product.name}" restored successfully.`);
+      await loadProductsList();
+      await loadParentProducts();
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to restore product');
     } finally {
       setSubmitting(false);
     }
@@ -848,6 +868,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
           <option value="AVAILABLE">Available</option>
           <option value="OUT_OF_STOCK">Out of Stock</option>
           <option value="COMING_SOON">Coming Soon</option>
+          <option value="ARCHIVED">Archived</option>
         </select>
 
         <select
@@ -866,6 +887,19 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             </option>
           ))}
         </select>
+
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '13px', cursor: 'pointer', userSelect: 'none', color: 'var(--color-on-surface)', whiteSpace: 'nowrap' }}>
+          <input
+            type="checkbox"
+            checked={includeArchived}
+            onChange={(e) => {
+              setIncludeArchived(e.target.checked);
+              setPage(0);
+            }}
+            style={{ width: '16px', height: '16px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
+          />
+          Show Archived Products
+        </label>
       </div>
 
       {/* Products Table */}
@@ -939,6 +973,13 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                     </td>
                     <td>
                       {(() => {
+                        if (p.status === 'ARCHIVED') {
+                          return (
+                            <span style={{ display: 'inline-block', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '11px', fontWeight: 800, background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1' }}>
+                              ARCHIVED
+                            </span>
+                          );
+                        }
                         const effStatus = getEffectiveProductStatus(p);
                         const isZeroStock = p.productType !== 'PARENT' && (p.quantity === undefined || p.quantity === null || p.quantity <= 0);
                         return (
@@ -953,20 +994,33 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                        <button
-                          onClick={() => openEditModal(p)}
-                          className="btn-stitch-ghost"
-                          style={{ padding: '0.35rem 0.75rem', fontSize: '12px' }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => setDeletingProduct(p)}
-                          className="btn-stitch-danger"
-                          style={{ padding: '0.35rem 0.75rem', fontSize: '12px' }}
-                        >
-                          Delete
-                        </button>
+                        {p.status === 'ARCHIVED' ? (
+                          <button
+                            onClick={() => handleRestoreProduct(p)}
+                            disabled={submitting}
+                            className="btn-stitch-primary"
+                            style={{ padding: '0.35rem 0.75rem', fontSize: '12px', background: '#059669', borderColor: '#059669' }}
+                          >
+                            ↺ Restore
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => openEditModal(p)}
+                              className="btn-stitch-ghost"
+                              style={{ padding: '0.35rem 0.75rem', fontSize: '12px' }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => setDeletingProduct(p)}
+                              className="btn-stitch-danger"
+                              style={{ padding: '0.35rem 0.75rem', fontSize: '12px' }}
+                            >
+                              Archive
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1936,22 +1990,27 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Archive Confirmation Modal */}
       {deletingProduct && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px', padding: '2rem' }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px', padding: '2rem' }}>
             <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-error)', margin: '0 0 1rem 0' }}>
-              Confirm Product Deletion
+              Archive Product
             </h3>
-            <p style={{ color: 'var(--color-on-surface-variant)', fontSize: '14px', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-              Are you sure you want to delete product <strong>"{deletingProduct.name}"</strong> (ID: #{deletingProduct.id})? All associated content boxes and images will be permanently removed.
+            <p style={{ color: 'var(--color-on-surface-variant)', fontSize: '14px', lineHeight: 1.5, marginBottom: '1rem' }}>
+              Are you sure you want to archive <strong>"{deletingProduct.name}"</strong> (ID: #{deletingProduct.id})? It will be hidden from the storefront, but historical orders, receipts, and images will be preserved.
             </p>
+            {deletingProduct.productType === 'PARENT' && (
+              <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', color: '#92400e', padding: '0.75rem 1rem', borderRadius: '0.375rem', fontSize: '13px', marginBottom: '1.25rem', fontWeight: 600 }}>
+                ⚠️ Notice: Archiving this Parent series will also archive all associated child model variations.
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
               <button disabled={submitting} onClick={closeModal} className="btn-stitch-ghost">
                 Cancel
               </button>
               <button disabled={submitting} onClick={handleDeleteProduct} className="btn-stitch-danger">
-                {submitting ? 'Deleting...' : 'Delete Product'}
+                {submitting ? 'Archiving...' : 'Archive Product'}
               </button>
             </div>
           </div>

@@ -33,6 +33,16 @@ public class CategoryService {
     @Cacheable(value = CacheNames.CATEGORIES_LIST, key = "'all'", sync = true)
     @Transactional(readOnly = true)
     public List<CategoryDto> getAllCategories() {
+        return categoryRepository.findByIsDeletedFalse().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoryDto> getAllCategories(boolean includeDeleted) {
+        if (!includeDeleted) {
+            return getAllCategories();
+        }
         return categoryRepository.findAll().stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -41,6 +51,13 @@ public class CategoryService {
     @Cacheable(value = CacheNames.CATEGORY_DETAIL, key = "#id", sync = true)
     @Transactional(readOnly = true)
     public CategoryDto getCategoryById(Long id) {
+        Category category = categoryRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + id + " not found"));
+        return mapToDto(category);
+    }
+
+    @Transactional(readOnly = true)
+    public CategoryDto getAdminCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + id + " not found"));
         return mapToDto(category);
@@ -49,11 +66,12 @@ public class CategoryService {
     @Transactional
     public CategoryDto createCategory(CategoryRequest request) {
         String trimmedName = request.getName().trim();
-        if (categoryRepository.existsByNameIgnoreCase(trimmedName)) {
-            throw new ResourceConflictException("Category with name '" + trimmedName + "' already exists");
+        if (categoryRepository.existsByNameIgnoreCaseAndIsDeletedFalse(trimmedName)) {
+            throw new ResourceConflictException("An active category with name '" + trimmedName + "' already exists");
         }
 
         Category category = new Category(trimmedName, request.getDescription());
+        category.setIsDeleted(false);
         Category saved = categoryRepository.save(category);
         cacheEvictionService.evictCategoryComplete(saved.getId());
         return mapToDto(saved);
@@ -65,8 +83,8 @@ public class CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + id + " not found"));
 
         String trimmedName = request.getName().trim();
-        if (categoryRepository.existsByNameIgnoreCaseAndIdNot(trimmedName, id)) {
-            throw new ResourceConflictException("Category with name '" + trimmedName + "' already exists");
+        if (categoryRepository.existsByNameIgnoreCaseAndIdNotAndIsDeletedFalse(trimmedName, id)) {
+            throw new ResourceConflictException("An active category with name '" + trimmedName + "' already exists");
         }
 
         category.setName(trimmedName);
@@ -82,12 +100,30 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + id + " not found"));
 
-        if (productRepository.existsByCategoryId(id)) {
-            throw new ResourceConflictException("Cannot delete category ID " + id + " because products are associated with it. Reassign or delete products first.");
+        category.setIsDeleted(true);
+        category.setDeletedAt(java.time.LocalDateTime.now());
+        categoryRepository.save(category);
+        cacheEvictionService.evictCategoryComplete(id);
+    }
+
+    @Transactional
+    public CategoryDto restoreCategory(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + id + " not found"));
+
+        if (!Boolean.TRUE.equals(category.getIsDeleted())) {
+            throw new com.dronestore.system.exception.BadRequestException("Category is not deleted.");
         }
 
-        categoryRepository.delete(category);
+        if (categoryRepository.existsByNameIgnoreCaseAndIdNotAndIsDeletedFalse(category.getName(), id)) {
+            throw new ResourceConflictException("An active category with name '" + category.getName() + "' already exists.");
+        }
+
+        category.setIsDeleted(false);
+        category.setDeletedAt(null);
+        Category saved = categoryRepository.save(category);
         cacheEvictionService.evictCategoryComplete(id);
+        return mapToDto(saved);
     }
 
     private CategoryDto mapToDto(Category category) {
@@ -95,6 +131,8 @@ public class CategoryService {
                 category.getId(),
                 category.getName(),
                 category.getDescription(),
+                category.getIsDeleted() != null ? category.getIsDeleted() : false,
+                category.getDeletedAt(),
                 category.getCreatedAt(),
                 category.getUpdatedAt()
         );

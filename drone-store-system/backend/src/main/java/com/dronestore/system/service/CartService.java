@@ -63,10 +63,18 @@ public class CartService {
         }
         Cart cart = cartOpt.get();
 
-        // Auto-restrict cart quantities to current available stock
+        // Auto-restrict cart quantities to current available stock and remove archived items
         boolean modified = false;
-        for (CartItem item : cart.getItems()) {
+        java.util.Iterator<CartItem> iterator = cart.getItems().iterator();
+        while (iterator.hasNext()) {
+            CartItem item = iterator.next();
             Product p = item.getProduct();
+            if (p != null && p.getStatus() == ProductStatus.ARCHIVED) {
+                cartItemRepository.delete(item);
+                iterator.remove();
+                modified = true;
+                continue;
+            }
             int currentStock = (p != null && p.getQuantity() != null) ? p.getQuantity() : 0;
             if (p != null && p.getStatus() == ProductStatus.AVAILABLE && currentStock > 0) {
                 if (item.getQuantity() > currentStock) {

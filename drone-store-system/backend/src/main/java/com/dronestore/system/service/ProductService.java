@@ -64,11 +64,22 @@ public class ProductService {
     public PageResponse<ProductDto> getProducts(int page, int size, String search, ProductStatus status,
                                                 Long categoryId, Long parentId, ProductType productType,
                                                 String sortBy, String sortDir) {
+        return getProducts(page, size, search, status, categoryId, parentId, productType, sortBy, sortDir, false);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ProductDto> getProducts(int page, int size, String search, ProductStatus status,
+                                                Long categoryId, Long parentId, ProductType productType,
+                                                String sortBy, String sortDir, boolean includeArchived) {
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Specification<Product> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            if (!includeArchived && status != ProductStatus.ARCHIVED) {
+                predicates.add(cb.notEqual(root.get("status"), ProductStatus.ARCHIVED));
+            }
 
             if (search != null && !search.trim().isEmpty()) {
                 String searchPattern = "%" + search.trim().toLowerCase() + "%";
@@ -143,6 +154,16 @@ public class ProductService {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(root.get("productType").in(Arrays.asList(ProductType.STANDALONE, ProductType.PARENT)));
+            predicates.add(cb.notEqual(root.get("status"), ProductStatus.ARCHIVED));
+
+            // Option B: hide products whose category has been soft-deleted
+            // Products with no category (null) are always shown
+            javax.persistence.criteria.Join<Object, Object> categoryJoin =
+                    root.join("category", javax.persistence.criteria.JoinType.LEFT);
+            predicates.add(cb.or(
+                    cb.isNull(root.get("category")),
+                    cb.equal(categoryJoin.get("isDeleted"), false)
+            ));
 
             if (search != null && !search.trim().isEmpty()) {
                 String searchPattern = "%" + search.trim().toLowerCase() + "%";
@@ -171,10 +192,10 @@ public class ProductService {
                             cb.or(
                                     cb.isNull(root.get("quantity")),
                                     cb.lessThanOrEqualTo(root.get("quantity"), 0)
-                            )
+                             )
                     );
                     predicates.add(cb.or(isDirectOutOfStock, isZeroStockNonParent));
-                } else {
+                } else if (status != ProductStatus.ARCHIVED) {
                     predicates.add(cb.equal(root.get("status"), status));
                 }
             }
@@ -199,6 +220,13 @@ public class ProductService {
     public ProductDto getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + id + " not found"));
+        if (product.getStatus() == ProductStatus.ARCHIVED) {
+            throw new ResourceNotFoundException("Product with ID " + id + " not found");
+        }
+        // Option B: treat product as not found if its category is soft-deleted
+        if (product.getCategory() != null && Boolean.TRUE.equals(product.getCategory().getIsDeleted())) {
+            throw new ResourceNotFoundException("Product with ID " + id + " not found");
+        }
         return mapToDto(product, true);
     }
 
@@ -219,8 +247,16 @@ public class ProductService {
             throw new BadRequestException("Product ID " + parentId + " is not a PARENT product series.");
         }
 
+        // Option B: if the parent's category is soft-deleted, return empty children
+        if (parent.getCategory() != null && Boolean.TRUE.equals(parent.getCategory().getIsDeleted())) {
+            return Collections.emptyList();
+        }
+
         List<Product> children = productRepository.findByParentIdAndProductType(parentId, ProductType.CHILD);
-        return mapToDtoBatch(children, true);
+        List<Product> activeChildren = children.stream()
+                .filter(child -> child.getStatus() != ProductStatus.ARCHIVED)
+                .collect(Collectors.toList());
+        return mapToDtoBatch(activeChildren, true);
     }
 
 
@@ -358,16 +394,59 @@ public class ProductService {
 
     @Transactional
     public void deleteProduct(Long id) {
+        archiveProduct(id);
+    }
+
+    @Transactional
+    public void archiveProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + id + " not found"));
 
-        if (productRepository.existsByParentId(id)) {
-            throw new ResourceConflictException("Cannot delete product ID " + id + " because child products are associated with it. Reassign or delete child products first.");
+        product.setStatus(ProductStatus.ARCHIVED);
+        productRepository.save(product);
+
+        // If parent product, cascade archive to all active child variations
+        if (product.getProductType() == ProductType.PARENT) {
+            List<Product> children = productRepository.findByParentId(id);
+            for (Product child : children) {
+                child.setStatus(ProductStatus.ARCHIVED);
+                productRepository.save(child);
+                cacheEvictionService.evictProductComplete(child.getId(), id);
+            }
         }
 
         Long parentId = product.getParent() != null ? product.getParent().getId() : null;
-        productRepository.delete(product);
         cacheEvictionService.evictProductComplete(id, parentId);
+    }
+
+    @Transactional
+    public ProductDto restoreProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + id + " not found"));
+
+        if (product.getStatus() != ProductStatus.ARCHIVED) {
+            throw new BadRequestException("Product is not archived.");
+        }
+
+        // Check parent constraint if child
+        if (product.getProductType() == ProductType.CHILD && product.getParent() != null) {
+            if (product.getParent().getStatus() == ProductStatus.ARCHIVED) {
+                throw new BadRequestException("Cannot restore variation while parent product '" 
+                        + product.getParent().getName() + "' is archived. Please restore parent first.");
+            }
+        }
+
+        // Restore status based on quantity and type
+        if (product.getProductType() == ProductType.PARENT || (product.getQuantity() != null && product.getQuantity() > 0)) {
+            product.setStatus(ProductStatus.AVAILABLE);
+        } else {
+            product.setStatus(ProductStatus.OUT_OF_STOCK);
+        }
+
+        Product saved = productRepository.save(product);
+        Long parentId = product.getParent() != null ? product.getParent().getId() : null;
+        cacheEvictionService.evictProductComplete(id, parentId);
+        return mapToDto(saved, false);
     }
 
     // ----------------- Content Sections CRUD & Reordering -----------------

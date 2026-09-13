@@ -20,7 +20,7 @@ export interface ErrorResponse {
   timestamp: string;
 }
 
-export type ProductStatus = 'AVAILABLE' | 'OUT_OF_STOCK' | 'COMING_SOON';
+export type ProductStatus = 'AVAILABLE' | 'OUT_OF_STOCK' | 'COMING_SOON' | 'ARCHIVED';
 export type ProductType = 'STANDALONE' | 'PARENT' | 'CHILD';
 
 export function getEffectiveProductStatus(product?: {
@@ -29,6 +29,7 @@ export function getEffectiveProductStatus(product?: {
   productType?: string;
 } | null): ProductStatus {
   if (!product) return 'OUT_OF_STOCK';
+  if (product.status === 'ARCHIVED') return 'ARCHIVED';
   if (product.productType === 'PARENT') {
     return (product.status as ProductStatus) || 'AVAILABLE';
   }
@@ -66,6 +67,8 @@ export interface CategoryDto {
   id: number;
   name: string;
   description?: string;
+  isDeleted?: boolean;
+  deletedAt?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -145,7 +148,11 @@ export interface UserDto {
   email: string;
   phone: string;
   role: string;
+  enabled?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface UserLoginResponse {
@@ -639,8 +646,9 @@ export async function fetchAdminProfile(token: string): Promise<AdminDto> {
   return response.json();
 }
 
-export async function fetchCategories(token: string): Promise<CategoryDto[]> {
-  const response = await fetch(`${API_BASE_URL}/api/admin/categories`, {
+export async function fetchCategories(token: string, includeDeleted: boolean = false): Promise<CategoryDto[]> {
+  const query = includeDeleted ? '?includeDeleted=true' : '';
+  const response = await fetch(`${API_BASE_URL}/api/admin/categories${query}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -707,6 +715,23 @@ export async function deleteCategory(token: string, id: number): Promise<void> {
   }
 }
 
+export async function restoreCategory(token: string, id: number): Promise<CategoryDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/categories/${id}/restore`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to restore category', timestamp: '' }));
+    throw new Error(err.message || 'Failed to restore category');
+  }
+
+  return response.json();
+}
+
 export async function fetchProducts(
   token: string,
   params?: {
@@ -717,6 +742,7 @@ export async function fetchProducts(
     categoryId?: number | string;
     parentId?: number | string;
     productType?: ProductType;
+    includeArchived?: boolean;
   }
 ): Promise<PageResponse<ProductDto>> {
   const queryParams = new URLSearchParams();
@@ -727,6 +753,7 @@ export async function fetchProducts(
   if (params?.categoryId) queryParams.append('categoryId', params.categoryId.toString());
   if (params?.parentId) queryParams.append('parentId', params.parentId.toString());
   if (params?.productType) queryParams.append('productType', params.productType);
+  if (params?.includeArchived) queryParams.append('includeArchived', 'true');
 
   const response = await fetch(`${API_BASE_URL}/api/admin/products?${queryParams.toString()}`, {
     method: 'GET',
@@ -793,6 +820,27 @@ export async function deleteProduct(token: string, id: number): Promise<void> {
     const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to delete product', timestamp: '' }));
     throw new Error(err.message || 'Failed to delete product');
   }
+}
+
+export async function archiveProduct(token: string, id: number): Promise<void> {
+  return deleteProduct(token, id);
+}
+
+export async function restoreProduct(token: string, id: number): Promise<ProductDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${id}/restore`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to restore product', timestamp: '' }));
+    throw new Error(err.message || 'Failed to restore product');
+  }
+
+  return response.json();
 }
 
 export async function fetchProductImages(productId: number, token?: string): Promise<ProductImageDto[]> {
@@ -1047,6 +1095,100 @@ export async function toggleProductContentSection(token: string, productId: numb
   if (!response.ok) {
     const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to toggle content section', timestamp: '' }));
     throw new Error(err.message || 'Failed to toggle content section');
+  }
+
+  return response.json();
+}
+
+/* Admin User Management APIs */
+export async function fetchAdminUsers(
+  token: string,
+  includeDeleted: boolean = false,
+  keyword?: string
+): Promise<UserDto[]> {
+  const queryParams = new URLSearchParams();
+  if (includeDeleted) queryParams.append('includeDeleted', 'true');
+  if (keyword) queryParams.append('keyword', keyword);
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/users?${queryParams.toString()}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to fetch users', timestamp: '' }));
+    throw new Error(err.message || 'Failed to fetch users');
+  }
+
+  return response.json();
+}
+
+export async function fetchAdminUserById(token: string, id: number): Promise<UserDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/users/${id}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to fetch user profile', timestamp: '' }));
+    throw new Error(err.message || 'Failed to fetch user profile');
+  }
+
+  return response.json();
+}
+
+export async function softDeleteUser(token: string, id: number): Promise<UserDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/users/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to deactivate user', timestamp: '' }));
+    throw new Error(err.message || 'Failed to deactivate user');
+  }
+
+  return response.json();
+}
+
+export async function restoreUser(token: string, id: number): Promise<UserDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/users/${id}/restore`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to restore user', timestamp: '' }));
+    throw new Error(err.message || 'Failed to restore user');
+  }
+
+  return response.json();
+}
+
+export async function toggleUserEnabled(token: string, id: number, enabled: boolean): Promise<UserDto> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/users/${id}/status?enabled=${enabled}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to update user status', timestamp: '' }));
+    throw new Error(err.message || 'Failed to update user status');
   }
 
   return response.json();

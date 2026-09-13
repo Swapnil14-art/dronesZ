@@ -28,7 +28,12 @@ public class UserService {
     @Transactional
     public UserDto registerUser(UserSignupRequest request) {
         String cleanEmail = request.getEmail().trim().toLowerCase();
-        if (userRepository.existsByEmailIgnoreCase(cleanEmail)) {
+        java.util.Optional<User> existing = userRepository.findByEmailIgnoreCase(cleanEmail);
+        if (existing.isPresent()) {
+            User existingUser = existing.get();
+            if (Boolean.TRUE.equals(existingUser.getIsDeleted())) {
+                throw new BusinessRuleException("An account with this email was previously registered and deactivated. Please contact support to reactivate your account.");
+            }
             throw new BusinessRuleException("An account with this email address already exists. Please sign in instead.");
         }
 
@@ -39,6 +44,7 @@ public class UserService {
         user.setPhone(request.getPhone().trim());
         user.setRole("USER");
         user.setEnabled(true);
+        user.setIsDeleted(false);
 
         User savedUser = userRepository.save(user);
         return mapToDto(savedUser);
@@ -51,6 +57,10 @@ public class UserService {
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new BusinessRuleException("Invalid email address or password.");
+        }
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new BusinessRuleException("This account has been deactivated or deleted. Please contact support.");
         }
 
         if (!Boolean.TRUE.equals(user.getEnabled())) {
@@ -66,6 +76,9 @@ public class UserService {
     public UserDto getUserProfile(String email) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User profile not found for email: " + email));
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new ResourceNotFoundException("User profile not found for email: " + email);
+        }
         return mapToDto(user);
     }
 
@@ -73,6 +86,10 @@ public class UserService {
     public UserDto updateUserProfile(String email, UserProfileRequest request) {
         User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User profile not found for email: " + email));
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new BusinessRuleException("Cannot update profile of a deactivated account.");
+        }
 
         user.setFullName(request.getFullName().trim());
         user.setPhone(request.getPhone().trim());
@@ -86,6 +103,63 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found for email: " + email));
     }
 
+    public java.util.List<UserDto> getAllUsers(boolean includeDeleted, String keyword) {
+        java.util.List<User> users = includeDeleted ? userRepository.findAll() : userRepository.findByIsDeletedFalse();
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String lowerKw = keyword.trim().toLowerCase();
+            users = users.stream()
+                    .filter(u -> (u.getFullName() != null && u.getFullName().toLowerCase().contains(lowerKw))
+                            || (u.getEmail() != null && u.getEmail().toLowerCase().contains(lowerKw))
+                            || (u.getPhone() != null && u.getPhone().toLowerCase().contains(lowerKw)))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        return users.stream().map(this::mapToDto).collect(java.util.stream.Collectors.toList());
+    }
+
+    public UserDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + id + " not found"));
+        return mapToDto(user);
+    }
+
+    @Transactional
+    public UserDto softDeleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + id + " not found"));
+
+        user.setIsDeleted(true);
+        user.setEnabled(false);
+        user.setDeletedAt(java.time.LocalDateTime.now());
+        User saved = userRepository.save(user);
+        return mapToDto(saved);
+    }
+
+    @Transactional
+    public UserDto restoreUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + id + " not found"));
+
+        user.setIsDeleted(false);
+        user.setEnabled(true);
+        user.setDeletedAt(null);
+        User saved = userRepository.save(user);
+        return mapToDto(saved);
+    }
+
+    @Transactional
+    public UserDto toggleUserStatus(Long id, boolean enabled) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + id + " not found"));
+
+        if (Boolean.TRUE.equals(user.getIsDeleted())) {
+            throw new BusinessRuleException("Cannot change status of a deleted user. Restore the user first.");
+        }
+
+        user.setEnabled(enabled);
+        User saved = userRepository.save(user);
+        return mapToDto(saved);
+    }
+
     public UserDto mapToDto(User user) {
         return new UserDto(
                 user.getId(),
@@ -93,7 +167,11 @@ public class UserService {
                 user.getEmail(),
                 user.getPhone(),
                 user.getRole(),
-                user.getCreatedAt()
+                user.getEnabled() != null ? user.getEnabled() : true,
+                user.getIsDeleted() != null ? user.getIsDeleted() : false,
+                user.getDeletedAt(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
         );
     }
 }

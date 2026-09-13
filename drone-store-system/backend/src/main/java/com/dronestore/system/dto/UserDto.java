@@ -9,18 +9,30 @@ public class UserDto {
     private String email;
     private String phone;
     private String role;
+    private Boolean enabled;
+    private Boolean isDeleted;
+    private LocalDateTime deletedAt;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public UserDto() {
     }
 
     public UserDto(Long id, String fullName, String email, String phone, String role, LocalDateTime createdAt) {
+        this(id, fullName, email, phone, role, true, false, null, createdAt, null);
+    }
+
+    public UserDto(Long id, String fullName, String email, String phone, String role, Boolean enabled, Boolean isDeleted, LocalDateTime deletedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.phone = phone;
         this.role = role;
+        this.enabled = enabled;
+        this.isDeleted = isDeleted;
+        this.deletedAt = deletedAt;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public Long getId() {
@@ -63,11 +75,43 @@ public class UserDto {
         this.role = role;
     }
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public Boolean getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

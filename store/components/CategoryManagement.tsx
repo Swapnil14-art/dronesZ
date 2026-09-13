@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CategoryDto, CategoryRequest, fetchCategories, createCategory, updateCategory, deleteCategory } from '../services/api';
+import { CategoryDto, CategoryRequest, fetchCategories, createCategory, updateCategory, deleteCategory, restoreCategory } from '../services/api';
 
 interface Props {
   token: string;
@@ -11,6 +11,7 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [includeDeleted, setIncludeDeleted] = useState<boolean>(false);
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -25,13 +26,13 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
 
   useEffect(() => {
     loadCategories();
-  }, [token]);
+  }, [token, includeDeleted]);
 
   const loadCategories = async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchCategories(token);
+      const data = await fetchCategories(token, includeDeleted);
       setCategories(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load categories');
@@ -101,12 +102,27 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
 
     try {
       await deleteCategory(token, deletingCategory.id);
-      setSuccessMsg(`Category "${deletingCategory.name}" deleted successfully`);
+      setSuccessMsg(`Category "${deletingCategory.name}" deactivated successfully`);
       closeModal();
       await loadCategories();
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
-      setFormError(err.message || 'Failed to delete category');
+      setFormError(err.message || 'Failed to deactivate category');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleRestoreCategory = async (cat: CategoryDto) => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await restoreCategory(token, cat.id);
+      setSuccessMsg(`Category "${cat.name}" restored successfully`);
+      await loadCategories();
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to restore category');
     } finally {
       setSubmitting(false);
     }
@@ -147,7 +163,7 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
       )}
 
       {/* Filter / Search Bar */}
-      <div className="stitch-card" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
+      <div className="stitch-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <input
           type="text"
           className="stitch-input"
@@ -156,6 +172,15 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{ maxWidth: '400px' }}
         />
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '13px', cursor: 'pointer', userSelect: 'none', color: 'var(--color-on-surface)' }}>
+          <input
+            type="checkbox"
+            checked={includeDeleted}
+            onChange={(e) => setIncludeDeleted(e.target.checked)}
+            style={{ width: '16px', height: '16px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
+          />
+          Show Deactivated Categories
+        </label>
       </div>
 
       {/* Categories Table */}
@@ -174,6 +199,7 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
               <tr>
                 <th>ID</th>
                 <th>Category Name</th>
+                <th>Status</th>
                 <th>Description</th>
                 <th>Created Date</th>
                 <th style={{ textAlign: 'right' }}>Actions</th>
@@ -181,10 +207,21 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
             </thead>
             <tbody>
               {filteredCategories.map((cat) => (
-                <tr key={cat.id}>
+                <tr key={cat.id} style={{ opacity: cat.isDeleted ? 0.75 : 1 }}>
                   <td><strong>#{cat.id}</strong></td>
                   <td>
                     <span className="badge-category">{cat.name}</span>
+                  </td>
+                  <td>
+                    {cat.isDeleted ? (
+                      <span style={{ display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '11px', fontWeight: 700, background: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1' }}>
+                        DEACTIVATED
+                      </span>
+                    ) : (
+                      <span style={{ display: 'inline-block', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '11px', fontWeight: 700, background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }}>
+                        ACTIVE
+                      </span>
+                    )}
                   </td>
                   <td style={{ color: 'var(--color-muted)', maxWidth: '350px' }}>
                     {cat.description || <em style={{ color: '#9ca3af' }}>No description provided</em>}
@@ -194,12 +231,25 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
-                      <button onClick={() => openEditModal(cat)} className="btn-stitch-ghost" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
-                        Edit
-                      </button>
-                      <button onClick={() => setDeletingCategory(cat)} className="btn-stitch-danger" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
-                        Delete
-                      </button>
+                      {!cat.isDeleted ? (
+                        <>
+                          <button onClick={() => openEditModal(cat)} className="btn-stitch-ghost" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
+                            Edit
+                          </button>
+                          <button onClick={() => setDeletingCategory(cat)} className="btn-stitch-danger" style={{ padding: '0.35rem 0.65rem', fontSize: '12px' }}>
+                            Deactivate
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleRestoreCategory(cat)}
+                          disabled={submitting}
+                          className="btn-stitch-primary"
+                          style={{ padding: '0.35rem 0.75rem', fontSize: '12px', background: '#059669', borderColor: '#059669' }}
+                        >
+                          ↺ Restore
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -261,15 +311,15 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete / Deactivate Confirmation Modal */}
       {deletingCategory && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--color-error)' }}>
-              Confirm Category Deletion
+              Deactivate Category
             </h3>
             <p style={{ color: 'var(--color-muted)', marginBottom: '1.25rem', fontSize: '14px', lineHeight: 1.5 }}>
-              Are you sure you want to delete category <strong>"{deletingCategory.name}"</strong>? Categories with assigned products cannot be deleted.
+              Are you sure you want to deactivate category <strong>"{deletingCategory.name}"</strong>? It will be hidden from the storefront, but existing products will retain their category link and can be restored anytime.
             </p>
 
             {formError && (
@@ -283,7 +333,7 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
                 Cancel
               </button>
               <button type="button" onClick={handleDeleteCategory} disabled={submitting} className="btn-stitch-danger">
-                {submitting ? 'Deleting...' : 'Delete Category'}
+                {submitting ? 'Deactivating...' : 'Deactivate Category'}
               </button>
             </div>
           </div>
@@ -292,3 +342,4 @@ export const CategoryManagement: React.FC<Props> = ({ token }) => {
     </div>
   );
 };
+

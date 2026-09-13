@@ -23,14 +23,15 @@ public class AdminCategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoryDto>> getAllCategories() {
-        List<CategoryDto> categories = categoryService.getAllCategories();
+    public ResponseEntity<List<CategoryDto>> getAllCategories(
+            @RequestParam(name = "includeDeleted", defaultValue = "false") boolean includeDeleted) {
+        List<CategoryDto> categories = categoryService.getAllCategories(includeDeleted);
         return ResponseEntity.ok(categories);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoryDto> getCategoryById(@PathVariable("id") Long id) {
-        CategoryDto category = categoryService.getCategoryById(id);
+        CategoryDto category = categoryService.getAdminCategoryById(id);
         return ResponseEntity.ok(category);
     }
 
@@ -50,5 +51,11 @@ public class AdminCategoryController {
     public ResponseEntity<Void> deleteCategory(@PathVariable("id") Long id) {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<CategoryDto> restoreCategory(@PathVariable("id") Long id) {
+        CategoryDto restored = categoryService.restoreCategory(id);
+        return ResponseEntity.ok(restored);
     }
 }

@@ -45,10 +45,11 @@ public class AdminProductController {
             @RequestParam(name = "parentId", required = false) Long parentId,
             @RequestParam(name = "productType", required = false) ProductType productType,
             @RequestParam(name = "sortBy", defaultValue = "createdAt") String sortBy,
-            @RequestParam(name = "sortDir", defaultValue = "desc") String sortDir) {
+            @RequestParam(name = "sortDir", defaultValue = "desc") String sortDir,
+            @RequestParam(name = "includeArchived", defaultValue = "false") boolean includeArchived) {
 
         PageResponse<ProductDto> response = productService.getProducts(
-                page, size, search, status, categoryId, parentId, productType, sortBy, sortDir);
+                page, size, search, status, categoryId, parentId, productType, sortBy, sortDir, includeArchived);
         return ResponseEntity.ok(response);
     }
 
@@ -138,6 +139,12 @@ public class AdminProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable("id") Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<ProductDto> restoreProduct(@PathVariable("id") Long id) {
+        ProductDto restored = productService.restoreProduct(id);
+        return ResponseEntity.ok(restored);
     }
 
     // ================= Dynamic Content Sections Endpoints =================
