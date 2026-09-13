@@ -13,6 +13,8 @@ import { UserAuthModal } from '../components/UserAuthModal';
 import { StitchHeader } from '../components/StitchHeader';
 import { StitchFooter } from '../components/StitchFooter';
 import { ProductGallery } from '../components/ProductGallery';
+import { ParachutePublicPage } from '../components/ParachutePublicPage';
+import { loadParachuteConfig, ParachutePageConfig } from '../services/parachuteConfig';
 
 const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({ section }) => {
   const sheetNumber = String(section.displayOrder !== undefined && section.displayOrder !== null ? section.displayOrder : 4).padStart(2, '0');
@@ -278,6 +280,10 @@ export const PublicStore: React.FC = () => {
   const [addingToCartId, setAddingToCartId] = useState<number | null>(null);
   const [cartFeedbackMsg, setCartFeedbackMsg] = useState<string | null>(null);
 
+  // Parachute Category State
+  const [parachuteConfig, setParachuteConfig] = useState<ParachutePageConfig>(loadParachuteConfig);
+  const [isParachuteRoute, setIsParachuteRoute] = useState<boolean>(false);
+
   const navigateTo = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new Event('popstate'));
@@ -291,23 +297,33 @@ export const PublicStore: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!activeParent && !activeProductDetail) {
+    if (!activeParent && !activeProductDetail && !isParachuteRoute) {
       loadMainCatalog();
     }
   }, [search, selectedStatus]);
 
   const handleUrlRouting = async () => {
     const pathname = window.location.pathname;
+    const currentParachuteConfig = loadParachuteConfig();
+    setParachuteConfig(currentParachuteConfig);
 
-    if (pathname.startsWith('/store/') && pathname.length > 7) {
+    if (pathname === '/store/parachute' || pathname === '/parachute') {
+      setIsParachuteRoute(true);
+      setActiveProductDetail(null);
+      setActiveParent(null);
+      setError(null);
+    } else if (pathname.startsWith('/store/') && pathname.length > 7) {
+      setIsParachuteRoute(false);
       const param = pathname.substring(7);
       setActiveProductDetail(null);
       await loadParentSeriesPage(param);
     } else if (pathname.startsWith('/products/') && pathname.length > 10) {
+      setIsParachuteRoute(false);
       const param = pathname.substring(10);
       setActiveParent(null);
       await loadProductDetailPage(param);
     } else {
+      setIsParachuteRoute(false);
       setActiveParent(null);
       setActiveProductDetail(null);
       await loadMainCatalog();
@@ -411,6 +427,7 @@ export const PublicStore: React.FC = () => {
 
 
   const navigateToMainStore = () => {
+    setIsParachuteRoute(false);
     setActiveParent(null);
     setActiveProductDetail(null);
     setSearch('');
@@ -419,8 +436,15 @@ export const PublicStore: React.FC = () => {
   };
 
   const navigateToParentSeries = (parentProduct: ProductDto) => {
+    setIsParachuteRoute(false);
     const slug = slugify(parentProduct.name);
     navigateTo(`/store/${slug}`);
+  };
+
+  const navigateToParachute = () => {
+    setActiveParent(null);
+    setActiveProductDetail(null);
+    navigateTo('/store/parachute');
   };
 
   const handleAddToCart = async (product: ProductDto, quantity: number = 1) => {
@@ -473,12 +497,12 @@ export const PublicStore: React.FC = () => {
 
   return (
     <div
-      className={`${activeProductDetail ? '' : 'blueprint-bg'} min-h-screen flex flex-col pt-24`}
+      className={`${activeProductDetail || isParachuteRoute ? '' : 'blueprint-bg'} min-h-screen flex flex-col pt-24`}
       style={{
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        background: activeProductDetail ? '#f3f3f3ff' : undefined
+        background: isParachuteRoute ? '#FBFAF7' : (activeProductDetail ? '#f3f3f3ff' : undefined)
       }}
     >
       {/* Shared Stitch Header Navigation */}
@@ -509,7 +533,13 @@ export const PublicStore: React.FC = () => {
       )}
 
       {/* Main Container */}
-      <main style={{ flex: 1, maxWidth: 'var(--max-width)', width: '100%', margin: '0 auto', padding: '3rem 2rem 5rem 2rem' }}>
+      <main style={{
+        flex: 1,
+        maxWidth: isParachuteRoute ? '100%' : 'var(--max-width)',
+        width: '100%',
+        margin: '0 auto',
+        padding: isParachuteRoute ? '0' : '3rem 2rem 5rem 2rem'
+      }}>
         {error && (
           <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.375rem', marginBottom: '2rem' }}>
             {error}
@@ -517,7 +547,7 @@ export const PublicStore: React.FC = () => {
         )}
 
         {/* Hero Section (only on main store catalog view) */}
-        {!activeParent && !activeProductDetail && (
+        {!activeParent && !activeProductDetail && !isParachuteRoute && (
           <section style={{ maxWidth: '800px', marginBottom: '4rem' }}>
             <div style={{
               fontSize: '12px',
@@ -546,8 +576,26 @@ export const PublicStore: React.FC = () => {
             </p>
           </section>
         )}
-        {/* VIEW 1: DEDICATED FULL-PAGE E-COMMERCE PRODUCT DETAILS (/products/{id}) */}
-        {loadingProductDetail ? (
+        {/* VIEW 4: PARACHUTE RECOVERY SYSTEMS WEBPAGE (/store/parachute) */}
+        {isParachuteRoute ? (
+          parachuteConfig && parachuteConfig.isEnabled ? (
+            <ParachutePublicPage config={parachuteConfig} />
+          ) : (
+            <div style={{ padding: '4rem 2rem', maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{ background: '#fff', border: '1px solid var(--color-outline, rgba(15,23,42,0.08))', padding: '4rem 2rem', borderRadius: '0.5rem' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.75rem' }}>
+                  Category Offline
+                </h3>
+                <p style={{ marginBottom: '1.5rem', color: '#64748b', fontSize: '14px' }}>
+                  The Parachute Recovery Systems page is currently disabled in the admin portal.
+                </p>
+                <button onClick={navigateToMainStore} className="btn-stitch-primary">
+                  Return to Store Catalog
+                </button>
+              </div>
+            </div>
+          )
+        ) : loadingProductDetail ? (
           <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--color-muted)' }}>
             <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>Loading DronesZ Hardware Specifications...</div>
             <div style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)' }}>Fetching live database record for specimen ID</div>
@@ -1226,11 +1274,70 @@ export const PublicStore: React.FC = () => {
               </section>
             )}
 
+            {/* Parachute / Recovery Systems Card Section */}
+            {parachuteConfig && parachuteConfig.isEnabled && (!search || parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase()) || 'parachute recovery systems'.includes(search.toLowerCase())) && (
+              <section style={{ marginBottom: '4rem' }}>
+                <div style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  letterSpacing: '0.05em',
+                  color: 'var(--color-on-surface-variant)',
+                  textTransform: 'uppercase',
+                  marginBottom: '1.5rem'
+                }}>
+                  Autonomous Safety Systems
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gap: '1.5rem'
+                }}>
+                  <div
+                    className="parent-series-card"
+                    onClick={navigateToParachute}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="badge-parent" style={{ marginBottom: '1rem', background: '#0284c7', color: '#fff' }}>
+                      RECOVERY SYSTEM
+                    </div>
+
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-on-surface)', marginBottom: '0.4rem' }}>
+                      {parachuteConfig.displayName || 'Parachute Recovery Systems'}
+                    </h3>
+
+                    <p style={{ fontSize: '0.9rem', color: 'var(--color-on-surface-variant)', marginBottom: '1rem', lineHeight: 1.4 }}>
+                      {parachuteConfig.hero.subheading || 'Engineered autonomous recovery systems for critical payload protection.'}
+                    </p>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-tertiary)' }} />
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-tertiary)', textTransform: 'uppercase' }}>
+                        ACTIVE SYSTEM
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateToParachute();
+                      }}
+                      className="btn-stitch-secondary-link"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                    >
+                      Explore Recovery Systems
+                      <ArrowRightIcon size={16} />
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {loading ? (
               <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
                 Loading DronesZ storefront catalog...
               </div>
-            ) : parentProducts.length === 0 ? (
+            ) : parentProducts.length === 0 && (!parachuteConfig || !parachuteConfig.isEnabled || (search && !parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase()) && !'parachute recovery systems'.includes(search.toLowerCase()))) ? (
               <div style={{ background: '#fff', border: '1px solid var(--color-outline)', padding: '4rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '0.5rem' }}>
                 No product series found matching your search query.
               </div>

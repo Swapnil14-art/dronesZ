@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parachute Recovery Systems — DronesZ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15140F;
+    --paper:#FBFAF7;
+    --paper-2:#F2EFE7;
+    --red:#D8321F;
+    --red-deep:#A31F10;
+    --slate:#5B5D57;
+    --line:#E2DED2;
+    --saffron:#FF9933;
+    --green:#0E7A1F;
+    --white:#FFFFFF;
+
+    --display: 'Archivo', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+
+    --wrap: 1180px;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  img,svg{display:block;}
+  a{color:inherit; text-decoration:none;}
+  ul{list-style:none;}
+
+  .wrap{max-width:var(--wrap); margin:0 auto; padding:0 32px;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+
+  /* ---------- tricolor thread ---------- */
+  .thread{
+    height:3px;
+    display:flex;
+    width:64px;
+  }
+  .thread span{flex:1;}
+  .thread .s1{background:var(--saffron);}
+  .thread .s2{background:var(--white); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .thread .s3{background:var(--green);}
+
+  /* ---------- header ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(251,250,247,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    height:76px;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand svg{width:34px; height:34px;}
+  .brand-text .name{
+    font-family:var(--display); font-weight:800; font-size:1.05rem; letter-spacing:0.01em;
+  }
+  .brand-text .tag{
+    font-size:0.68rem; color:var(--slate); letter-spacing:0.02em;
+  }
+  nav.links{display:flex; align-items:center; gap:30px;}
+  nav.links a{
+    font-size:0.9rem; color:var(--ink); font-weight:500;
+    position:relative; padding:4px 0;
+  }
+  nav.links a::after{
+    content:''; position:absolute; left:0; bottom:0; height:2px; width:0;
+    background:var(--red); transition:width .2s ease;
+  }
+  nav.links a:hover::after{width:100%;}
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--body); font-weight:600; font-size:0.92rem;
+    padding:12px 22px;
+    border-radius:2px;
+    cursor:pointer;
+    border:1px solid transparent;
+    white-space:nowrap;
+  }
+  .btn-primary{
+    background:var(--red); color:var(--white);
+    box-shadow:0 1px 0 var(--red-deep);
+  }
+  .btn-primary:hover{background:var(--red-deep);}
+  .btn-ghost{
+    border-color:var(--ink); color:var(--ink); background:transparent;
+  }
+  .btn-ghost:hover{background:var(--ink); color:var(--paper);}
+  .btn-sm{padding:9px 16px; font-size:0.82rem;}
+
+  .menu-toggle{display:none;}
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:88px 0 64px;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-grid{
+    display:grid;
+    grid-template-columns:1.5fr 1fr;
+    gap:64px;
+    align-items:end;
+  }
+  .eyebrow{
+    font-family:var(--mono); font-size:0.72rem; letter-spacing:0.08em;
+    color:var(--red); text-transform:uppercase;
+    display:flex; align-items:center; gap:10px; margin-bottom:22px;
+  }
+  h1.headline{
+    font-family:var(--display); font-weight:900;
+    font-size:clamp(2.6rem, 5vw, 4.4rem);
+    line-height:0.98;
+    letter-spacing:-0.01em;
+    max-width:14ch;
+  }
+  h1.headline .dot{color:var(--red);}
+  .hero-sub{
+    margin-top:26px;
+    font-size:1.08rem;
+    color:var(--slate);
+    max-width:46ch;
+    line-height:1.6;
+  }
+  .hero-cta{
+    margin-top:36px;
+    display:flex; gap:16px; align-items:center;
+  }
+
+  .stage-panel{
+    border:1px solid var(--line);
+    background:var(--white);
+    padding:26px 24px;
+  }
+  .stage-panel h3{
+    font-family:var(--mono); font-size:0.7rem; letter-spacing:0.08em;
+    color:var(--slate); text-transform:uppercase; margin-bottom:18px;
+  }
+  .stage-list{display:flex; flex-direction:column;}
+  .stage-item{
+    display:flex; align-items:center; gap:14px;
+    padding:12px 0;
+    border-top:1px solid var(--line);
+  }
+  .stage-item:first-child{border-top:none;}
+  .stage-item .dot-marker{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--line); flex-shrink:0;
+  }
+  .stage-item.active .dot-marker{background:var(--red);}
+  .stage-item .label{
+    font-family:var(--mono); font-size:0.82rem; letter-spacing:0.02em;
+  }
+  .stage-item .desc{
+    font-size:0.78rem; color:var(--slate); margin-left:auto; text-align:right;
+  }
+
+  /* ---------- section shell ---------- */
+  section{padding:80px 0;}
+  section.alt{background:var(--paper-2);}
+  .sec-head{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:32px; margin-bottom:48px; flex-wrap:wrap;
+  }
+  .sec-label{
+    font-family:var(--mono); font-size:0.72rem; letter-spacing:0.08em;
+    color:var(--red); text-transform:uppercase; margin-bottom:14px;
+    display:block;
+  }
+  h2.sec-title{
+    font-family:var(--display); font-weight:800;
+    font-size:clamp(1.9rem, 3vw, 2.6rem);
+    letter-spacing:-0.01em;
+    max-width:20ch;
+  }
+  .sec-note{
+    font-size:0.95rem; color:var(--slate); max-width:38ch;
+  }
+
+  /* ---------- features strip ---------- */
+  .feature-strip{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    border-top:1px solid var(--line);
+    border-left:1px solid var(--line);
+  }
+  .feature{
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding:30px 26px;
+  }
+  .feature .ico{width:26px; height:26px; margin-bottom:20px; color:var(--red);}
+  .feature h4{
+    font-family:var(--display); font-weight:700; font-size:1.02rem;
+    margin-bottom:8px;
+  }
+  .feature p{font-size:0.88rem; color:var(--slate); line-height:1.55;}
+
+  /* ---------- product range ---------- */
+  .range-rows{border-top:1px solid var(--ink);}
+  .range-row{
+    display:grid;
+    grid-template-columns:110px 1fr 130px 160px;
+    align-items:center;
+    gap:24px;
+    padding:22px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .range-row .mtow{
+    font-family:var(--display); font-weight:800; font-size:1.9rem;
+  }
+  .range-row .mtow small{
+    font-family:var(--body); font-weight:500; font-size:0.9rem; color:var(--slate); margin-left:2px;
+  }
+  .range-row .rdesc{font-size:0.9rem; color:var(--slate);}
+  .status-pill{
+    font-family:var(--mono); font-size:0.7rem; letter-spacing:0.04em;
+    padding:5px 10px; border-radius:2px; justify-self:start;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .status-pill.stock{background:#FDEDEA; color:var(--red-deep);}
+  .status-pill.stock::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--red);}
+  .status-pill.custom{background:var(--paper-2); color:var(--slate); border:1px solid var(--line);}
+  .status-pill.custom::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--slate);}
+  .range-row .rlink{
+    font-size:0.85rem; font-weight:600; color:var(--ink); justify-self:end;
+    border-bottom:1px solid var(--ink); padding-bottom:2px;
+  }
+
+  .engineer-split{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1px;
+    background:var(--line);
+    margin-top:56px;
+    border:1px solid var(--line);
+  }
+  .engineer-col{background:var(--white); padding:34px 32px;}
+  .engineer-col.callout{background:var(--ink); color:var(--paper);}
+  .engineer-col h4{
+    font-family:var(--display); font-weight:700; font-size:1.15rem; margin-bottom:18px;
+  }
+  .engineer-col ul li{
+    font-size:0.9rem; padding:9px 0 9px 20px; position:relative; color:var(--slate);
+    border-top:1px solid var(--line);
+  }
+  .engineer-col ul li:first-child{border-top:none; padding-top:0;}
+  .engineer-col ul li::before{
+    content:'—'; position:absolute; left:0; color:var(--red);
+  }
+  .engineer-col.callout p{font-size:0.92rem; color:#C9C7BE; line-height:1.65; margin-bottom:16px;}
+  .engineer-col.callout .btn{margin-top:8px;}
+
+  /* ---------- case studies ---------- */
+  .case-row{
+    display:grid;
+    grid-template-columns:60px 1.3fr 1fr;
+    gap:36px;
+    padding:36px 0;
+    border-top:1px solid var(--line);
+  }
+  .case-rows{border-bottom:1px solid var(--line);}
+  .case-num{
+    font-family:var(--mono); font-size:0.85rem; color:var(--slate); padding-top:4px;
+  }
+  .case-context{
+    font-family:var(--mono); font-size:0.72rem; letter-spacing:0.03em;
+    color:var(--red); text-transform:uppercase; margin-bottom:10px;
+  }
+  .case-title{
+    font-family:var(--display); font-weight:700; font-size:1.3rem; margin-bottom:12px;
+  }
+  .case-desc{font-size:0.92rem; color:var(--slate); max-width:52ch;}
+  .case-stats{
+    display:grid; grid-template-columns:1fr 1fr; gap:18px 20px;
+    align-content:start;
+  }
+  .stat-block{border-left:2px solid var(--line); padding-left:12px;}
+  .stat-block .v{font-family:var(--mono); font-size:1.15rem; font-weight:600;}
+  .stat-block .k{font-size:0.72rem; color:var(--slate); text-transform:uppercase; letter-spacing:0.03em; margin-top:3px;}
+
+  .case-footnote{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:26px; flex-wrap:wrap; gap:16px;
+  }
+  .case-footnote p{font-size:0.85rem; color:var(--slate);}
+
+  /* ---------- what we do ---------- */
+  .capability-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+  }
+  .capability{
+    background:var(--white); padding:30px 28px;
+  }
+  .capability h4{
+    font-family:var(--display); font-weight:700; font-size:1.02rem; margin-bottom:8px;
+  }
+  .capability p{font-size:0.87rem; color:var(--slate); line-height:1.55;}
+
+  /* ---------- process ---------- */
+  .process-list{
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    margin-bottom:44px;
+  }
+  .process-step{background:var(--white); padding:26px 20px;}
+  .process-step .pnum{
+    font-family:var(--mono); font-size:0.75rem; color:var(--red); margin-bottom:16px;
+  }
+  .process-step h5{
+    font-family:var(--display); font-weight:700; font-size:0.95rem; margin-bottom:8px; line-height:1.3;
+  }
+  .process-step p{font-size:0.8rem; color:var(--slate); line-height:1.5;}
+
+  .who-row{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .who-row .who-label{font-size:0.9rem; color:var(--slate); margin-right:6px;}
+  .pill{
+    font-size:0.82rem; padding:8px 16px; border:1px solid var(--line);
+    border-radius:20px; color:var(--ink); font-weight:500;
+  }
+
+  /* ---------- final cta ---------- */
+  .cta-band{
+    background:var(--ink); color:var(--paper);
+    padding:88px 0; text-align:center;
+  }
+  .cta-band .thread{margin:0 auto 26px;}
+  .cta-band h2{
+    font-family:var(--display); font-weight:800;
+    font-size:clamp(1.9rem, 4vw, 3rem);
+    max-width:16ch; margin:0 auto 18px;
+    letter-spacing:-0.01em;
+  }
+  .cta-band p{color:#B9B7AE; font-size:1rem; max-width:44ch; margin:0 auto 36px;}
+  .cta-band .hero-cta{justify-content:center;}
+  .cta-band .btn-ghost{border-color:#514F45; color:var(--paper);}
+  .cta-band .btn-ghost:hover{background:var(--paper); color:var(--ink);}
+
+  /* ---------- footer ---------- */
+  footer{padding:44px 0; border-top:1px solid var(--line);}
+  .foot-row{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
+  }
+  .foot-brand{display:flex; align-items:center; gap:10px;}
+  .foot-brand svg{width:22px; height:22px;}
+  .foot-brand .name{font-family:var(--display); font-weight:800; font-size:0.9rem;}
+  .foot-brand .tag{font-size:0.7rem; color:var(--slate);}
+  .foot-meta{font-family:var(--mono); font-size:0.75rem; color:var(--slate);}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:960px){
+    .hero-grid{grid-template-columns:1fr; gap:40px;}
+    nav.links{display:none;}
+    .feature-strip{grid-template-columns:repeat(2,1fr);}
+    .engineer-split{grid-template-columns:1fr;}
+    .case-row{grid-template-columns:1fr;}
+    .case-num{display:none;}
+    .capability-grid{grid-template-columns:repeat(2,1fr);}
+    .process-list{grid-template-columns:repeat(3,1fr);}
+    .range-row{grid-template-columns:80px 1fr; row-gap:10px;}
+    .range-row .status-pill{grid-column:1/2;}
+    .range-row .rlink{grid-column:2/3; justify-self:start;}
+  }
+  @media (max-width:600px){
+    .wrap{padding:0 20px;}
+    .feature-strip{grid-template-columns:1fr;}
+    .capability-grid{grid-template-columns:1fr;}
+    .process-list{grid-template-columns:1fr;}
+    .stage-item .desc{display:none;}
+    .foot-row{flex-direction:column; align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav-row">
+    <div class="brand">
+      <svg viewBox="0 0 48 48" fill="none">
+        <g stroke="#D8321F" stroke-width="2.4">
+          <path d="M24 24C24 24 16 18 16 10C16 5 19 3 22 5C25 7 24 24 24 24Z"/>
+          <path d="M24 24C24 24 32 18 32 10C32 5 29 3 26 5C23 7 24 24 24 24Z"/>
+          <path d="M24 24C24 24 30 33 38 33C43 33 45 30 43 27C41 24 24 24 24 24Z"/>
+          <path d="M24 24C24 24 18 33 10 33C5 33 3 30 5 27C7 24 24 24 24 24Z"/>
+        </g>
+      </svg>
+      <div class="brand-text">
+        <div class="name">DronesZ</div>
+        <div class="tag">Built in India, for a safer sky</div>
+      </div>
+    </div>
+    <nav class="links">
+      <a href="#range">Product range</a>
+      <a href="#cases">Case studies</a>
+      <a href="#process">Integration</a>
+      <a href="#who">Who it's for</a>
+    </nav>
+    <a href="#talk" class="btn btn-primary btn-sm">Talk to us</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">
+        <span class="thread"><span class="s1"></span><span class="s2"></span><span class="s3"></span></span>
+        Parachute recovery systems
+      </div>
+      <h1 class="headline">Parachute systems<br>for drones<span class="dot">.</span></h1>
+      <p class="hero-sub">DronesZ has partnered with a specialised parachute recovery systems manufacturer to offer engineered recovery solutions for UAVs — from off-the-shelf 5–15&nbsp;kg systems to custom builds for higher MTOW platforms.</p>
+      <div class="hero-cta">
+        <a href="#talk" class="btn btn-primary">Talk to us</a>
+        <a href="#range" class="btn btn-ghost">See the product range</a>
+      </div>
+    </div>
+    <div class="stage-panel">
+      <h3>Recovery sequence</h3>
+      <div class="stage-list">
+        <div class="stage-item active"><span class="dot-marker"></span><span class="label">01 · Arm</span><span class="desc">FC / RC standby</span></div>
+        <div class="stage-item active"><span class="dot-marker"></span><span class="label">02 · Detect</span><span class="desc">Failure or geofence breach</span></div>
+        <div class="stage-item active"><span class="dot-marker"></span><span class="label">03 · Deploy</span><span class="desc">Canopy release</span></div>
+        <div class="stage-item"><span class="dot-marker"></span><span class="label">04 · Descend</span><span class="desc">Controlled terminal velocity</span></div>
+        <div class="stage-item"><span class="dot-marker"></span><span class="label">05 · Recover</span><span class="desc">Platform, payload, mission continue</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="feature-strip">
+      <div class="feature">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>
+        <h4>Enhances platform safety</h4>
+        <p>Reduces risk to people, assets and operations.</p>
+      </div>
+      <div class="feature">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12l4-8h10l4 8-4 8H7l-4-8z"/><path d="M8 12h8"/></svg>
+        <h4>Protects payload and investment</h4>
+        <p>Engineered for reliable deployment.</p>
+      </div>
+      <div class="feature">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v6M12 16v-6M18 11v4"/></svg>
+        <h4>Enables responsible BVLOS</h4>
+        <p>Supports regulatory compliance and safe scaling.</p>
+      </div>
+      <div class="feature">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <h4>Built for real world missions</h4>
+        <p>From logistics to defence, surveillance and industrial UAVs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="range" class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="sec-label">Product range</span>
+        <h2 class="sec-title">Off-the-shelf 5–15&nbsp;kg. Custom beyond.</h2>
+      </div>
+      <p class="sec-note">Four MTOW classes covering rapid dispatch through fully custom, mission-sized systems.</p>
+    </div>
+
+    <div class="range-rows">
+      <div class="range-row">
+        <div class="mtow">5<small>kg</small></div>
+        <div class="rdesc">Standard canopy · rapid dispatch.</div>
+        <span class="status-pill stock">In stock</span>
+        <a href="#talk" class="rlink">Talk to us →</a>
+      </div>
+      <div class="range-row">
+        <div class="mtow">10<small>kg</small></div>
+        <div class="rdesc">Field-proven on logistics drones.</div>
+        <span class="status-pill stock">In stock</span>
+        <a href="#talk" class="rlink">Talk to us →</a>
+      </div>
+      <div class="range-row">
+        <div class="mtow">15<small>kg</small></div>
+        <div class="rdesc">Standard canopy · surveillance-tested.</div>
+        <span class="status-pill stock">In stock</span>
+        <a href="#talk" class="rlink">Talk to us →</a>
+      </div>
+      <div class="range-row">
+        <div class="mtow">&gt;15<small>kg</small></div>
+        <div class="rdesc">Sized to airframe MTOW &amp; mission profile.</div>
+        <span class="status-pill custom">Custom</span>
+        <a href="#talk" class="rlink">Talk to us →</a>
+      </div>
+    </div>
+
+    <div class="engineer-split">
+      <div class="engineer-col">
+        <h4>What can be engineered around your UAV?</h4>
+        <ul>
+          <li>Canopy sizing around MTOW, geometry and mission profile</li>
+          <li>Deployment mechanism and mounting interface</li>
+          <li>Flight-controller / trigger integration</li>
+          <li>Auto trigger logic for flight-critical failure scenarios</li>
+          <li>Manual trigger / RC command integration</li>
+          <li>Drop-test planning, iteration and integration documentation</li>
+        </ul>
+      </div>
+      <div class="engineer-col callout">
+        <h4>Recovery performance is airframe-specific</h4>
+        <p>Final canopy area, deployment arrangement and descent performance are determined from the actual UAV configuration and mission requirements. The figures shown here are representative partner case-study data, not a universal specification.</p>
+        <p>For a project-specific recommendation, share your MTOW, airframe type, dimensions, expected failure modes and mission profile.</p>
+        <a href="#talk" class="btn btn-primary btn-sm">Talk to us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cases">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="sec-label">Case studies</span>
+        <h2 class="sec-title">Proven on real drones, real missions.</h2>
+      </div>
+      <p class="sec-note">Selected deployments where recovery systems have been sized, integrated and drop-tested on Indian UAV platforms.</p>
+    </div>
+
+    <div class="case-rows">
+      <div class="case-row">
+        <div class="case-num">01</div>
+        <div>
+          <div class="case-context">Last-mile urban delivery · BVLOS</div>
+          <div class="case-title">Logistics drone recovery</div>
+          <p class="case-desc">Deployed on a 10&nbsp;kg last-mile logistics UAV operating BVLOS over urban corridors. The recovery system was sized for the payload-carrying descent envelope and integrated with the flight controller for autonomous trigger on flight-critical failure.</p>
+        </div>
+        <div class="case-stats">
+          <div class="stat-block"><div class="v">10 kg</div><div class="k">MTOW</div></div>
+          <div class="stat-block"><div class="v">4.5 m²</div><div class="k">Canopy</div></div>
+          <div class="stat-block"><div class="v">5.2 m/s</div><div class="k">Descent</div></div>
+          <div class="stat-block"><div class="v">12</div><div class="k">Drops</div></div>
+        </div>
+      </div>
+
+      <div class="case-row">
+        <div class="case-num">02</div>
+        <div>
+          <div class="case-context">Multi-hour BVLOS surveillance</div>
+          <div class="case-title">Surveillance UAV recovery</div>
+          <p class="case-desc">Integrated on a fixed-wing surveillance platform running extended BVLOS missions. A compact deployment mechanism was sized to the airframe geometry, with manual arm / disarm from the ground station.</p>
+        </div>
+        <div class="case-stats">
+          <div class="stat-block"><div class="v">12 kg</div><div class="k">MTOW</div></div>
+          <div class="stat-block"><div class="v">5.5 m²</div><div class="k">Canopy</div></div>
+          <div class="stat-block"><div class="v">5.6 m/s</div><div class="k">Descent</div></div>
+          <div class="stat-block"><div class="v">8</div><div class="k">Drops</div></div>
+        </div>
+      </div>
+
+      <div class="case-row">
+        <div class="case-num">03</div>
+        <div>
+          <div class="case-context">Mapping and defence prototype</div>
+          <div class="case-title">Heavy-lift custom airframe</div>
+          <p class="case-desc">A custom canopy was designed and drop-tested for a &gt;20&nbsp;kg airframe used across mapping and defence prototype programmes, with deployment sized to keep terminal velocity within the airframe's recovery limits.</p>
+        </div>
+        <div class="case-stats">
+          <div class="stat-block"><div class="v">22 kg</div><div class="k">MTOW</div></div>
+          <div class="stat-block"><div class="v">8 m²</div><div class="k">Canopy</div></div>
+          <div class="stat-block"><div class="v">6.1 m/s</div><div class="k">Descent</div></div>
+          <div class="stat-block"><div class="v">6</div><div class="k">Drops</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-footnote">
+      <p>Detailed technical case reports are available under NDA.</p>
+      <a href="#talk" class="btn btn-ghost btn-sm">Talk to engineering →</a>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="sec-label">What we do</span>
+        <h2 class="sec-title">Engineered for the mission.</h2>
+      </div>
+    </div>
+    <div class="capability-grid">
+      <div class="capability">
+        <h4>Designed &amp; manufactured in-house</h4>
+        <p>India's first parachute designers and manufacturers for UAVs — canopy, deployment and mounting under one roof.</p>
+      </div>
+      <div class="capability">
+        <h4>BVLOS-compliant</h4>
+        <p>Meets DGCA recovery requirements for beyond-visual-line-of-sight operations.</p>
+      </div>
+      <div class="capability">
+        <h4>FC integration</h4>
+        <p>Works with Pixhawk, Cube, ArduPilot and PX4 flight controllers.</p>
+      </div>
+      <div class="capability">
+        <h4>Auto + manual trigger</h4>
+        <p>Fires on FC failure, geofence breach, or RC command.</p>
+      </div>
+      <div class="capability">
+        <h4>Drop-tested</h4>
+        <p>Every unit inspected and drop-tested before dispatch.</p>
+      </div>
+      <div class="capability">
+        <h4>Integration support</h4>
+        <p>Documentation, wiring guides and mission-specific tuning included.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="process">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="sec-label">Integration</span>
+        <h2 class="sec-title">From airframe assessment to packed unit.</h2>
+      </div>
+      <p class="sec-note">DronesZ coordinates the UAV-side requirement while the recovery partner handles system engineering and manufacturing.</p>
+    </div>
+
+    <div class="process-list">
+      <div class="process-step"><div class="pnum">01</div><h5>Airframe assessment</h5><p>MTOW, geometry and mission profile review.</p></div>
+      <div class="process-step"><div class="pnum">02</div><h5>Sizing calculation</h5><p>Canopy area, drag coefficient and terminal-velocity targets.</p></div>
+      <div class="process-step"><div class="pnum">03</div><h5>Design &amp; customization</h5><p>Canopy pattern, deployment mechanism and mounting bracket.</p></div>
+      <div class="process-step"><div class="pnum">04</div><h5>Integration</h5><p>Wiring, flight-controller signal mapping and arming logic.</p></div>
+      <div class="process-step"><div class="pnum">05</div><h5>Drop test</h5><p>Instrumented drop testing, inspection and iteration.</p></div>
+      <div class="process-step"><div class="pnum">06</div><h5>Delivery</h5><p>Packed unit with integration documentation.</p></div>
+    </div>
+
+    <div id="who" class="who-row">
+      <span class="who-label">Who this is for</span>
+      <span class="pill">UAV OEMs</span>
+      <span class="pill">System integrators</span>
+      <span class="pill">Defence &amp; government programmes</span>
+      <span class="pill">Logistics</span>
+      <span class="pill">Mapping</span>
+      <span class="pill">Surveillance</span>
+      <span class="pill">Industrial UAVs</span>
+    </div>
+  </div>
+</section>
+
+<section id="talk" class="cta-band">
+  <div class="wrap">
+    <span class="thread"><span class="s1"></span><span class="s2"></span><span class="s3"></span></span>
+    <h2>Ready to recover, protect and continue the mission?</h2>
+    <p>Share your MTOW, airframe type and mission profile — we'll size the right recovery system for your platform.</p>
+    <div class="hero-cta">
+      <a href="#" class="btn btn-primary">Talk to us</a>
+      <a href="#" class="btn btn-ghost">Talk to engineering</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <div class="foot-brand">
+      <svg viewBox="0 0 48 48" fill="none">
+        <g stroke="#D8321F" stroke-width="2.4">
+          <path d="M24 24C24 24 16 18 16 10C16 5 19 3 22 5C25 7 24 24 24 24Z"/>
+          <path d="M24 24C24 24 32 18 32 10C32 5 29 3 26 5C23 7 24 24 24 24Z"/>
+          <path d="M24 24C24 24 30 33 38 33C43 33 45 30 43 27C41 24 24 24 24 24Z"/>
+          <path d="M24 24C24 24 18 33 10 33C5 33 3 30 5 27C7 24 24 24 24 24Z"/>
+        </g>
+      </svg>
+      <div>
+        <div class="name">DronesZ</div>
+        <div class="tag">A drone brought to you by a GenZ</div>
+      </div>
+    </div>
+    <div class="foot-meta">PARACHUTE RECOVERY SYSTEMS</div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -4,8 +4,9 @@ import { DashboardOverview } from '../components/DashboardOverview';
 import { ProductManagement } from '../components/ProductManagement';
 import { CategoryManagement } from '../components/CategoryManagement';
 import { UserManagement } from '../components/UserManagement';
+import { ParachuteManagement } from '../components/ParachuteManagement';
 
-type TabType = 'overview' | 'products' | 'categories' | 'users';
+type TabType = 'overview' | 'products' | 'categories' | 'users' | 'parachute';
 
 export const ProtectedAdminDashboard: React.FC = () => {
   const { admin, token, logout } = useAuth();
@@ -60,6 +61,13 @@ export const ProtectedAdminDashboard: React.FC = () => {
             >
               <span style={{ fontSize: '1.1rem' }}>👥</span> Users
             </div>
+
+            <div
+              className={`stitch-admin-nav-item ${activeTab === 'parachute' ? 'active' : ''}`}
+              onClick={() => setActiveTab('parachute')}
+            >
+              <span style={{ fontSize: '1.1rem' }}>🪂</span> Parachute
+            </div>
           </nav>
         </div>
 
@@ -94,6 +102,7 @@ export const ProtectedAdminDashboard: React.FC = () => {
         {activeTab === 'products' && <ProductManagement token={token} />}
         {activeTab === 'categories' && <CategoryManagement token={token} />}
         {activeTab === 'users' && <UserManagement token={token} />}
+        {activeTab === 'parachute' && <ParachuteManagement token={token} />}
       </main>
     </div>
   );
