@@ -16,9 +16,9 @@
   --p-green: #0E7A1F;
   --p-white: #FFFFFF;
 
-  --p-display: 'Archivo', sans-serif;
-  --p-body: 'Inter', sans-serif;
-  --p-mono: 'IBM Plex Mono', monospace;
+  --p-display: var(--font-display, 'Space Grotesk', sans-serif);
+  --p-body: var(--font-sans, var(--font-inter, 'Inter', system-ui, -apple-system, sans-serif));
+  --p-mono: var(--font-mono, 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
   --p-wrap: 1180px;
 
   font-family: var(--p-body);

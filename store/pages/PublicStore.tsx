@@ -1275,7 +1275,7 @@ export const PublicStore: React.FC = () => {
             )}
 
             {/* Parachute / Recovery Systems Card Section */}
-            {parachuteConfig && parachuteConfig.isEnabled && (!search || parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase()) || 'parachute recovery systems'.includes(search.toLowerCase())) && (
+            {parachuteConfig && parachuteConfig.isEnabled && (!search || parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase()) || 'parachute systems for drones'.includes(search.toLowerCase()) || 'parachute recovery systems'.includes(search.toLowerCase())) && (
               <section style={{ marginBottom: '4rem' }}>
                 <div style={{
                   fontSize: '12px',
@@ -1303,7 +1303,7 @@ export const PublicStore: React.FC = () => {
                     </div>
 
                     <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-on-surface)', marginBottom: '0.4rem' }}>
-                      {parachuteConfig.displayName || 'Parachute Recovery Systems'}
+                      {parachuteConfig.displayName || 'Parachute systems for drones'}
                     </h3>
 
                     <p style={{ fontSize: '0.9rem', color: 'var(--color-on-surface-variant)', marginBottom: '1rem', lineHeight: 1.4 }}>

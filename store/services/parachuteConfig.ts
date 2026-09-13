@@ -74,7 +74,7 @@ export interface ParachutePageConfig {
 export function getDefaultParachuteConfig(): ParachutePageConfig {
   return {
     isEnabled: true,
-    displayName: 'Parachute',
+    displayName: 'Parachute systems for drones',
     talkToUsUrl: '/contact',
 
     hero: {
