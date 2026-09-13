@@ -67,18 +67,19 @@ export function HeroSection() {
     <section className="hero" ref={heroRef} aria-labelledby="hero-title">
       {/* Full-bleed assembling-drone footage behind everything. */}
       <div className="hero-media">
-        {/* Poster fallback (no-JS / canvas failure): the assembled last frame. */}
+        {/* Poster fallback (no-JS / canvas failure): the initial frame. */}
         <img
           className="hero-poster"
-          src="/hero-seq/100.webp"
-          alt="A DronesZ 5-inch FPV drone, fully assembled in a matte studio void with red rim light."
+          src="/hero-seq/001.png"
+          alt="A DronesZ 5-inch FPV drone in a matte studio void with red rim light."
           width={1280}
           height={560}
           fetchPriority="high"
         />
         <FrameSequenceCanvas
           dir="/hero-seq"
-          count={100}
+          count={120}
+          ext="png"
           progressRef={progressRef}
           onReady={handleReady}
           className="hero-canvas"

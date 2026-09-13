@@ -13,6 +13,7 @@ const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
 export function FrameSequenceCanvas({
   dir,
   count,
+  ext = "webp",
   progressRef,
   onReady,
   className = "frame-seq-canvas",
@@ -20,6 +21,7 @@ export function FrameSequenceCanvas({
   /** Public dir of the sequence, e.g. "/custom-seq" (frames named 001.webp…). */
   dir: string;
   count: number;
+  ext?: string;
   progressRef: MutableRefObject<number>;
   /** Hands draw() up so the owner can request a repaint each scroll tick. */
   onReady: (draw: () => void) => void;
@@ -66,7 +68,7 @@ export function FrameSequenceCanvas({
 
     for (let i = 0; i < count; i++) {
       const img = new Image();
-      img.src = `${dir}/${String(i + 1).padStart(3, "0")}.webp`;
+      img.src = `${dir}/${String(i + 1).padStart(3, "0")}.${ext}`;
       img.onload = draw;
       frames[i] = img;
     }
@@ -82,7 +84,7 @@ export function FrameSequenceCanvas({
         img.src = "";
       }
     };
-  }, [dir, count, progressRef, onReady]);
+  }, [dir, count, ext, progressRef, onReady]);
 
   return <canvas ref={canvasRef} className={className} aria-hidden="true" />;
 }

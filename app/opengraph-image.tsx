@@ -9,7 +9,7 @@ import { join } from "node:path";
  * Kept font-free (system weights) so generation never depends on a font fetch; the mark +
  * red accent carry the brand.
  */
-export const alt = "DronesZ India — Redefining Flight. Assembling the Future.";
+
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -44,31 +44,7 @@ export default function OpengraphImage() {
         </span>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <span
-          style={{
-            fontSize: 72,
-            fontWeight: 700,
-            color: INK,
-            lineHeight: 1.05,
-          }}
-        >
-          Redefining Flight.
-        </span>
-        <span
-          style={{
-            fontSize: 72,
-            fontWeight: 700,
-            color: RED,
-            lineHeight: 1.05,
-          }}
-        >
-          Assembling the Future.
-        </span>
-        <span style={{ fontSize: 30, color: "#9A9AA2", marginTop: "12px" }}>
-          Custom airframes · Counter-UAS · Engineered in Indore
-        </span>
-      </div>
+
     </div>,
     { ...size },
   );
