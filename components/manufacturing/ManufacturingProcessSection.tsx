@@ -22,7 +22,7 @@ const STAGES: Stage[] = [
     phase: "Phase 01 / Discovery",
     title: "YOUR VISION. OUR STARTING POINT.",
     desc: "Every great drone begins with an idea. Define your requirements, mission, and vision, and let us understand what you want to build.",
-    image: "/manufacturing/stage-1.webp",
+    image: "/manufacturing/stage-1-hd.jpg",
     side: "left",
   },
   {
@@ -32,7 +32,7 @@ const STAGES: Stage[] = [
     phase: "Phase 02 / Design",
     title: "ENGINEERING YOUR VISION",
     desc: "Our engineering team transforms your requirements into a practical drone design through thoughtful engineering, component selection, and technical planning.",
-    image: "/manufacturing/stage-2.webp",
+    image: "/manufacturing/stage-2-hd.jpg",
     side: "right",
   },
   {
