@@ -1,5 +1,3 @@
-/// <reference types="vite/client" />
-
 export interface AdminDto {
   id: number;
   email: string;
