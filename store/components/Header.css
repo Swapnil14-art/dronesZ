@@ -332,27 +332,39 @@
 .dronesz-custom-talk-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 0.28rem 0.65rem;
-  font-size: 11px;
-  font-weight: 700;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  padding: 0.2rem 0;
+  font-size: 13px;
+  font-weight: 600;
   font-family: 'Inter', sans-serif;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   color: #e52b31;
-  background: rgba(229, 43, 49, 0.12);
-  border: 1px solid rgba(229, 43, 49, 0.35);
-  border-radius: 4px;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: opacity 0.15s ease;
   white-space: nowrap;
 }
 
+.dronesz-custom-talk-btn::after {
+  content: "→";
+  display: inline-block;
+  margin-left: 0.25rem;
+  font-size: 1.05em;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
 .dronesz-custom-talk-btn:hover {
-  background: #e52b31;
-  color: #ffffff;
-  border-color: #e52b31;
-  box-shadow: 0 0 12px rgba(229, 43, 49, 0.4);
+  opacity: 0.85;
+  color: #e52b31;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dronesz-custom-talk-btn:hover::after {
+  transform: translateX(3px);
 }
 
 @media (max-width: 768px) {

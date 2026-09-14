@@ -210,15 +210,15 @@ export const CustomNavManagement: React.FC<Props> = ({ token: _token }) => {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.6rem', color: '#94a3b8', fontSize: '13px' }}>
             <span style={{ fontWeight: 500, color: '#e2e8f0' }}>Motors</span>
-            <span style={{ fontSize: '11px', background: 'rgba(229, 43, 49, 0.15)', color: '#e52b31', border: '1px solid rgba(229, 43, 49, 0.3)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
-              Talk to us
+            <span style={{ fontSize: '13px', color: '#e52b31', fontWeight: 600 }}>
+              Talk to us →
             </span>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.6rem', color: '#94a3b8', fontSize: '13px' }}>
             <span style={{ fontWeight: 500, color: '#e2e8f0' }}>Propellers</span>
-            <span style={{ fontSize: '11px', background: 'rgba(229, 43, 49, 0.15)', color: '#e52b31', border: '1px solid rgba(229, 43, 49, 0.3)', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
-              Talk to us
+            <span style={{ fontSize: '13px', color: '#e52b31', fontWeight: 600 }}>
+              Talk to us →
             </span>
           </div>
         </div>
