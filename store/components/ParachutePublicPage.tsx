@@ -9,10 +9,10 @@ import './parachute-page.css';
  */
 
 const FeatureIcons = [
-  /* shield */  <svg key="0" className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>,
-  /* hexagon */ <svg key="1" className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l4-8h10l4 8-4 8H7l-4-8z"/><path d="M8 12h8"/></svg>,
-  /* nodes */   <svg key="2" className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v6M12 16v-6M18 11v4"/></svg>,
-  /* grid */    <svg key="3" className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+  /* shield */  <svg key="0" className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" /></svg>,
+  /* hexagon */ <svg key="1" className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12l4-8h10l4 8-4 8H7l-4-8z" /><path d="M8 12h8" /></svg>,
+  /* nodes */   <svg key="2" className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="6" cy="6" r="2" /><circle cx="12" cy="18" r="2" /><circle cx="18" cy="9" r="2" /><path d="M6 8v6M12 16v-6M18 11v4" /></svg>,
+  /* grid */    <svg key="3" className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>,
 ];
 
 const Thread = () => (
@@ -88,7 +88,6 @@ export const ParachutePublicPage: React.FC<Props> = ({ config }) => {
               {c.productRange.length} MTOW {c.productRange.length === 1 ? 'class' : 'classes'} covering rapid dispatch through fully custom, mission-sized systems.
             </p>
           </div>
-
           <div className="p-range-rows">
             {c.productRange.filter(r => r.visible).map((row, i) => (
               <div key={i} className="p-range-row">
@@ -96,10 +95,11 @@ export const ParachutePublicPage: React.FC<Props> = ({ config }) => {
                   {row.mtow}<small>kg</small>
                 </div>
                 <div className="rdesc">{row.description}</div>
+
                 <span className={`p-status-pill ${row.status === 'In stock' ? 'stock' : 'custom'}`}>
                   {row.status}
                 </span>
-                <a href={ctaUrl} className="rlink">Talk to us →</a>
+
               </div>
             ))}
           </div>
