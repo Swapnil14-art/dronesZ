@@ -1236,9 +1236,7 @@ export const PublicStore: React.FC = () => {
                       onClick={() => navigateToParentSeries(parent)}
                       style={{ cursor: 'pointer' }}
                     >
-                      <div className="badge-parent" style={{ marginBottom: '1rem' }}>
-                        PARENT SERIES
-                      </div>
+                      <br></br>
 
                       <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-on-surface)', marginBottom: '0.4rem' }}>
                         {parent.name}
@@ -1285,7 +1283,7 @@ export const PublicStore: React.FC = () => {
                   textTransform: 'uppercase',
                   marginBottom: '1.5rem'
                 }}>
-                  Autonomous Safety Systems
+                  RECOVERY SYSTEM
                 </div>
 
                 <div style={{
@@ -1298,9 +1296,7 @@ export const PublicStore: React.FC = () => {
                     onClick={navigateToParachute}
                     style={{ cursor: 'pointer' }}
                   >
-                    <div className="badge-parent" style={{ marginBottom: '1rem', background: '#0284c7', color: '#fff' }}>
-                      RECOVERY SYSTEM
-                    </div>
+                    <br></br>
 
                     <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-on-surface)', marginBottom: '0.4rem' }}>
                       {parachuteConfig.displayName || 'Parachute systems for drones'}
