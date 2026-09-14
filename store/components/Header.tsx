@@ -82,9 +82,9 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
             <button
               type="button"
               className="dronesz-nav__link"
-              onClick={() => navigateTo('/#frames-section')}
+              onClick={() => navigateTo('/#manufacturing')}
             >
-              Frames
+              Process
             </button>
             <button
               type="button"
@@ -299,9 +299,9 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
               <li>
                 <button
                   className="dronesz-mobile-link"
-                  onClick={() => navigateTo('/#frames-section')}
+                  onClick={() => navigateTo('/#manufacturing')}
                 >
-                  Frames
+                  Process
                 </button>
               </li>
               <li>

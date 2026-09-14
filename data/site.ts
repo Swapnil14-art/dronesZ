@@ -17,7 +17,7 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { label: "Home", href: "/" },
   { label: "Products", href: "/store" },
-  { label: "Frames", href: "#frames-section" },
+  { label: "Process", href: "#manufacturing" },
   { label: "Custom", href: "#custom-airframes" },
   { label: "Contact", href: "/contact" },
 ];
