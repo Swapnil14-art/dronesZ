@@ -108,4 +108,60 @@ test.describe("home", () => {
     );
     expect(overflow).toBe(false);
   });
+
+  test("MissionSpecSection renders in correct order with all 5 specs and dark mode support", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    // Check heading and badge
+    await expect(page.getByText("Engineered in India")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Build\.\s*Fly\.\s*Beyond\./i }),
+    ).toBeVisible();
+    await expect(page.getByText("DRONESZ / SYSTEM SPEC")).toBeVisible();
+
+    // Check all 5 specs
+    const specTitles = [
+      "Secured supply chain",
+      "Less lead time",
+      "Manufacturing in India",
+      "Low MOQ, customisation available",
+      "Built for every mission",
+    ];
+    for (const title of specTitles) {
+      await expect(page.getByText(title, { exact: true })).toBeVisible();
+    }
+
+    // Verify DOM order: Process -> MissionSpecSection -> CustomAirframes
+    const order = await page.evaluate(() => {
+      const mainChildren = Array.from(
+        document.querySelector("main")?.children || [],
+      );
+      const processIndex = mainChildren.findIndex(
+        (el) =>
+          el.classList.contains("manufacturing-process") ||
+          el.querySelector(".manufacturing-process") !== null,
+      );
+      const specIndex = mainChildren.findIndex((el) =>
+        el.textContent?.includes("DRONESZ / SYSTEM SPEC"),
+      );
+      const customAirframesIndex = mainChildren.findIndex(
+        (el) =>
+          el.id === "custom-airframes" ||
+          el.querySelector("#custom-airframes") !== null,
+      );
+      return { processIndex, specIndex, customAirframesIndex };
+    });
+
+    expect(order.processIndex).toBeLessThan(order.specIndex);
+    expect(order.specIndex).toBeLessThan(order.customAirframesIndex);
+
+    // Verify dark mode class toggle works
+    await page.evaluate(() => {
+      document.documentElement.classList.add("dark");
+    });
+    await expect(page.getByText("DRONESZ / SYSTEM SPEC")).toBeVisible();
+  });
 });
+

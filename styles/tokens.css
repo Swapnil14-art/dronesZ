@@ -39,6 +39,8 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display:
     var(--font-display), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-heading:
+    var(--font-display), var(--font-inter), ui-sans-serif, sans-serif;
 
   --text-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.85rem);
   --text-sm: clamp(0.875rem, 0.84rem + 0.18vw, 0.95rem);
