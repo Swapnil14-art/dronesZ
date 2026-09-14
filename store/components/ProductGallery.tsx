@@ -32,13 +32,13 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
     if (images && images.length > 0) {
       return images.map((img, idx) => ({
         id: img.id,
-        url: getProductImageUrl(img.url) || img.url,
+        url: getProductImageUrl(img, productId) || '',
         label: DEFAULT_VIEW_NAMES[idx] || `View ${idx + 1}`,
         isPrimary: Boolean(img.isPrimary),
       }));
     }
     if (primaryImageUrl) {
-      const url = getProductImageUrl(primaryImageUrl) || primaryImageUrl;
+      const url = getProductImageUrl(primaryImageUrl, productId) || '';
       return DEFAULT_VIEW_NAMES.map((name, idx) => ({
         id: `view-${idx}`,
         url,
@@ -46,14 +46,15 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
         isPrimary: idx === 0,
       }));
     }
-    // Fallback if no image uploaded
+    // Fallback if no image uploaded but productId is known
+    const fallbackUrl = getProductImageUrl(null, productId) || '';
     return DEFAULT_VIEW_NAMES.map((name, idx) => ({
       id: `fallback-${idx}`,
-      url: '',
+      url: fallbackUrl,
       label: name,
       isPrimary: idx === 0,
     }));
-  }, [images, primaryImageUrl]);
+  }, [images, primaryImageUrl, productId]);
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);

@@ -1090,8 +1090,8 @@ export const PublicStore: React.FC = () => {
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="image-void-stage">
-                      {child.image ? (
-                        <img src={getProductImageUrl(child.image)!} alt={child.name} className="product-img" />
+                      {getProductImageUrl(child, child.id) ? (
+                        <img src={getProductImageUrl(child, child.id)!} alt={child.name} className="product-img" />
                       ) : (
                         <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: '#94a3b8', textTransform: 'uppercase' }}>
                           DRONESZ SPECIMEN

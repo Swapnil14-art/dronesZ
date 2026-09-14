@@ -245,36 +245,150 @@ const getApiBaseUrl = (): string => {
 export const API_BASE_URL = getApiBaseUrl();
 
 /**
- * Canonical product-image URL helper.
- *
- * Backend returns image paths as relative API routes, e.g.:
- *   /api/products/15/image?v=1788608619
- *
- * These MUST stay relative so the browser loads them from the same origin
- * (via Next.js rewrites → Spring Boot backend). Prepending API_BASE_URL
- * (http://localhost:8070) would create a cross-origin request that the
- * Content-Security-Policy `img-src 'self'` directive blocks — which is
- * the root cause of images not rendering while "Open in new tab" works.
- *
- * blob:/data: URLs (local upload previews) are passed through as-is.
+ * Known product mapping for static repository images (temporary storage workaround).
+ * Supabase remains the sole source of truth for all product metadata, pricing, and specs.
  */
-export const getProductImageUrl = (imagePath?: string | null): string | null => {
-  if (!imagePath || !imagePath.trim()) return null;
-  const path = imagePath.trim();
+export const KNOWN_PRODUCT_IMAGE_MAP: Record<number, string> = {
+  26: '8017.png',
+  27: '7005.png',
+  28: '3115.png',
+  30: '3110.png',
+  31: '2807.png',
+};
 
-  // Absolute URLs / local previews — pass through unchanged
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:') || path.startsWith('data:')) {
-    return path;
+/**
+ * Sanitizes an image file name to prevent path traversal and extract safe basename.
+ */
+export function sanitizeImageFileName(fileName?: string | null): string | null {
+  if (!fileName || typeof fileName !== 'string') return null;
+  const trimmed = fileName.trim();
+  if (!trimmed) return null;
+
+  // Pass through blob: and data: URLs for local upload previews
+  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) {
+    return trimmed;
   }
 
-  // Relative API paths (e.g. /api/products/15/image?v=...) — keep relative
-  // so the request goes through Next.js rewrites → backend, staying same-origin.
-  if (path.startsWith('/')) {
-    return path;
+  // Strip query parameters and hashes (e.g. ?v=1788887304)
+  const clean = trimmed.split('?')[0].split('#')[0];
+
+  // Extract base name only (strip any directory paths like ../ or /)
+  const baseName = clean.split(/[/\\]/).filter(Boolean).pop();
+  if (!baseName || baseName === '.' || baseName === '..') {
+    return null;
   }
 
-  // Bare relative path — prefix with /
-  return `/${path}`;
+  // Keep only safe characters: letters, numbers, dot, underscore, hyphen
+  const safeName = baseName.replace(/[^a-zA-Z0-9._-]/g, '');
+  if (!safeName || safeName.startsWith('.')) {
+    return null;
+  }
+
+  return safeName;
+}
+
+/**
+ * Resolves static product image source: /product-images/[safeFileName]
+ *
+ * Products, categories, prices, specs, and file_name metadata continue to be fetched from Supabase.
+ * This resolves the static image filename mapping without calling the broken BYTEA API.
+ */
+export function getProductImageSrc(
+  input?: string | ProductImageDto | ProductDto | null,
+  fallbackProductId?: number | null
+): string | null {
+  if (!input && !fallbackProductId) return null;
+
+  // If input is an object (ProductImageDto or ProductDto)
+  if (input && typeof input === 'object') {
+    // Check for direct fileName property
+    if ('fileName' in input && input.fileName) {
+      const safe = sanitizeImageFileName(input.fileName);
+      if (safe) {
+        return safe.startsWith('blob:') || safe.startsWith('data:') ? safe : `/product-images/${safe}`;
+      }
+    }
+    // Check for primaryImage fileName
+    if ('primaryImage' in input && input.primaryImage?.fileName) {
+      const safe = sanitizeImageFileName(input.primaryImage.fileName);
+      if (safe) {
+        return safe.startsWith('blob:') || safe.startsWith('data:') ? safe : `/product-images/${safe}`;
+      }
+    }
+    // Check for first image in images array
+    if ('images' in input && Array.isArray(input.images) && input.images.length > 0) {
+      for (const img of input.images) {
+        if (img.fileName) {
+          const safe = sanitizeImageFileName(img.fileName);
+          if (safe) {
+            return safe.startsWith('blob:') || safe.startsWith('data:') ? safe : `/product-images/${safe}`;
+          }
+        }
+      }
+    }
+
+    const pid = ('productId' in input ? input.productId : ('id' in input ? input.id : null)) || fallbackProductId;
+    if (pid && KNOWN_PRODUCT_IMAGE_MAP[pid]) {
+      return `/product-images/${KNOWN_PRODUCT_IMAGE_MAP[pid]}`;
+    }
+
+    const rawUrl = ('url' in input ? input.url : ('image' in input ? input.image : null));
+    if (rawUrl) {
+      return getProductImageSrc(rawUrl, pid);
+    }
+    return null;
+  }
+
+  // If input is a string
+  if (typeof input === 'string') {
+    const trimmed = input.trim();
+    if (!trimmed) {
+      if (fallbackProductId && KNOWN_PRODUCT_IMAGE_MAP[fallbackProductId]) {
+        return `/product-images/${KNOWN_PRODUCT_IMAGE_MAP[fallbackProductId]}`;
+      }
+      return null;
+    }
+
+    if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) {
+      return trimmed;
+    }
+
+    // Already a /product-images/ path
+    if (trimmed.startsWith('/product-images/')) {
+      const base = sanitizeImageFileName(trimmed);
+      return base ? `/product-images/${base}` : null;
+    }
+
+    // If it's a legacy /api/products/[productId]/images/[imageId] path, extract productId
+    const apiMatch = trimmed.match(/\/api\/products\/(\d+)/i);
+    const parsedId = apiMatch ? parseInt(apiMatch[1], 10) : fallbackProductId;
+    if (parsedId && KNOWN_PRODUCT_IMAGE_MAP[parsedId]) {
+      return `/product-images/${KNOWN_PRODUCT_IMAGE_MAP[parsedId]}`;
+    }
+
+    // Otherwise check if it looks like a file name (e.g. 8017.png or 8017)
+    const safe = sanitizeImageFileName(trimmed);
+    if (safe && (safe.endsWith('.png') || safe.endsWith('.jpg') || safe.endsWith('.jpeg') || safe.endsWith('.webp') || safe.endsWith('.svg'))) {
+      return `/product-images/${safe}`;
+    }
+
+    if (fallbackProductId && KNOWN_PRODUCT_IMAGE_MAP[fallbackProductId]) {
+      return `/product-images/${KNOWN_PRODUCT_IMAGE_MAP[fallbackProductId]}`;
+    }
+  }
+
+  if (fallbackProductId && KNOWN_PRODUCT_IMAGE_MAP[fallbackProductId]) {
+    return `/product-images/${KNOWN_PRODUCT_IMAGE_MAP[fallbackProductId]}`;
+  }
+
+  return null;
+}
+
+export const getProductImageUrl = (
+  imagePath?: string | ProductImageDto | ProductDto | null,
+  fallbackProductId?: number | null
+): string | null => {
+  return getProductImageSrc(imagePath, fallbackProductId);
 };
 
 /* Admin Login Route */

@@ -422,7 +422,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         setFormImages(
           images.map((img, idx) => ({
             id: img.id,
-            previewUrl: getProductImageUrl(img.url) || img.url,
+            previewUrl: getProductImageUrl(img, product.id) || img.url,
             fileName: img.fileName,
             fileSizeStr: img.fileSize ? `${(img.fileSize / 1024).toFixed(1)} KB` : undefined,
             isPrimary: Boolean(img.isPrimary),
@@ -433,7 +433,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         setFormImages(
           product.images.map((img, idx) => ({
             id: img.id,
-            previewUrl: getProductImageUrl(img.url) || img.url,
+            previewUrl: getProductImageUrl(img, product.id) || img.url,
             fileName: img.fileName,
             fileSizeStr: img.fileSize ? `${(img.fileSize / 1024).toFixed(1)} KB` : undefined,
             isPrimary: Boolean(img.isPrimary),
@@ -443,7 +443,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       } else if (product.image) {
         setFormImages([
           {
-            previewUrl: getProductImageUrl(product.image) || product.image,
+            previewUrl: getProductImageUrl(product.image, product.id) || product.image,
             isPrimary: true,
             displayOrder: 0,
           },
@@ -456,7 +456,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         setFormImages(
           product.images.map((img, idx) => ({
             id: img.id,
-            previewUrl: getProductImageUrl(img.url) || img.url,
+            previewUrl: getProductImageUrl(img, product.id) || img.url,
             fileName: img.fileName,
             fileSizeStr: img.fileSize ? `${(img.fileSize / 1024).toFixed(1)} KB` : undefined,
             isPrimary: Boolean(img.isPrimary),
@@ -466,7 +466,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       } else if (product.image) {
         setFormImages([
           {
-            previewUrl: getProductImageUrl(product.image) || product.image,
+            previewUrl: getProductImageUrl(product.image, product.id) || product.image,
             isPrimary: true,
             displayOrder: 0,
           },
@@ -936,7 +936,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                         {(() => {
                           const thumb = p.image || p.primaryImage?.url || (p.images && p.images.length > 0 ? p.images[0].url : null);
                           return thumb ? (
-                            <img src={getProductImageUrl(thumb) || ''} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={getProductImageUrl(thumb, p.id) || ''} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             <span style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8' }}>N/A</span>
                           );

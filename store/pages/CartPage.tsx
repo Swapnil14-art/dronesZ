@@ -175,9 +175,9 @@ export const CartPage: React.FC = () => {
                         border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))'
                       }}
                     >
-                      {item.productImage ? (
+                      {getProductImageUrl(item.productImage, item.productId) ? (
                         <img
-                          src={getProductImageUrl(item.productImage)!}
+                          src={getProductImageUrl(item.productImage, item.productId)!}
                           alt={item.productName}
                           className="product-img"
                           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
