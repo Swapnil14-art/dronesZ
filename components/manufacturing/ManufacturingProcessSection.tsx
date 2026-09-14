@@ -42,7 +42,7 @@ const STAGES: Stage[] = [
     phase: "Phase 03 / Iteration",
     title: "FROM DESIGN TO REALITY",
     desc: "We bring the design to life through prototyping, integration, and refinement. Each iteration helps us develop a drone that meets the intended requirements.",
-    image: "/manufacturing/stage-3.webp",
+    image: "/manufacturing/stage-3-hd.jpg",
     side: "left",
   },
   {
@@ -52,7 +52,7 @@ const STAGES: Stage[] = [
     phase: "Phase 04 / Build",
     title: "BUILT TO TAKE FLIGHT",
     desc: "Once the design is ready, we manufacture and assemble the drone with precision, bringing together the components and engineering that turn your vision into a flight-ready machine.",
-    image: "/manufacturing/stage-4.webp",
+    image: "/manufacturing/stage-4-hd.jpg",
     side: "right",
   },
 ];
