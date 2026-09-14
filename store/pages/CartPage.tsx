@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from 'react';
 import { useUserAuth } from '../context/UserAuthContext';
 import { UserAuthModal } from '../components/UserAuthModal';
