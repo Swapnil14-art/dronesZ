@@ -59,14 +59,14 @@ export const ProtectedAdminDashboard: React.FC = () => {
               className={`stitch-admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
               onClick={() => setActiveTab('users')}
             >
-              <span style={{ fontSize: '1.1rem' }}>👥</span> Users
+              <span style={{ fontSize: '1.1rem' }}></span> Users
             </div>
 
             <div
               className={`stitch-admin-nav-item ${activeTab === 'parachute' ? 'active' : ''}`}
               onClick={() => setActiveTab('parachute')}
             >
-              <span style={{ fontSize: '1.1rem' }}>🪂</span> Parachute
+              <span style={{ fontSize: '1.1rem' }}></span> Parachute
             </div>
           </nav>
         </div>
