@@ -30,7 +30,7 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: "pnpm dev -p 3007",
+    command: "npm run dev -- -p 3007",
     url: "http://localhost:3007",
     reuseExistingServer: true,
     timeout: 120_000,

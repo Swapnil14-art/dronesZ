@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useUserAuth } from '../context/UserAuthContext';
 import { UserAuthModal } from './UserAuthModal';
+import { useCustomNavConfig } from '../services/customNavConfig';
 import './Header.css';
 
 interface HeaderProps {
@@ -13,7 +14,11 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCustomDropdownOpen, setIsCustomDropdownOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const customDropdownRef = useRef<HTMLDivElement>(null);
+  const customTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const customNavConfig = useCustomNavConfig();
 
   const MAIN_SITE_URL =
     (typeof process !== 'undefined' && (process.env.NEXT_PUBLIC_VITE_MAIN_SITE_URL || process.env.NEXT_PUBLIC_MAIN_SITE_URL)) ||
@@ -21,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
 
   const navigateTo = (path: string) => {
     setIsMobileMenuOpen(false);
+    setIsCustomDropdownOpen(false);
     if (path === '/' || path.startsWith('/#') || path === '/contact') {
       const target = path === '/' ? MAIN_SITE_URL : `${MAIN_SITE_URL}${path}`;
       window.location.href = target;
@@ -30,11 +36,42 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
     }
   };
 
-  // Close profile dropdown when clicking outside
+  const handleTalkToUs = (url: string) => {
+    setIsMobileMenuOpen(false);
+    setIsCustomDropdownOpen(false);
+    if (!url) return;
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:') || url.startsWith('tel:')) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      navigateTo(url);
+    }
+  };
+
+  const handleCustomMouseEnter = () => {
+    if (customTimeoutRef.current) {
+      clearTimeout(customTimeoutRef.current);
+      customTimeoutRef.current = null;
+    }
+    setIsCustomDropdownOpen(true);
+  };
+
+  const handleCustomMouseLeave = () => {
+    if (customTimeoutRef.current) {
+      clearTimeout(customTimeoutRef.current);
+    }
+    customTimeoutRef.current = setTimeout(() => {
+      setIsCustomDropdownOpen(false);
+    }, 150);
+  };
+
+  // Close profile dropdown and custom dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
         setIsProfileMenuOpen(false);
+      }
+      if (customDropdownRef.current && !customDropdownRef.current.contains(event.target as Node)) {
+        setIsCustomDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -86,13 +123,78 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
             >
               Process
             </button>
-            <button
-              type="button"
-              className="dronesz-nav__link"
-              onClick={() => navigateTo('/#custom-airframes')}
+            
+            {/* Custom Dropdown Trigger */}
+            <div
+              ref={customDropdownRef}
+              className="dronesz-custom-wrapper"
+              onMouseEnter={handleCustomMouseEnter}
+              onMouseLeave={handleCustomMouseLeave}
             >
-              Custom
-            </button>
+              <button
+                type="button"
+                className="dronesz-nav__link"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsCustomDropdownOpen(!isCustomDropdownOpen);
+                }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                Custom
+                <span style={{ fontSize: '10px', transform: isCustomDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s ease' }}>
+                  ▾
+                </span>
+              </button>
+
+              {isCustomDropdownOpen && (
+                <div
+                  className="dronesz-custom-dropdown"
+                  onMouseEnter={handleCustomMouseEnter}
+                  onMouseLeave={handleCustomMouseLeave}
+                >
+                  <button
+                    type="button"
+                    className="dronesz-custom-frames-btn"
+                    onClick={() => navigateTo('/#custom-airframes')}
+                  >
+                    Frames
+                  </button>
+
+                  <div className="dronesz-custom-divider" />
+
+                  <div className="dronesz-custom-row">
+                    <span className="dronesz-custom-label">Motors</span>
+                    <button
+                      type="button"
+                      className="dronesz-custom-talk-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTalkToUs(customNavConfig.motorsTalkToUsUrl);
+                      }}
+                    >
+                      Talk to us
+                    </button>
+                  </div>
+
+                  <div className="dronesz-custom-divider" />
+
+                  <div className="dronesz-custom-row">
+                    <span className="dronesz-custom-label">Propellers</span>
+                    <button
+                      type="button"
+                      className="dronesz-custom-talk-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTalkToUs(customNavConfig.propellersTalkToUsUrl);
+                      }}
+                    >
+                      Talk to us
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button
               type="button"
               className="dronesz-nav__link"
@@ -305,12 +407,52 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
                 </button>
               </li>
               <li>
-                <button
-                  className="dronesz-mobile-link"
-                  onClick={() => navigateTo('/#custom-airframes')}
-                >
-                  Custom
-                </button>
+                <div style={{ width: '100%' }}>
+                  <button
+                    className="dronesz-mobile-link"
+                    onClick={() => setIsCustomDropdownOpen(!isCustomDropdownOpen)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
+                  >
+                    <span>Custom</span>
+                    <span style={{ fontSize: '11px', opacity: 0.7 }}>
+                      {isCustomDropdownOpen ? '▴' : '▾'}
+                    </span>
+                  </button>
+
+                  {isCustomDropdownOpen && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: '0.75rem', marginTop: '0.5rem', marginBottom: '0.5rem', borderLeft: '2px solid rgba(255, 255, 255, 0.12)' }}>
+                      <button
+                        className="dronesz-mobile-link"
+                        onClick={() => navigateTo('/#custom-airframes')}
+                        style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc' }}
+                      >
+                        Frames
+                      </button>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 500, color: '#94a3b8' }}>Motors</span>
+                        <button
+                          type="button"
+                          className="dronesz-custom-talk-btn"
+                          onClick={() => handleTalkToUs(customNavConfig.motorsTalkToUsUrl)}
+                        >
+                          Talk to us
+                        </button>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 500, color: '#94a3b8' }}>Propellers</span>
+                        <button
+                          type="button"
+                          className="dronesz-custom-talk-btn"
+                          onClick={() => handleTalkToUs(customNavConfig.propellersTalkToUsUrl)}
+                        >
+                          Talk to us
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </li>
               <li>
                 <button

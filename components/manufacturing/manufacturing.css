@@ -1,10 +1,13 @@
-/* Manufacturing Process Section — Lovable visual replica with DronesZ design integration */
+/* =========================================================
+   MANUFACTURING PROCESS SECTION
+   ========================================================= */
 
 .manufacturing-section {
   position: relative;
   background-color: var(--color-canvas, #fafafa);
   padding-block: clamp(4rem, 6vw, 8rem);
-  padding-inline: var(--space-gutter, clamp(1.25rem, 0.5rem + 3vw, 4rem));
+  padding-inline: var(--space-gutter,
+      clamp(1.25rem, 0.5rem + 3vw, 4rem));
   overflow: hidden;
 }
 
@@ -14,12 +17,15 @@
   position: relative;
 }
 
-/* ── HEADER ── */
+/* =========================================================
+   HEADER
+   ========================================================= */
+
 .manufacturing-header {
   display: flex;
   align-items: flex-start;
   gap: clamp(1rem, 2.5vw, 2.5rem);
-  margin-bottom: clamp(3rem, 5vw, 5rem);
+  margin-bottom: clamp(4rem, 7vw, 7rem);
   position: relative;
 }
 
@@ -75,19 +81,35 @@
   right: 0;
   width: 25%;
   height: 1px;
-  background: var(--color-line, oklch(87% 0.008 268));
+  background: var(--color-line,
+      oklch(87% 0.008 268));
 }
 
-/* ── TIMELINE WRAPPER & GRID ── */
+/* =========================================================
+   TIMELINE
+   ========================================================= */
+
+/*
+ * Desktop:
+ * Approximately 2.35–2.4 viewport heights.
+ *
+ * The four cards are spread vertically but remain visually
+ * connected through the alternating timeline.
+ */
+
 .manufacturing-timeline-wrap {
   position: relative;
   width: 100%;
+  min-height: 235vh;
 }
+
+/* =========================================================
+   SVG CURVE
+   ========================================================= */
 
 .manufacturing-svg-layer {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -101,52 +123,169 @@
   stroke-width: 3.5px;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 2px 6px rgba(229, 9, 20, 0.2));
+
+  filter:
+    drop-shadow(0 2px 6px rgba(229, 9, 20, 0.2));
+
   vector-effect: non-scaling-stroke;
 }
 
+/* =========================================================
+   GRID / CARD POSITIONING
+   ========================================================= */
+
+/*
+ * Absolute positioning is intentional.
+ *
+ * This allows the cards to alternate:
+ *
+ *      01 LEFT
+ *
+ *                  02 RIGHT
+ *
+ *      03 LEFT
+ *
+ *                  04 RIGHT
+ *
+ * without forcing them into normal grid rows.
+ */
+
 .manufacturing-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: clamp(2.5rem, 6vw, 6rem);
-  row-gap: clamp(3rem, 5vw, 5.5rem);
   position: relative;
+  width: 100%;
+  min-height: 235vh;
   z-index: 2;
 }
 
-/* Zigzag column alignment */
-.m-card--left {
-  grid-column: 1;
-}
+/* =========================================================
+   BASE CARD
+   ========================================================= */
 
-.m-card--right {
-  grid-column: 2;
-  margin-top: clamp(2rem, 4vw, 4.5rem);
-}
-
-/* ── CARD STYLING ── */
 .m-card {
-  position: relative;
+  position: absolute;
+
+  width: calc(50% - clamp(1.25rem, 3vw, 3rem));
+
   background: var(--color-surface, #ffffff);
-  border: 1px solid var(--color-line, oklch(87% 0.008 268));
+
+  border: 1px solid var(--color-line,
+      oklch(87% 0.008 268));
+
   border-radius: var(--radius-sm, 6px);
+
   overflow: visible;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+
+  box-shadow:
+    0 4px 20px -2px rgba(0, 0, 0, 0.05);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+/* =========================================================
+   STAGE POSITIONS
+   ========================================================= */
+
+/*
+ * Stage 1
+ *
+ * Starting point.
+ */
+.m-card--left:nth-child(1) {
+  left: 0;
+  top: 0;
+}
+
+/*
+ * Stage 2
+ *
+ * Right side.
+ *
+ * The -10% translate creates the subtle overlap with
+ * the preceding stage.
+ */
+.m-card--right:nth-child(2) {
+  right: 0;
+  top: 19%;
+  transform: translateY(-10%);
+}
+
+/*
+ * Stage 3
+ *
+ * Back to the left.
+ */
+.m-card--left:nth-child(3) {
+  left: 0;
+  top: 38%;
+  transform: translateY(-10%);
+}
+
+/*
+ * Stage 4
+ *
+ * Back to the right.
+ */
+.m-card--right:nth-child(4) {
+  right: 0;
+  top: 57%;
+  transform: translateY(-10%);
+}
+
+/* =========================================================
+   CARD HOVER
+   ========================================================= */
+
+/*
+ * Stage 1 doesn't have the 10% offset.
+ */
+.m-card--left:nth-child(1):hover {
+  transform: translateY(-5px);
+}
+
+/*
+ * Stages 2–4 preserve their 10% overlap on hover.
+ */
+.m-card--right:nth-child(2):hover,
+.m-card--left:nth-child(3):hover,
+.m-card--right:nth-child(4):hover {
+  transform:
+    translateY(calc(-10% - 5px));
+}
+
+.m-card {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .m-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px -4px rgba(242, 2, 2, 0.1);
-  border-color: color-mix(in oklch, var(--color-brand-red, #e50914) 40%, var(--color-line, oklch(87% 0.008 268)));
+  box-shadow:
+    0 16px 35px -8px rgba(0, 0, 0, 0.10);
+
+  border-color:
+    color-mix(in oklch,
+      var(--color-brand-red, #e50914) 40%,
+      var(--color-line, oklch(87% 0.008 268)));
 }
+
+/* =========================================================
+   CARD MEDIA
+   ========================================================= */
 
 .m-card__media {
   position: relative;
   width: 100%;
+
   aspect-ratio: 16 / 10;
+
   overflow: hidden;
+
   background-color: #0d0f12;
+
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
 }
@@ -154,8 +293,10 @@
 .m-card__img {
   width: 100%;
   height: 100%;
+
   object-fit: cover;
   display: block;
+
   transition: transform 0.4s ease;
 }
 
@@ -163,10 +304,16 @@
   transform: scale(1.03);
 }
 
+/* =========================================================
+   CARD BODY
+   ========================================================= */
+
 .m-card__body {
   padding: clamp(1.2rem, 1.5vw, 1.6rem);
+
   display: flex;
   flex-direction: column;
+
   gap: 0.5rem;
 }
 
@@ -174,69 +321,101 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   gap: 0.5rem;
   margin-bottom: 0.15rem;
 }
 
 .m-card__action {
   font-family: var(--font-sans);
+
   font-size: 0.72rem;
   font-weight: 700;
+
   letter-spacing: 0.12em;
   text-transform: uppercase;
+
   color: var(--color-brand-red, #e50914);
 }
 
 .m-card__phase {
   font-family: var(--font-sans);
+
   font-size: 0.72rem;
   font-weight: 500;
+
   color: var(--color-faint, #71717a);
 }
 
 .m-card__title {
   font-family: var(--font-display, var(--font-sans));
-  font-size: clamp(1.05rem, 0.95rem + 0.35vw, 1.25rem);
+
+  font-size:
+    clamp(1.05rem,
+      0.95rem + 0.35vw,
+      1.25rem);
+
   font-weight: 700;
+
   letter-spacing: -0.01em;
   text-transform: uppercase;
+
   color: var(--color-white, #18181b);
+
   line-height: 1.25;
+
   margin: 0;
 }
 
 .m-card__desc {
   font-size: 0.9rem;
+
   color: var(--color-muted, #52525b);
+
   line-height: 1.55;
+
   margin: 0;
 }
 
-/* ── NUMBER NODES ON TIMELINE ── */
+/* =========================================================
+   TIMELINE NODES
+   ========================================================= */
+
 .m-node {
   position: absolute;
+
   width: 32px;
   height: 32px;
+
   border-radius: 50%;
+
   background: var(--color-brand-red, #e50914);
   color: #ffffff;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   font-family: var(--font-sans);
+
   font-size: 0.75rem;
   font-weight: 700;
-  box-shadow: 0 0 0 4px var(--color-canvas, #ffffff), 0 4px 12px rgba(229, 9, 20, 0.4);
+
+  box-shadow:
+    0 0 0 4px var(--color-canvas, #ffffff),
+    0 4px 12px rgba(229, 9, 20, 0.4);
+
   z-index: 3;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.m-node:hover {
-  transform: scale(1.15);
-  box-shadow: 0 0 0 5px var(--color-canvas, #ffffff), 0 6px 16px rgba(229, 9, 20, 0.5);
-}
+/* =========================================================
+   NODE POSITIONS
+   ========================================================= */
 
-/* Node anchors corresponding to Lovable design */
 .m-card--left .m-node {
   right: -16px;
   top: 40%;
@@ -247,24 +426,167 @@
   top: 40%;
 }
 
-/* ── RESPONSIVE ADAPTATIONS ── */
+.m-node:hover {
+  transform: scale(1.15);
+
+  box-shadow:
+    0 0 0 5px var(--color-canvas, #ffffff),
+    0 6px 16px rgba(229, 9, 20, 0.5);
+}
+
+/* =========================================================
+   LARGE DESKTOP
+   ========================================================= */
+
+@media (min-width: 1200px) {
+
+  .manufacturing-timeline-wrap,
+  .manufacturing-grid {
+    min-height: 240vh;
+  }
+
+  .m-card {
+    width: 44%;
+  }
+
+  /*
+   * Keep the same compact stagger.
+   * DO NOT reset these to 25/50/75.
+   */
+
+  .m-card--left:nth-child(1) {
+    left: 0;
+    top: 0;
+  }
+
+  .m-card--right:nth-child(2) {
+    right: 0;
+    top: 19%;
+    transform: translateY(-10%);
+  }
+
+  .m-card--left:nth-child(3) {
+    left: 0;
+    top: 38%;
+    transform: translateY(-10%);
+  }
+
+  .m-card--right:nth-child(4) {
+    right: 0;
+    top: 57%;
+    transform: translateY(-10%);
+  }
+}
+
+/* =========================================================
+   MEDIUM DESKTOP / TABLET LANDSCAPE
+   ========================================================= */
+
+@media (min-width: 861px) and (max-width: 1199px) {
+
+  .manufacturing-timeline-wrap,
+  .manufacturing-grid {
+    min-height: 225vh;
+  }
+
+  .m-card {
+    width: 45%;
+  }
+
+  .m-card--left:nth-child(1) {
+    left: 0;
+    top: 0;
+  }
+
+  .m-card--right:nth-child(2) {
+    right: 0;
+    top: 19%;
+    transform: translateY(-10%);
+  }
+
+  .m-card--left:nth-child(3) {
+    left: 0;
+    top: 38%;
+    transform: translateY(-10%);
+  }
+
+  .m-card--right:nth-child(4) {
+    right: 0;
+    top: 57%;
+    transform: translateY(-10%);
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
 @media (max-width: 860px) {
+
+  .manufacturing-section {
+    padding-block: 4rem;
+  }
+
+  .manufacturing-header {
+    margin-bottom: 3rem;
+  }
+
   .manufacturing-header__divider {
     display: none;
   }
 
+  /*
+   * Mobile does NOT use the desktop overlap.
+   */
+  .manufacturing-timeline-wrap {
+    min-height: auto;
+  }
+
   .manufacturing-grid {
-    grid-template-columns: 1fr;
-    row-gap: 2.5rem;
+    min-height: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 2.5rem;
+
     padding-left: 2rem;
   }
 
-  .m-card--left,
-  .m-card--right {
-    grid-column: 1;
-    margin-top: 0;
+  /*
+   * Reset all absolute desktop positioning.
+   */
+  .m-card,
+  .m-card--left:nth-child(1),
+  .m-card--right:nth-child(2),
+  .m-card--left:nth-child(3),
+  .m-card--right:nth-child(4) {
+    position: relative;
+
+    top: auto;
+    left: auto;
+    right: auto;
+
+    width: 100%;
+
+    margin: 0;
+
+    transform: none;
   }
 
+  /*
+   * Normal mobile hover.
+   */
+  .m-card:hover,
+  .m-card--right:nth-child(2):hover,
+  .m-card--left:nth-child(3):hover,
+  .m-card--right:nth-child(4):hover {
+    transform: translateY(-3px);
+  }
+
+  /*
+   * Mobile node alignment.
+   */
   .m-card--left .m-node,
   .m-card--right .m-node {
     left: -2rem;
@@ -274,5 +596,39 @@
 
   .manufacturing-svg-layer {
     display: block;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+  .manufacturing-grid {
+    padding-left: 1.75rem;
+    gap: 2rem;
+  }
+
+  .m-card--left .m-node,
+  .m-card--right .m-node {
+    left: -1.75rem;
+  }
+
+  .m-node {
+    width: 30px;
+    height: 30px;
+
+    font-size: 0.7rem;
+  }
+
+  .m-card__body {
+    padding: 1rem;
+  }
+
+  .m-card__meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.2rem;
   }
 }

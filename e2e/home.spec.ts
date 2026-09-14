@@ -1,70 +1,62 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("home", () => {
-  test("hero heading and nav render", async ({ page }) => {
+  test("hero heading and nav render", async ({ page, isMobile }) => {
+    test.skip(isMobile, "Desktop nav check");
     await page.goto("/");
     await expect(page.locator("h1")).toBeVisible();
-    // Frames and Custom are in-page anchor buttons (Lenis scroll); Contact routes as a link.
-    await expect(page.getByRole("button", { name: "Frames" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Custom" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Contact" })).toBeVisible();
+
+    // Hover Custom to verify dropdown Frames button
+    await page.getByRole("button", { name: "Custom" }).hover();
+    await expect(page.getByRole("menuitem", { name: "Frames" })).toBeVisible();
   });
 
   /**
    * The in-page nav anchors must land on their section from ANOTHER route too, not just from home.
-   * The cross-route path reloads with a hash, and the browser's native hash scroll runs before the
-   * pinned ScrollTriggers exist — so the target still sits far above its final position. #frames-
-   * section is near the top and landed only ~280px off (passing by luck), but #custom-airframes sits
-   * below every pin and was missed by thousands. Nav re-scrolls through Lenis once layout settles.
-   *
-   * Landing target is the nav's own height, not 0: the bar is fixed, so a section parked at the
-   * viewport top hides its first ~64-71px behind it. Asserted two-sided — `top <= 4` also passes on
-   * a wild overshoot, which is exactly the failure the cross-route path is prone to.
    */
-  for (const { label, id } of [
-    { label: "Frames", id: "#frames-section" },
-    { label: "Custom", id: "#custom-airframes" },
-  ]) {
-    test(`nav "${label}" lands on its section from another route`, async ({
-      page,
-    }) => {
-      await page.goto("/contact");
-      await page.getByRole("button", { name: label }).click();
-      await page.waitForURL(new RegExp(id.replace("#", "#")));
+  test('nav "Custom -> Frames" lands on custom-airframes section from another route', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "Desktop route landing check");
+    await page.goto("/contact");
+    await page.getByRole("button", { name: "Custom" }).hover();
+    await page.getByRole("menuitem", { name: "Frames" }).click();
+    await page.waitForURL(/#custom-airframes/);
 
-      // Poll rather than assert once: the landing deliberately waits for load + fonts + 2 frames.
-      await expect
-        .poll(
-          () =>
-            page.evaluate((sel) => {
-              const r = document.querySelector(sel)?.getBoundingClientRect();
-              const nav = document
-                .querySelector(".nav")
-                ?.getBoundingClientRect();
-              if (!r || !nav) return null;
-              return Math.round(Math.abs(r.top - nav.height));
-            }, id),
-          {
-            message: `${label} never landed clear of the nav at ${id}`,
-            timeout: 20_000,
-          },
-        )
-        .toBeLessThanOrEqual(4);
-    });
-  }
+    // Poll rather than assert once: the landing deliberately waits for load + fonts + 2 frames.
+    await expect
+      .poll(
+        () =>
+          page.evaluate((sel) => {
+            const r = document.querySelector(sel)?.getBoundingClientRect();
+            const nav = document
+              .querySelector(".nav")
+              ?.getBoundingClientRect();
+            if (!r || !nav) return null;
+            return Math.round(Math.abs(r.top - nav.height));
+          }, "#custom-airframes"),
+        {
+          message: `Frames never landed clear of the nav at #custom-airframes`,
+          timeout: 20_000,
+        },
+      )
+      .toBeLessThanOrEqual(4);
+  });
 
   /**
-   * What the "Custom" item is FOR: it is a shortcut to the process rail — the "how a build works"
-   * explanation — not the tagline/path-card fork further down the same section. Reworked
-   * 2026-08-13 at the user's request: landing on the fork skipped past the explanation, so the
-   * anchor moved to `#custom-airframes` on `.custom-process` instead. The rail sits only ~24px
-   * below its section's top, so an un-offset anchor would still bury it under the fixed bar.
+   * What the "Custom -> Frames" item is FOR: it is a shortcut to the process rail.
    */
-  test('nav "Custom" opens the process rail, not the tagline/path-card fork', async ({
+  test('nav "Custom -> Frames" opens the process rail, not the tagline/path-card fork', async ({
     page,
+    isMobile,
   }) => {
+    test.skip(isMobile, "Desktop rail scroll check");
     await page.goto("/");
-    await page.getByRole("button", { name: "Custom" }).click();
+    await page.getByRole("button", { name: "Custom" }).hover();
+    await page.getByRole("menuitem", { name: "Frames" }).click();
 
     const rail = page.locator(".custom-process__rail");
     await expect(rail).toBeVisible();

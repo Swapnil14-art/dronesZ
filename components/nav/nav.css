@@ -243,6 +243,195 @@
   margin: 0.25rem 0;
 }
 
+/* Custom Navigation Item & Dropdown */
+.nav__custom-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav__custom-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nav__custom-caret {
+  font-size: 10px;
+  display: inline-block;
+  transition: transform var(--duration-fast, 0.15s) ease, opacity var(--duration-fast, 0.15s) ease;
+  opacity: 0.7;
+}
+
+.nav__custom-item:hover .nav__custom-caret,
+.nav__custom-caret.is-open {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+.nav__custom-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 250px;
+  background: #14171d;
+  background: color-mix(in oklch, var(--color-canvas, #0e1116) 92%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0;
+  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  animation: navDropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Invisible bridge so moving cursor between trigger and dropdown never loses hover */
+.nav__custom-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+}
+
+@keyframes navDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Frames Item Button */
+.nav__custom-frames-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  background: transparent;
+  border: none;
+  color: var(--color-white, #f8fafc);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--duration-fast, 0.15s) ease, color var(--duration-fast, 0.15s) ease;
+}
+
+.nav__custom-frames-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-brand-red, #e52b31);
+}
+
+.nav__custom-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0.25rem 0;
+}
+
+/* Motors & Propellers Rows */
+.nav__custom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.9rem;
+  user-select: none;
+  cursor: default;
+}
+
+.nav__custom-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: oklch(84% 0.008 268, #cbd5e1);
+  font-family: var(--font-sans);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Talk to Us Button */
+.nav__custom-talk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.28rem 0.65rem;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-brand-red, #e52b31);
+  background: color-mix(in oklch, var(--color-brand-red, #e52b31) 12%, transparent);
+  border: 1px solid color-mix(in oklch, var(--color-brand-red, #e52b31) 35%, transparent);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--duration-fast, 0.15s) ease;
+  white-space: nowrap;
+}
+
+.nav__custom-talk-btn:hover {
+  background: var(--color-brand-red, #e52b31);
+  color: #ffffff;
+  border-color: var(--color-brand-red, #e52b31);
+  box-shadow: 0 0 12px rgba(229, 43, 49, 0.4);
+}
+
+/* Mobile Drawer Custom Subnavigation */
+.nav__mobile-custom-header {
+  width: 100%;
+}
+
+.nav__mobile-custom-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 0.75rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.nav__mobile-sublink {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-white, #f8fafc);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.25rem 0;
+  transition: color var(--duration-fast, 0.15s) ease;
+}
+
+.nav__mobile-sublink:hover {
+  color: var(--color-brand-red, #e52b31);
+}
+
+.nav__mobile-custom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+}
+
+.nav__mobile-custom-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-muted, #94a3b8);
+  pointer-events: none;
+}
+
 /* Mobile Toggle Hamburger Button */
 .nav__mobile-toggle {
   display: none;
