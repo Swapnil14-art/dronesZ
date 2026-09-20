@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: drone-store-backend
+    runtime: docker
+    dockerfilePath: ./drone-store-system/backend/Dockerfile
+    dockerContext: ./drone-store-system/backend
+    plan: free
+    envVars:
+      - key: SERVER_PORT
+        value: 8070

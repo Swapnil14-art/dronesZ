@@ -1,0 +1,649 @@
+/* Frames spine: pinned story panels with a cinematic dark-media slot on a light editorial page.
+   The clips are matte-void footage, so the media slot itself is near-black — a dark rectangle
+   floating on the near-white canvas. Portrait flat-lay posters sit `contain`ed in the same dark
+   16:9 slot so image and video read identically (frame suspended in a void). */
+
+/* Local dark surface for the media slot — the light theme has no dark-surface token. */
+.frame-visual {
+  --frame-void: oklch(16% 0.006 268);
+  position: relative;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--frame-void);
+  box-shadow: 0 40px 90px -40px
+    color-mix(in oklch, var(--color-brand-red) 45%, transparent);
+}
+
+.frame-visual__poster,
+.frame-visual__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* Poster is the whole frame suspended in the void → contain, never cropped. */
+.frame-visual__poster {
+  object-fit: contain;
+}
+/* Clip is shot 16:9 for this slot → cover fills edge to edge. */
+.frame-visual__video {
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--duration-slow) var(--ease-out-expo);
+}
+.frame-visual__video[data-playing="true"] {
+  opacity: 1;
+}
+/* custom-showcase has no still: a matte void with a faint red horizon so it isn't dead black. */
+.frame-visual__void {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      120% 80% at 50% 120%,
+      color-mix(in oklch, var(--color-brand-red) 22%, transparent),
+      transparent 60%
+    ),
+    var(--frame-void);
+}
+
+/* ---- Panel: sticky split, narrative + media, mirrors .chapter ---- */
+.frame-panel {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: var(--space-4);
+  padding-inline: var(--space-gutter);
+  overflow: hidden;
+  background: var(--color-canvas);
+}
+
+.frame-panel__narrative {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 46ch;
+}
+.frame-panel__eyebrow-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+.frame-panel__size {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-xl);
+  color: var(--color-brand-red);
+  line-height: 1;
+}
+.frame-panel__title {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-2);
+}
+
+/* Narrative beats accumulate as the pin scrubs — a building manifesto, not a slideshow. */
+.frame-panel__beats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.frame-beat {
+  font-size: var(--text-base);
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+.frame-panel__tagline {
+  margin-top: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-lg);
+  color: var(--color-white);
+}
+
+/* ---- Custom Airframes: same panel, not pinned, hosts the (parked) form slot ---- */
+.frame-panel--custom .frame-panel__form {
+  margin-top: var(--space-3);
+}
+
+@media (max-width: 860px) {
+  .frame-panel {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding-block: var(--space-section);
+  }
+  .frame-panel__media {
+    order: -1;
+  }
+}
+
+/* Reduced-motion / no-JS: ScrollSection stays data-animated="false" → beats flow & stay visible. */
+.frame-panel[data-animated="false"] .frame-beat,
+.frame-panel[data-animated="false"] .frame-panel__tagline {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   Custom Airframes — wireframe→hardware reveal + two-path fork
+   ============================================================ */
+.custom-reveal {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 40% 1fr;
+  align-items: center;
+  gap: var(--space-4);
+  padding-inline: var(--space-gutter);
+  overflow: hidden;
+  background: var(--color-canvas);
+}
+.custom-reveal__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 42ch;
+}
+.custom-reveal__title {
+  font-size: var(--text-2xl);
+  margin-top: var(--space-1);
+}
+.custom-reveal__lead {
+  margin-top: var(--space-2);
+  font-size: var(--text-lg);
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+.custom-reveal__media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-void);
+  box-shadow: 0 40px 90px -40px
+    color-mix(in oklch, var(--color-brand-red) 45%, transparent);
+}
+.custom-reveal__canvas,
+.custom-reveal__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.custom-reveal__canvas {
+  z-index: 1;
+}
+/* Panel caption, above the canvas. The plate is near-black, so the shared eyebrow's muted ink is
+   flipped to light here — the red rule already reads against the dark. */
+.custom-reveal__caption {
+  position: absolute;
+  z-index: 2;
+  top: var(--space-2);
+  left: var(--space-2);
+}
+.custom-reveal__caption .section-label {
+  color: var(--color-on-dark);
+}
+/* Narrow phones: at 320px the plate is only ~280px wide, and the eyebrow's wide tracking plus
+   full-length rule pushed the caption onto a second line, flush against the plate's edge. Tighten
+   tracking, size and rule so it holds one line down to 320px. */
+@media (max-width: 400px) {
+  .custom-reveal__caption {
+    top: var(--space-1);
+    left: var(--space-1);
+  }
+  .custom-reveal__caption .section-label {
+    font-size: var(--text-xs);
+    letter-spacing: 0.12em;
+    gap: 0.45rem;
+  }
+  .custom-reveal__caption .section-label::before {
+    width: 1.1rem;
+  }
+}
+
+/* ---- Process rail: idea → hardware, between the reveal and the fork ----
+   The pinned reveal centres a 424px plate inside 100vh, so it already ends with ~240px of quiet
+   canvas. This band therefore takes only a small top padding of its own — the breathing room is
+   inherited, and .custom-fork drops its top --space-section to match (its bottom keeps it). */
+.custom-process {
+  position: relative;
+  z-index: 1;
+  background: var(--color-canvas);
+  padding: var(--space-3) var(--space-gutter) 0;
+}
+.custom-process__rail {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+  /* Matches .custom-fork__paths so the rail and the two path cards share one measure. */
+  width: min(100%, 60rem);
+}
+/* Each step carries its own hairline, so the four read as one rule broken by the grid gaps. */
+.process-step {
+  position: relative;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-line);
+}
+/* Short red tick riding on the hairline — marks the step and picks up the brand accent. */
+.process-step::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 2.25rem;
+  height: 2px;
+  background: var(--color-brand-red);
+}
+.process-step__num {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  line-height: 1;
+  color: var(--color-brand-red);
+  font-variant-numeric: tabular-nums;
+}
+.process-step__label {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+/* Closing line. Muted so the tagline directly below it still lands as the section's headline. */
+.custom-process__kicker {
+  width: min(100%, 44rem);
+  margin: var(--space-4) auto 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-lg);
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--color-muted);
+}
+
+/* Two-path fork */
+.custom-fork {
+  position: relative;
+  z-index: 1;
+  background: var(--color-canvas);
+  /* Top padding is --space-4, not --space-section: .custom-process now supplies the separation
+     from the reveal above. Bottom keeps the full section rhythm into the next chapter. */
+  padding: var(--space-4) var(--space-gutter) var(--space-section);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.custom-fork__tagline {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-4);
+}
+.custom-fork__paths {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: min(100%, 60rem);
+}
+.path-card {
+  display: block;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  transition:
+    transform var(--duration-normal) var(--ease-out-expo),
+    border-color var(--duration-normal) var(--ease-out-expo),
+    box-shadow var(--duration-normal) var(--ease-out-expo);
+}
+.path-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-brand-red);
+  box-shadow: 0 24px 50px -30px
+    color-mix(in oklch, var(--color-brand-red) 50%, transparent);
+}
+.path-card__tag {
+  font-size: var(--text-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-brand-red);
+}
+.path-card__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-lg);
+  margin: var(--space-1) 0;
+}
+.path-card__body {
+  color: var(--color-muted);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+.path-card__cta {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-brand-red);
+  transition: transform var(--duration-fast) var(--ease-out-expo);
+}
+.path-card:hover .path-card__cta {
+  transform: translateX(3px);
+}
+.custom-fork__form {
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+  max-width: 44ch;
+}
+
+/* Product-category tags — fills the run into "GET IN TOUCH" below. */
+.custom-fork__types {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  width: min(100%, 60rem);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.type-tag {
+  padding: 0.45rem 1.1rem;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-brand-red);
+  background: color-mix(
+    in oklch,
+    var(--color-brand-red) 6%,
+    var(--color-surface)
+  );
+  border: 1px solid
+    color-mix(in oklch, var(--color-brand-red) 32%, var(--color-line));
+  border-radius: 999px;
+}
+
+@media (max-width: 860px) {
+  .custom-reveal {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding-block: var(--space-section);
+  }
+  .custom-reveal__media {
+    order: -1;
+  }
+  .custom-fork__paths {
+    grid-template-columns: 1fr;
+  }
+  /* Four 240px cells don't survive a tablet measure — fold to 2×2. */
+  .custom-process__rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2) var(--space-3);
+  }
+}
+
+/* Narrow phones: "MANUFACTURE" at uppercase tracking needs more than a half-gutter column, so
+   the rail becomes a single stack of four ruled rows. */
+@media (max-width: 480px) {
+  .custom-process__rail {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   Engineering dossier — exploded specimen + annotation callouts
+   ============================================================ */
+.dossier {
+  grid-template-columns: 34% 1fr;
+  /* faint blueprint grid on the light "paper" */
+  background-color: var(--color-canvas);
+  background-image:
+    linear-gradient(oklch(0% 0 0 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0% 0 0 / 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dossier__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 40ch;
+}
+.dossier__eyebrow-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.dossier__size {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(3rem, 2rem + 6vw, 7rem);
+  line-height: 0.9;
+  color: var(--color-brand-red);
+}
+.dossier__title {
+  font-size: var(--text-xl);
+  margin-top: var(--space-1);
+}
+.dossier__hook {
+  margin-top: var(--space-2);
+  max-width: 42ch;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--color-muted);
+  border-left: 2px solid var(--color-brand-red);
+  padding-left: var(--space-2);
+}
+.dossier__tagline {
+  margin-top: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-lg);
+  color: var(--color-white);
+}
+.dossier__play {
+  margin-top: var(--space-3);
+  align-self: flex-start;
+  padding: 0.6rem 1.1rem;
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  color: var(--color-white);
+  background: transparent;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out-expo),
+    color var(--duration-fast) var(--ease-out-expo);
+}
+.dossier__play:hover {
+  border-color: var(--color-brand-red);
+  color: var(--color-brand-red);
+}
+
+/* Specimen: photo sits left within the right column; labels flank to its right. */
+.dossier__specimen {
+  position: relative;
+  height: 78vh;
+  /* --frame-box-aspect = FRAME_BOX_ASPECT, set per-panel in FrameDossierPanel. Identical box —
+     so identical rendered photo width and height — on all four cards. */
+  aspect-ratio: var(--frame-box-aspect);
+  justify-self: start;
+}
+/* Holds the specimen photo. Since scripts/pad-frame-specimens.mjs padded all four flat-lays to one
+   shared aspect, the photo now fills this plate edge to edge and the gradient is never actually
+   visible — it stays only as a backstop for a future frame added at an off-aspect ratio.
+   NOTE: do NOT reintroduce a blurred cover-fit <img> here (the pre-2026-07 approach). `filter:
+   blur()` promoted the specimen to a composited layer in WebKit/Safari, which swallowed the sibling
+   leader-line SVG's stroke-dashoffset repaints — callout lines rendered pre-drawn instead of
+   animating on scroll. A filter-free background keeps the SVG repainting correctly. */
+.dossier__plate {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(
+    135% 115% at 50% 42%,
+    oklch(29% 0.004 265),
+    oklch(19% 0.004 265)
+  );
+}
+.dossier__photo,
+.dossier__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.dossier__photo[data-hidden] {
+  opacity: 0;
+}
+
+/* Playing the clip: drop the portrait diagram framing for a landscape video frame that fills the
+   column, hide the exploded-diagram annotations (they don't map to the moving footage). */
+.dossier__specimen[data-video] {
+  aspect-ratio: 16 / 9;
+  height: auto;
+  width: 100%;
+  /* Never let the 16/9 video box exceed the pinned viewport on short/wide screens. */
+  max-height: 78vh;
+}
+.dossier__specimen[data-video] .dossier__video {
+  object-fit: cover;
+}
+.dossier__specimen[data-video] .dossier__lines,
+.dossier__specimen[data-video] .dossier__dot,
+.dossier__specimen[data-video] .dossier__labels {
+  display: none;
+}
+
+.dossier__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.dossier__line {
+  stroke: var(--color-brand-red);
+  stroke-width: 1.5;
+  stroke-dasharray: 1; /* pathLength=1 → offset 0..1 draws the line */
+  stroke-dashoffset: 0;
+}
+.dossier__dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--color-brand-red);
+  box-shadow: 0 0 0 4px
+    color-mix(in oklch, var(--color-brand-red) 25%, transparent);
+}
+
+.dossier__labels {
+  position: absolute;
+  inset: 0;
+  list-style: none;
+  pointer-events: none;
+}
+.dossier__label {
+  position: absolute;
+  /* Sits at the photo's right edge so its leader dash continues the SVG line with no gap. */
+  left: 100%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-base);
+  color: var(--color-white);
+}
+.dossier__label::before {
+  content: "";
+  display: inline-block;
+  width: 2.2rem;
+  height: 1.5px;
+  margin-right: 0.7rem;
+  vertical-align: middle;
+  background: var(--color-brand-red);
+}
+
+/* Reduced-motion / no-JS: lines drawn, labels visible (ScrollSection data-animated="false"). */
+.dossier[data-animated="false"] .dossier__line {
+  stroke-dashoffset: 0;
+}
+.dossier[data-animated="false"] .dossier__dot {
+  transform: none;
+}
+.dossier[data-animated="false"] .dossier__label {
+  opacity: 1;
+  transform: translateY(-50%);
+}
+
+@media (max-width: 860px) {
+  .dossier {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding-block: var(--space-section);
+  }
+  /* On small screens drop the leader-line diagram; show the photo + a plain label list. */
+  .dossier__specimen {
+    /* Flows to fit plate + stacked label list. The uniform ratio moves down to .dossier__plate,
+       so the photo box stays identical across all four cards while the labels stack below it
+       rather than overlapping the photo. */
+    aspect-ratio: auto;
+    height: auto;
+    /* Bounded by height as well, so the uniform box can't outgrow a short viewport. */
+    width: min(78vw, 360px, calc(62vh * var(--frame-box-aspect)));
+    justify-self: center;
+    order: -1;
+  }
+  /* Carries the uniform ratio (in place of the specimen) and keeps position:relative so the
+     absolutely-positioned photo still fills it. The gradient stays — narrower frames are still
+     letterboxed inside the shared box and need the side fill. */
+  .dossier__plate {
+    position: relative;
+    aspect-ratio: var(--frame-box-aspect);
+  }
+  .dossier__lines,
+  .dossier__dot {
+    display: none;
+  }
+  .dossier__labels {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin-top: var(--space-2);
+  }
+  .dossier__label {
+    position: static;
+    transform: none;
+    left: auto;
+    color: var(--color-muted);
+    font-size: var(--text-sm);
+  }
+}

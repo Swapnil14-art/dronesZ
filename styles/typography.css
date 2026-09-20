@@ -1,0 +1,3 @@
+/* Font faces are loaded via next/font in app/fonts.ts and exposed as --font-inter / --font-display.
+   The fluid type scale (--text-*) lives in tokens.css. This file is reserved for any
+   face-specific tuning (feature settings, optical sizing) added during the /design brief. */

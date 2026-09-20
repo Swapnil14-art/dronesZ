@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+.vscode
+*.log
+.DS_Store
+.env*
+drone-store-system/backend/target

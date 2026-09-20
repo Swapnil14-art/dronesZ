@@ -1,0 +1,377 @@
+/* ============================================================
+   DronesZ Unified Header Styles for Product Catalog & Store
+   ============================================================ */
+
+.dronesz-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 2rem;
+  background: rgba(13, 15, 18, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: background 320ms ease, border-color 320ms ease;
+}
+
+.dronesz-header__inner {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dronesz-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.35rem);
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 200ms ease;
+}
+
+.dronesz-brand:hover {
+  opacity: 0.9;
+}
+
+.dronesz-brand-mark {
+  height: 1.55em;
+  width: auto;
+  object-fit: contain;
+}
+
+.dronesz-wordmark {
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.dronesz-wordmark .accent {
+  color: #e52b31;
+  display: inline-block;
+  transform: translateY(0.8px);
+}
+
+.dronesz-nav__desktop {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dronesz-nav__link {
+  position: relative;
+  font-size: clamp(0.85rem, 0.8rem + 0.2vw, 0.95rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  padding: 0.35rem 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.dronesz-nav__link:hover,
+.dronesz-nav__link.active {
+  color: #ffffff;
+}
+
+/* Red underline animation */
+.dronesz-nav__link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 100%;
+  background: #e52b31;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dronesz-nav__link:hover::after,
+.dronesz-nav__link.active::after {
+  transform: scaleX(1);
+}
+
+.dronesz-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.dronesz-icon-btn {
+  position: relative;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 50%;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+
+.dronesz-icon-btn:hover {
+  color: #ffffff;
+}
+
+.dronesz-cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  background: #e52b31;
+  color: #ffffff;
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(229, 43, 49, 0.4);
+}
+
+.dronesz-mobile-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: #ffffff;
+}
+
+.dronesz-hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 22px;
+  height: 16px;
+}
+
+.dronesz-hamburger-line {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: #ffffff;
+  border-radius: 1px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.dronesz-hamburger.is-active .dronesz-hamburger-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.dronesz-hamburger.is-active .dronesz-hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+.dronesz-hamburger.is-active .dronesz-hamburger-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.dronesz-mobile-drawer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #0d0f12;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dronesz-mobile-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+.dronesz-mobile-link {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  display: inline-block;
+  padding: 0.4rem 0;
+  transition: color 0.2s ease;
+}
+
+.dronesz-mobile-link:hover,
+.dronesz-mobile-link.active {
+  color: #ffffff;
+  border-left: 3px solid #e52b31;
+  padding-left: 0.75rem;
+}
+
+/* Custom Navigation Dropdown in Store Header */
+.dronesz-custom-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.dronesz-custom-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 250px;
+  background: #14171d;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0;
+  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  animation: droneszDropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dronesz-custom-dropdown::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 0;
+  right: 0;
+  height: 10px;
+}
+
+@keyframes droneszDropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.dronesz-custom-frames-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  background: transparent;
+  border: none;
+  color: #f8fafc;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dronesz-custom-frames-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e52b31;
+}
+
+.dronesz-custom-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0.25rem 0;
+}
+
+.dronesz-custom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.9rem;
+  user-select: none;
+  cursor: default;
+}
+
+.dronesz-custom-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  cursor: default;
+}
+
+.dronesz-custom-talk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  padding: 0.2rem 0;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.02em;
+  color: #e52b31;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.dronesz-custom-talk-btn::after {
+  content: "→";
+  display: inline-block;
+  margin-left: 0.25rem;
+  font-size: 1.05em;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.dronesz-custom-talk-btn:hover {
+  opacity: 0.85;
+  color: #e52b31;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dronesz-custom-talk-btn:hover::after {
+  transform: translateX(3px);
+}
+
+@media (max-width: 768px) {
+  .dronesz-nav__desktop {
+    display: none;
+  }
+  .dronesz-mobile-toggle {
+    display: block;
+  }
+}

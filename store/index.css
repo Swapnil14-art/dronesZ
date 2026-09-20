@@ -1,0 +1,535 @@
+/* ============================================================
+   Drone Store System — Unified Light Theme & Design System
+   Matches Main Home Page Canvas, Typography, and Aesthetics
+   ============================================================ */
+
+:root {
+  /* Store Tokens — Aligned with Main Website Light Theme */
+  --color-primary: #e52b31;
+  --color-primary-hover: #dc2626;
+  --color-background: var(--color-canvas, #f8fafc);
+  --color-surface: #ffffff;
+  --color-surface-container: #f1f5f9;
+  --color-surface-container-low: #f8fafc;
+  --color-surface-container-lowest: #ffffff;
+  --color-inverse-surface: #0f172a;
+  
+  --color-on-surface: #0f172a;
+  --color-on-surface-variant: #475569;
+  --color-muted: #64748b;
+  --color-outline: rgba(15, 23, 42, 0.08);
+  
+  --color-tertiary: #059669;       /* Available / In Stock / Success */
+  --color-error: #dc2626;          /* Out of stock / Error / Danger */
+  --color-amber: #d97706;          /* Coming soon / Pending */
+  
+  --font-sans: var(--font-sans), 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-display), 'Space Grotesk', var(--font-sans);
+  --max-width: 1280px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* Blueprint Grid Background — Matched to Home Page Dossier Grid */
+.blueprint-bg {
+  background-color: var(--color-canvas, #f8fafc);
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px), 
+    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+}
+
+/* Material Symbols Icon helper */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Top Navigation Bar */
+.stitch-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-outline);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.stitch-nav-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Generic Stitch Card */
+.stitch-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: all 0.25s ease;
+}
+
+.stitch-card:hover {
+  box-shadow: 0 8px 24px -6px rgba(0,0,0,0.06);
+}
+
+/* Parent Series Card */
+.parent-series-card {
+  background: var(--color-surface);
+  border-top: 3px solid var(--color-primary);
+  border-left: 1px solid var(--color-outline);
+  border-right: 1px solid var(--color-outline);
+  border-bottom: 1px solid var(--color-outline);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  transition: all 0.25s ease;
+}
+
+.parent-series-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -8px rgba(229, 43, 49, 0.12);
+  border-top-color: var(--color-primary-hover);
+}
+
+/* Standalone Product Card */
+.stitch-product-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.stitch-product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -8px rgba(0,0,0,0.08);
+  border-color: rgba(229, 43, 49, 0.3);
+}
+
+.stitch-product-card:hover .product-img {
+  transform: scale(1.04);
+}
+
+.product-img {
+  transition: transform 0.4s ease;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Image Stage / Product Container */
+.image-void-stage {
+  height: 12rem;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Badges & Pills */
+.badge-parent {
+  background-color: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  display: inline-block;
+  border: 1px solid rgba(71, 85, 105, 0.15);
+}
+
+.badge-category {
+  background-color: #f8fafc;
+  color: var(--color-on-surface);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--color-outline);
+}
+
+.badge-tertiary {
+  background-color: #ecfdf5;
+  color: var(--color-tertiary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.badge-error {
+  background-color: #fef2f2;
+  color: var(--color-error);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.badge-amber {
+  background-color: #fffbeb;
+  color: var(--color-amber);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+/* Buttons */
+.btn-stitch-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.btn-stitch-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(229, 43, 49, 0.25);
+}
+
+.btn-stitch-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-stitch-ghost {
+  background-color: #ffffff;
+  color: var(--color-on-surface);
+  border: 1px solid var(--color-outline);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0.55rem 0.95rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.btn-stitch-ghost:hover {
+  background-color: #f8fafc;
+  color: var(--color-primary);
+  border-color: rgba(229, 43, 49, 0.3);
+}
+
+.btn-stitch-danger {
+  background-color: #dc2626;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-stitch-danger:hover {
+  background-color: #b91c1c;
+}
+
+.btn-stitch-secondary-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: opacity 0.2s ease;
+}
+
+.btn-stitch-secondary-link:hover {
+  opacity: 0.8;
+}
+
+/* Input Fields & Forms */
+.stitch-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.stitch-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-on-surface-variant);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.stitch-input, .stitch-select, .stitch-textarea {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  padding: 0.65rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 14px;
+  color: var(--color-on-surface);
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.stitch-input:focus, .stitch-select:focus, .stitch-textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(229, 43, 49, 0.12);
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+  touch-action: none;
+  overscroll-behavior: contain;
+}
+
+.modal-content {
+  background: var(--color-surface);
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-outline);
+  border-top: 4px solid var(--color-primary);
+  max-width: 600px;
+  width: 100%;
+  max-height: 85vh;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Admin Dashboard Layout */
+.stitch-admin-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-background);
+}
+
+.stitch-admin-sidebar {
+  width: 260px;
+  background-color: #0f172a;
+  color: #f8fafc;
+  padding: 1.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid #1e293b;
+  flex-shrink: 0;
+}
+
+.stitch-admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.4rem;
+}
+
+.stitch-admin-nav-item:hover, .stitch-admin-nav-item.active {
+  background-color: rgba(229, 43, 49, 0.15);
+  color: #ffffff;
+  border-left: 3px solid var(--color-primary);
+}
+
+.stitch-admin-main {
+  flex: 1;
+  padding: 2.5rem;
+  overflow-y: auto;
+}
+
+/* Tables */
+.stitch-table-wrapper {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.stitch-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.stitch-table th {
+  background: #f8fafc;
+  color: var(--color-on-surface-variant);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--color-outline);
+}
+
+.stitch-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-outline);
+  color: var(--color-on-surface);
+}
+
+.stitch-table tr:last-child td {
+  border-bottom: none;
+}
+
+.stitch-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Stat Cards */
+.stitch-stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-outline);
+  border-top: 3px solid var(--color-primary);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.stitch-stat-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--color-on-surface);
+  margin-top: 0.25rem;
+}
+
+.stitch-stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Dynamic Word Content Box Styling */
+.word-content-box ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.6rem 0 !important;
+}
+
+.word-content-box ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.6rem 0 !important;
+}
+
+.word-content-box li {
+  margin-bottom: 0.4rem !important;
+  display: list-item !important;
+}
+
+.word-content-box p {
+  margin-bottom: 0.65rem;
+}
+
+.word-content-box h2, .word-content-box h3 {
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 700;
+  color: var(--color-on-surface);
+}

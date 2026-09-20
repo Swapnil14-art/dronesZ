@@ -1,0 +1,103 @@
+.sound-toggle {
+  position: fixed;
+  bottom: clamp(1rem, 0.5rem + 2vw, 2rem);
+  right: clamp(1rem, 0.5rem + 2vw, 2rem);
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.9rem 0.5rem 0.8rem;
+  border-radius: 999px;
+  /* Own dark-glass surface so it stays legible over the dark hero AND the light sections. */
+  background: color-mix(in oklch, var(--color-void) 62%, transparent);
+  border: 1px solid color-mix(in oklch, var(--color-on-dark) 18%, transparent);
+  color: var(--color-on-dark);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition:
+    background var(--duration-fast) var(--ease-out-expo),
+    border-color var(--duration-fast) var(--ease-out-expo),
+    transform var(--duration-fast) var(--ease-out-expo);
+}
+.sound-toggle:hover {
+  background: color-mix(in oklch, var(--color-void) 78%, transparent);
+  border-color: color-mix(in oklch, var(--color-brand-red) 55%, transparent);
+}
+.sound-toggle:focus-visible {
+  outline: 2px solid var(--color-brand-red);
+  outline-offset: 3px;
+}
+.sound-toggle[data-playing] {
+  border-color: color-mix(in oklch, var(--color-brand-red) 70%, transparent);
+}
+
+/* Equalizer glyph — flat + dim when off, red + pulsing when playing. */
+.sound-toggle__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.sound-toggle__bars span {
+  width: 2.5px;
+  height: 25%;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0.55;
+  transition:
+    height var(--duration-normal) var(--ease-out-expo),
+    opacity var(--duration-normal) var(--ease-out-expo);
+}
+.sound-toggle[data-playing] .sound-toggle__bars span {
+  background: var(--color-brand-red);
+  opacity: 1;
+  animation: sound-eq 900ms var(--ease-out-expo) infinite alternate;
+}
+.sound-toggle[data-playing] .sound-toggle__bars span:nth-child(1) {
+  animation-delay: -200ms;
+}
+.sound-toggle[data-playing] .sound-toggle__bars span:nth-child(2) {
+  animation-delay: -450ms;
+}
+.sound-toggle[data-playing] .sound-toggle__bars span:nth-child(3) {
+  animation-delay: -80ms;
+}
+.sound-toggle[data-playing] .sound-toggle__bars span:nth-child(4) {
+  animation-delay: -600ms;
+}
+
+@keyframes sound-eq {
+  from {
+    height: 25%;
+  }
+  to {
+    height: 100%;
+  }
+}
+
+.sound-toggle__label {
+  line-height: 1;
+}
+
+/* Reduced motion: keep the state legible (red, taller bars) but stop the pulsing. */
+@media (prefers-reduced-motion: reduce) {
+  .sound-toggle[data-playing] .sound-toggle__bars span {
+    animation: none;
+    height: 65%;
+  }
+}
+
+/* Narrow phones: icon-only to save room next to content. */
+@media (max-width: 480px) {
+  .sound-toggle__label {
+    display: none;
+  }
+  .sound-toggle {
+    padding: 0.55rem;
+  }
+}

@@ -1,0 +1,140 @@
+/* Shared primitives — buttons, labels, fields. Bespoke per design-brief §7 (no template defaults). */
+
+/* ---- Button ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    transform var(--duration-fast) var(--ease-out-expo),
+    background-color var(--duration-fast) var(--ease-out-expo),
+    border-color var(--duration-fast) var(--ease-out-expo),
+    color var(--duration-fast) var(--ease-out-expo);
+}
+.btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.btn--primary {
+  background: var(--color-brand-red);
+  color: var(
+    --color-on-dark
+  ); /* always light on the red fill, theme-independent */
+}
+.btn--primary:hover {
+  background: var(--color-brand-red-hi);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-white);
+  border-color: var(--color-line);
+}
+.btn--ghost:hover {
+  border-color: var(--color-brand-red);
+  color: var(--color-brand-red-hi);
+}
+
+.btn--on-light.btn--ghost {
+  color: var(--color-breather-ink);
+  border-color: oklch(80% 0.01 268);
+}
+
+/* ---- SectionLabel: eyebrow + thin red rule ---- */
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.section-label::before {
+  content: "";
+  width: 2.25rem;
+  height: 1px;
+  background: var(--color-brand-red);
+}
+.section-label--on-light {
+  color: oklch(45% 0.01 268);
+}
+
+/* ---- FormField ---- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.field__label {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+.field__control {
+  background: var(--color-canvas-deep);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.9rem;
+  color: var(--color-white);
+  font-size: var(--text-base);
+  transition: border-color var(--duration-fast) var(--ease-out-expo);
+}
+.field__control::placeholder {
+  color: var(--color-faint);
+}
+.field__control:focus {
+  outline: none;
+  border-color: var(--color-brand-red-hi);
+}
+/* Keyboard focus keeps a visible ring — the border-color change alone isn't a
+   sufficient indicator, and this overrides the outline:none above for a11y. */
+.field__control:focus-visible {
+  outline: 2px solid var(--color-brand-red-hi);
+  outline-offset: 1px;
+}
+.field__control[aria-invalid="true"] {
+  border-color: var(--color-brand-red);
+}
+.field__error {
+  font-size: var(--text-sm);
+  color: var(--color-brand-red-hi);
+}
+
+/* ---- AnimatedText (reveal-on-enter, compositor props only) ---- */
+.anim-text {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.6s var(--ease-out-expo),
+    transform 0.6s var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+.anim-text[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-text {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+/* No-JS: the IntersectionObserver never runs, so never leave content hidden. */
+@media (scripting: none) {
+  .anim-text {
+    opacity: 1;
+    transform: none;
+  }
+}
