@@ -236,12 +236,17 @@ export interface OrderDto {
 }
 
 const getApiBaseUrl = (): string => {
-  // 1. Explicit environment variable override
+  // 1. Explicit environment variable override (configured in Vercel / .env)
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
     return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/+$/, '');
   }
 
-  // 2. Browser runtime environment detection
+  // 2. Server-Side Rendering (SSR) runtime internal URL
+  if (process.env.BACKEND_INTERNAL_URL) {
+    return process.env.BACKEND_INTERNAL_URL.replace(/\/+$/, '');
+  }
+
+  // 3. Browser runtime localhost detection for local development
   if (typeof window !== 'undefined') {
     const isLocalhost =
       window.location.hostname === 'localhost' ||
@@ -252,16 +257,11 @@ const getApiBaseUrl = (): string => {
       return 'http://localhost:8070';
     }
 
-    return 'https://dronesz.onrender.com';
-  }
-
-  // 3. Server-Side Rendering (SSR) runtime
-  if (process.env.BACKEND_INTERNAL_URL) {
-    return process.env.BACKEND_INTERNAL_URL.replace(/\/+$/, '');
+    return '';
   }
 
   const isDev = process.env.NODE_ENV !== 'production';
-  return isDev ? 'http://localhost:8070' : 'https://dronesz.onrender.com';
+  return isDev ? 'http://localhost:8070' : '';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

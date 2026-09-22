@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
+const apiOrigin = process.env.NEXT_PUBLIC_API_BASE_URL
+  ? process.env.NEXT_PUBLIC_API_BASE_URL.trim().replace(/\/+$/, "")
+  : "";
 
 /**
  * Content-Security-Policy for a static marketing site. Notes on the non-obvious choices:
@@ -19,10 +22,10 @@ const csp = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' data: blob: http://localhost:8070 http://127.0.0.1:8070 https://dronesz.onrender.com`,
+  `img-src 'self' data: blob: http://localhost:8070 http://127.0.0.1:8070 ${apiOrigin}`.trim(),
   `font-src 'self'`,
   `media-src 'self'`,
-  `connect-src 'self' http://localhost:8070 http://127.0.0.1:8070 https://dronesz.onrender.com https://*.public.blob.vercel-storage.com https://blob.vercel-storage.com`,
+  `connect-src 'self' http://localhost:8070 http://127.0.0.1:8070 ${apiOrigin} https://*.public.blob.vercel-storage.com https://blob.vercel-storage.com`.trim(),
   `worker-src 'self' blob:`,
   `object-src 'none'`,
   `base-uri 'self'`,
@@ -65,7 +68,11 @@ const nextConfig: NextConfig = {
     const backendUrl =
       process.env.BACKEND_INTERNAL_URL ||
       process.env.NEXT_PUBLIC_API_BASE_URL ||
-      (isDev ? "http://127.0.0.1:8070" : "https://dronesz.onrender.com");
+      (isDev ? "http://127.0.0.1:8070" : "");
+
+    if (!backendUrl) {
+      return [];
+    }
 
     return [
       {
