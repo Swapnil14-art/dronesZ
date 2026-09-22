@@ -108,6 +108,7 @@ export interface ProductDto {
   grade?: string;
   taxInclusive?: boolean;
   taxNote?: string;
+  isAddToCartEnabled?: boolean;
   contentSections?: ProductContentSectionDto[];
   createdAt?: string;
   updatedAt?: string;
@@ -128,6 +129,7 @@ export interface ProductRequest {
   grade?: string;
   taxInclusive?: boolean;
   taxNote?: string;
+  isAddToCartEnabled?: boolean;
   contentSections?: ProductContentSectionRequest[];
 }
 
@@ -861,6 +863,43 @@ export async function restoreProduct(token: string, id: number): Promise<Product
   }
 
   return response.json();
+}
+
+export async function toggleAddToCartSingle(token: string, id: number, enabled?: boolean): Promise<ProductDto> {
+  const query = enabled !== undefined ? `?enabled=${enabled}` : '';
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/${id}/add-to-cart-toggle${query}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to toggle Add to Cart', timestamp: '' }));
+    throw new Error(err.message || 'Failed to toggle Add to Cart');
+  }
+
+  return response.json();
+}
+
+export async function toggleAddToCartBulk(
+  token: string,
+  params: { productIds?: number[]; enabled: boolean; allProducts?: boolean }
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/products/bulk/add-to-cart-toggle`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to update Add to Cart in bulk', timestamp: '' }));
+    throw new Error(err.message || 'Failed to update Add to Cart in bulk');
+  }
 }
 
 export async function fetchProductImages(productId: number, token?: string): Promise<ProductImageDto[]> {

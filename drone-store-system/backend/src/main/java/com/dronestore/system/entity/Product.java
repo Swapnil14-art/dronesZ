@@ -60,6 +60,9 @@ public class Product {
     @Column(name = "tax_note", length = 150)
     private String taxNote = "GST & Taxes Included";
 
+    @Column(name = "is_add_to_cart_enabled", nullable = false)
+    private Boolean isAddToCartEnabled = true;
+
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("displayOrder ASC")
     private List<ProductContentSection> contentSections = new ArrayList<>();
@@ -84,6 +87,9 @@ public class Product {
         if (this.taxInclusive == null) {
             this.taxInclusive = true;
         }
+        if (this.isAddToCartEnabled == null) {
+            this.isAddToCartEnabled = true;
+        }
         if (this.dispatchTime == null) {
             this.dispatchTime = "24-48 Hours";
         }
@@ -106,6 +112,9 @@ public class Product {
         }
         if (this.taxInclusive == null) {
             this.taxInclusive = true;
+        }
+        if (this.isAddToCartEnabled == null) {
+            this.isAddToCartEnabled = true;
         }
         if (this.dispatchTime == null) {
             this.dispatchTime = "24-48 Hours";
@@ -239,6 +248,14 @@ public class Product {
 
     public void setTaxNote(String taxNote) {
         this.taxNote = taxNote;
+    }
+
+    public Boolean getIsAddToCartEnabled() {
+        return isAddToCartEnabled;
+    }
+
+    public void setIsAddToCartEnabled(Boolean isAddToCartEnabled) {
+        this.isAddToCartEnabled = isAddToCartEnabled;
     }
 
     public List<ProductContentSection> getContentSections() {

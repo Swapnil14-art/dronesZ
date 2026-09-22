@@ -449,6 +449,11 @@ export const PublicStore: React.FC = () => {
 
   const handleAddToCart = async (product: ProductDto, quantity: number = 1) => {
     setCartFeedbackMsg(null);
+    if (product.isAddToCartEnabled === false) {
+      alert(`Adding to cart is currently disabled for "${product.name}".`);
+      return;
+    }
+
     const effStatus = getEffectiveProductStatus(product);
     const availableStock = product.quantity !== undefined && product.quantity !== null ? product.quantity : 0;
 
@@ -713,8 +718,10 @@ export const PublicStore: React.FC = () => {
                   const cartItem = cart?.items?.find((i) => i.productId === activeProductDetail.id);
                   const currentInCart = cartItem ? cartItem.quantity : 0;
                   const remainingStock = Math.max(0, availableStock - currentInCart);
+                  const isCartDisabled = activeProductDetail.isAddToCartEnabled === false;
                   const isOutOfStock = effectiveStatus !== 'AVAILABLE' || availableStock <= 0;
                   const isMaxInCart = remainingStock <= 0 && currentInCart > 0;
+                  const canPurchase = !isCartDisabled && !isOutOfStock && !isMaxInCart && remainingStock > 0;
 
                   const multiplier = selectedPackage === 'quad' ? 4 : 1;
                   const singleUnitPrice = activeProductDetail.price;
@@ -797,21 +804,21 @@ export const PublicStore: React.FC = () => {
                           display: 'inline-flex',
                           alignItems: 'center',
                           border: '1px solid #000000ff',
-                          background: isOutOfStock || isMaxInCart ? '#f1f5f9' : '#ffffff',
+                          background: !canPurchase ? '#f1f5f9' : '#ffffff',
                           height: '44px',
                           overflow: 'hidden',
-                          opacity: isOutOfStock || isMaxInCart ? 0.6 : 1
+                          opacity: !canPurchase ? 0.6 : 1
                         }}>
                           <button
                             type="button"
-                            disabled={isOutOfStock || isMaxInCart || selectedQuantity <= 1}
+                            disabled={!canPurchase || selectedQuantity <= 1}
                             onClick={() => setSelectedQuantity(Math.max(1, selectedQuantity - 1))}
                             style={{
                               width: '38px',
                               height: '100%',
                               border: 'none',
                               background: 'none',
-                              cursor: (isOutOfStock || isMaxInCart || selectedQuantity <= 1) ? 'not-allowed' : 'pointer',
+                              cursor: (!canPurchase || selectedQuantity <= 1) ? 'not-allowed' : 'pointer',
                               fontWeight: 600,
                               fontSize: '1.1rem',
                               color: '#64748b',
@@ -820,7 +827,7 @@ export const PublicStore: React.FC = () => {
                               justifyContent: 'center',
                               transition: 'color 0.15s ease'
                             }}
-                            onMouseEnter={(e) => { if (selectedQuantity > 1) e.currentTarget.style.color = '#0f172a'; }}
+                            onMouseEnter={(e) => { if (canPurchase && selectedQuantity > 1) e.currentTarget.style.color = '#0f172a'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; }}
                           >
                             −
@@ -835,18 +842,18 @@ export const PublicStore: React.FC = () => {
                               userSelect: 'none'
                             }}
                           >
-                            {isOutOfStock ? 0 : selectedQuantity}
+                            {!canPurchase && isOutOfStock ? 0 : selectedQuantity}
                           </span>
                           <button
                             type="button"
-                            disabled={isOutOfStock || isMaxInCart || (selectedQuantity + 1) * multiplier > remainingStock}
+                            disabled={!canPurchase || (selectedQuantity + 1) * multiplier > remainingStock}
                             onClick={() => setSelectedQuantity(selectedQuantity + 1)}
                             style={{
                               width: '38px',
                               height: '100%',
                               border: 'none',
                               background: 'none',
-                              cursor: (isOutOfStock || isMaxInCart || (selectedQuantity + 1) * multiplier > remainingStock) ? 'not-allowed' : 'pointer',
+                              cursor: (!canPurchase || (selectedQuantity + 1) * multiplier > remainingStock) ? 'not-allowed' : 'pointer',
                               fontWeight: 600,
                               fontSize: '1.1rem',
                               color: '#64748b',
@@ -855,7 +862,7 @@ export const PublicStore: React.FC = () => {
                               justifyContent: 'center',
                               transition: 'color 0.15s ease'
                             }}
-                            onMouseEnter={(e) => { e.currentTarget.style.color = '#0f172a'; }}
+                            onMouseEnter={(e) => { if (canPurchase) e.currentTarget.style.color = '#0f172a'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; }}
                           >
                             +
@@ -865,7 +872,7 @@ export const PublicStore: React.FC = () => {
                         {/* Add to Cart Button */}
                         <button
                           type="button"
-                          disabled={isOutOfStock || isMaxInCart || remainingStock <= 0 || addingToCartId === activeProductDetail.id}
+                          disabled={!canPurchase || addingToCartId === activeProductDetail.id}
                           onClick={() => handleAddToCart(activeProductDetail, selectedQuantity * multiplier)}
                           style={{
                             flex: '1 1 170px',
@@ -879,14 +886,14 @@ export const PublicStore: React.FC = () => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '0.5rem',
-                            cursor: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 'not-allowed' : 'pointer',
-                            opacity: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 0.6 : 1,
+                            cursor: !canPurchase ? 'not-allowed' : 'pointer',
+                            opacity: !canPurchase ? 0.6 : 1,
                             padding: '0 1.25rem',
                             boxShadow: '0 1px 2px rgba(220, 38, 38, 0.2)',
                             transition: 'all 0.15s ease',
                           }}
                           onMouseEnter={(e) => {
-                            if (!isOutOfStock && !isMaxInCart && remainingStock > 0) {
+                            if (canPurchase) {
                               e.currentTarget.style.background = '#b91c1c';
                             }
                           }}
@@ -907,7 +914,7 @@ export const PublicStore: React.FC = () => {
                         {/* Buy Now Button */}
                         <button
                           type="button"
-                          disabled={isOutOfStock || isMaxInCart || remainingStock <= 0}
+                          disabled={!canPurchase}
                           onClick={async () => {
                             await handleAddToCart(activeProductDetail, selectedQuantity * multiplier);
                             navigateTo('/checkout');
@@ -923,13 +930,13 @@ export const PublicStore: React.FC = () => {
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            cursor: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 'not-allowed' : 'pointer',
-                            opacity: (isOutOfStock || isMaxInCart || remainingStock <= 0) ? 0.6 : 1,
+                            cursor: !canPurchase ? 'not-allowed' : 'pointer',
+                            opacity: !canPurchase ? 0.6 : 1,
                             padding: '0 1.25rem',
                             transition: 'all 0.15s ease',
                           }}
                           onMouseEnter={(e) => {
-                            if (!isOutOfStock && !isMaxInCart && remainingStock > 0) {
+                            if (canPurchase) {
                               e.currentTarget.style.background = '#f8fafc';
                               e.currentTarget.style.borderColor = '#94a3b8';
                             }
@@ -1113,8 +1120,10 @@ export const PublicStore: React.FC = () => {
                         const childCartItem = cart?.items?.find((i) => i.productId === child.id);
                         const childInCart = childCartItem ? childCartItem.quantity : 0;
                         const childRemaining = Math.max(0, childStock - childInCart);
+                        const isChildCartDisabled = child.isAddToCartEnabled === false;
                         const isChildOutOfStock = childEffectiveStatus !== 'AVAILABLE' || childStock <= 0;
                         const isChildMaxInCart = childRemaining <= 0 && childInCart > 0;
+                        const canChildPurchase = !isChildCartDisabled && !isChildOutOfStock && !isChildMaxInCart;
 
                         return (
                           <>
@@ -1138,7 +1147,7 @@ export const PublicStore: React.FC = () => {
 
                             <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                               <button
-                                disabled={isChildOutOfStock || isChildMaxInCart || addingToCartId === child.id}
+                                disabled={!canChildPurchase || addingToCartId === child.id}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleAddToCart(child);
@@ -1150,8 +1159,8 @@ export const PublicStore: React.FC = () => {
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   gap: '0.4rem',
-                                  opacity: (isChildOutOfStock || isChildMaxInCart) ? 0.6 : 1,
-                                  cursor: (isChildOutOfStock || isChildMaxInCart) ? 'not-allowed' : 'pointer'
+                                  opacity: canChildPurchase ? 1 : 0.6,
+                                  cursor: canChildPurchase ? 'pointer' : 'not-allowed'
                                 }}
                               >
                                 <CartIcon size={18} />

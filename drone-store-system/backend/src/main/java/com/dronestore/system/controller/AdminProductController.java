@@ -147,6 +147,20 @@ public class AdminProductController {
         return ResponseEntity.ok(restored);
     }
 
+    @PatchMapping("/{id}/add-to-cart-toggle")
+    public ResponseEntity<ProductDto> toggleAddToCartSingle(
+            @PathVariable("id") Long id,
+            @RequestParam(name = "enabled", required = false) Boolean enabled) {
+        ProductDto updated = productService.toggleAddToCartSingle(id, enabled);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/bulk/add-to-cart-toggle")
+    public ResponseEntity<Void> toggleAddToCartBulk(@Valid @RequestBody com.dronestore.system.dto.BulkAddToCartToggleRequest request) {
+        productService.toggleAddToCartBulk(request);
+        return ResponseEntity.noContent().build();
+    }
+
     // ================= Dynamic Content Sections Endpoints =================
 
     @GetMapping("/{id}/content-sections")

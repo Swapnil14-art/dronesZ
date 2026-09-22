@@ -25,7 +25,9 @@ import {
   deleteProductImage,
   getProductImageUrl,
   fetchProductContentSections,
-  getEffectiveProductStatus
+  getEffectiveProductStatus,
+  toggleAddToCartSingle,
+  toggleAddToCartBulk
 } from '../services/api';
 import { RichTextEditor } from './RichTextEditor';
 import { TableEditor } from './TableEditor';
@@ -95,6 +97,12 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [formGrade, setFormGrade] = useState<string>('Aero Precision');
   const [formTaxInclusive, setFormTaxInclusive] = useState<boolean>(true);
   const [formTaxNote, setFormTaxNote] = useState<string>('GST & Taxes Included');
+  const [formIsAddToCartEnabled, setFormIsAddToCartEnabled] = useState<boolean>(true);
+
+  // Selection & Bulk Actions State
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
+  const [togglingCartId, setTogglingCartId] = useState<number | null>(null);
+  const [bulkLoading, setBulkLoading] = useState<boolean>(false);
 
   // Dynamic Content Boxes State
   const [formContentSections, setFormContentSections] = useState<ProductContentSectionRequest[]>([]);
@@ -388,6 +396,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormGrade('Aero Precision');
     setFormTaxInclusive(true);
     setFormTaxNote('GST & Taxes Included');
+    setFormIsAddToCartEnabled(true);
     setFormContentSections([]);
     setShowAddBoxMenu(false);
     setFormImages([]);
@@ -413,6 +422,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormGrade(product.grade || 'Aero Precision');
     setFormTaxInclusive(product.taxInclusive !== undefined ? product.taxInclusive : true);
     setFormTaxNote(product.taxNote || 'GST & Taxes Included');
+    setFormIsAddToCartEnabled(product.isAddToCartEnabled !== false);
     setDeletedImageIds([]);
 
     // Populate images directly from backend API
@@ -654,6 +664,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       grade: formGrade.trim() || 'Aero Precision',
       taxInclusive: formTaxInclusive,
       taxNote: formTaxNote.trim() || 'GST & Taxes Included',
+      isAddToCartEnabled: formIsAddToCartEnabled,
       contentSections: formContentSections.map((s, idx) => ({
         id: s.id,
         title: s.title.trim() || (s.type === 'WORD' ? 'Content Section' : 'Specification Matrix'),
@@ -798,6 +809,78 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     }
   };
 
+  const handleToggleAddToCart = async (productId: number, currentEnabled: boolean) => {
+    try {
+      setTogglingCartId(productId);
+      const updated = await toggleAddToCartSingle(token, productId, !currentEnabled);
+      setProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, isAddToCartEnabled: updated.isAddToCartEnabled } : p))
+      );
+      setSuccessMsg(`Add to Cart ${!currentEnabled ? 'enabled' : 'disabled'} for product #${productId}!`);
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to toggle Add to Cart status');
+      setTimeout(() => setError(null), 4000);
+    } finally {
+      setTogglingCartId(null);
+    }
+  };
+
+  const handleBulkToggleAddToCart = async (enabled: boolean) => {
+    if (selectedProductIds.length === 0) return;
+    try {
+      setBulkLoading(true);
+      await toggleAddToCartBulk(token, { productIds: selectedProductIds, enabled });
+      setProducts((prev) =>
+        prev.map((p) => (selectedProductIds.includes(p.id) ? { ...p, isAddToCartEnabled: enabled } : p))
+      );
+      setSuccessMsg(`Add to Cart ${enabled ? 'enabled' : 'disabled'} for ${selectedProductIds.length} selected product(s)!`);
+      setSelectedProductIds([]);
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update selected products');
+      setTimeout(() => setError(null), 4000);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleToggleAllAddToCart = async (enabled: boolean) => {
+    const confirmMsg = `Are you sure you want to ${enabled ? 'ENABLE' : 'DISABLE'} Add to Cart for ALL applicable products in the catalog?`;
+    if (!window.confirm(confirmMsg)) return;
+
+    try {
+      setBulkLoading(true);
+      await toggleAddToCartBulk(token, { enabled, allProducts: true });
+      setProducts((prev) => prev.map((p) => ({ ...p, isAddToCartEnabled: enabled })));
+      setSuccessMsg(`Add to Cart ${enabled ? 'enabled' : 'disabled'} for ALL products!`);
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update all products');
+      setTimeout(() => setError(null), 4000);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const pageIds = products.map((p) => p.id);
+      setSelectedProductIds(Array.from(new Set([...selectedProductIds, ...pageIds])));
+    } else {
+      const pageIds = new Set(products.map((p) => p.id));
+      setSelectedProductIds(selectedProductIds.filter((id) => !pageIds.has(id)));
+    }
+  };
+
+  const handleSelectRow = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedProductIds((prev) => [...prev, id]);
+    } else {
+      setSelectedProductIds((prev) => prev.filter((item) => item !== id));
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
       {/* Header Bar */}
@@ -902,6 +985,92 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         </label>
       </div>
 
+      {/* Bulk Cart Action Bar */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        background: '#f8fafc',
+        border: '1px solid var(--color-outline)',
+        borderRadius: '0.5rem',
+        padding: '0.75rem 1.25rem',
+        marginBottom: '1rem',
+        flexWrap: 'wrap',
+        gap: '0.75rem'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-on-surface)' }}>
+            Bulk Cart Controls:
+          </span>
+          {selectedProductIds.length > 0 && (
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              background: 'var(--color-primary)',
+              color: '#fff',
+              padding: '2px 8px',
+              borderRadius: '4px'
+            }}>
+              {selectedProductIds.length} Selected
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {selectedProductIds.length > 0 && (
+            <>
+              <button
+                type="button"
+                disabled={bulkLoading}
+                onClick={() => handleBulkToggleAddToCart(true)}
+                className="btn-stitch-primary"
+                style={{ padding: '0.4rem 0.85rem', fontSize: '12px', background: '#059669', borderColor: '#059669' }}
+              >
+                ✓ Enable Cart ({selectedProductIds.length})
+              </button>
+              <button
+                type="button"
+                disabled={bulkLoading}
+                onClick={() => handleBulkToggleAddToCart(false)}
+                className="btn-stitch-danger"
+                style={{ padding: '0.4rem 0.85rem', fontSize: '12px' }}
+              >
+                ✕ Disable Cart ({selectedProductIds.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedProductIds([])}
+                className="btn-stitch-ghost"
+                style={{ padding: '0.4rem 0.75rem', fontSize: '12px' }}
+              >
+                Clear Selection
+              </button>
+            </>
+          )}
+
+          <button
+            type="button"
+            disabled={bulkLoading}
+            onClick={() => handleToggleAllAddToCart(true)}
+            className="btn-stitch-ghost"
+            style={{ padding: '0.4rem 0.85rem', fontSize: '12px', border: '1px solid #10b981', color: '#065f46' }}
+            title="Enable Add to Cart for all active products in catalog"
+          >
+            Enable All Products
+          </button>
+          <button
+            type="button"
+            disabled={bulkLoading}
+            onClick={() => handleToggleAllAddToCart(false)}
+            className="btn-stitch-ghost"
+            style={{ padding: '0.4rem 0.85rem', fontSize: '12px', border: '1px solid #f87171', color: '#991b1b' }}
+            title="Disable Add to Cart for all active products in catalog"
+          >
+            Disable All Products
+          </button>
+        </div>
+      </div>
+
       {/* Products Table */}
       {loading ? (
         <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
@@ -917,19 +1086,37 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
             <table className="stitch-table">
               <thead>
                 <tr>
-                  <th style={{ width: '60px' }}>ID</th>
+                  <th style={{ width: '40px', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={products.length > 0 && products.every((p) => selectedProductIds.includes(p.id))}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                      title="Select all on current page"
+                    />
+                  </th>
+                  <th style={{ width: '50px' }}>ID</th>
                   <th style={{ width: '64px' }}>Image</th>
                   <th>Product Details</th>
                   <th>Type &amp; Hierarchy</th>
                   <th>Category</th>
                   <th>Price &amp; Stock</th>
                   <th>Status</th>
+                  <th style={{ textAlign: 'center', width: '130px' }}>Add to Cart</th>
                   <th style={{ textAlign: 'right', width: '160px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((p) => (
                   <tr key={p.id}>
+                    <td style={{ textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedProductIds.includes(p.id)}
+                        onChange={(e) => handleSelectRow(p.id, e.target.checked)}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                      />
+                    </td>
                     <td style={{ color: 'var(--color-muted)', fontWeight: 600 }}>#{p.id}</td>
                     <td>
                       <div style={{ width: '48px', height: '48px', borderRadius: '6px', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--color-outline)' }}>
@@ -991,6 +1178,30 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                           </span>
                         );
                       })()}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        disabled={p.status === 'ARCHIVED' || togglingCartId === p.id}
+                        onClick={() => handleToggleAddToCart(p.id, p.isAddToCartEnabled !== false)}
+                        title={p.isAddToCartEnabled !== false ? "Click to Disable Add to Cart" : "Click to Enable Add to Cart"}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          padding: '0.25rem 0.6rem',
+                          borderRadius: '9999px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          cursor: p.status === 'ARCHIVED' ? 'not-allowed' : 'pointer',
+                          border: p.isAddToCartEnabled !== false ? '1px solid #10b981' : '1px solid #f87171',
+                          background: p.isAddToCartEnabled !== false ? '#ecfdf5' : '#fef2f2',
+                          color: p.isAddToCartEnabled !== false ? '#065f46' : '#991b1b',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <span>{p.isAddToCartEnabled !== false ? '✓ Enabled' : '✕ Disabled'}</span>
+                      </button>
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -1359,6 +1570,29 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                             <option value="COMING_SOON">COMING SOON</option>
                           </select>
                         </div>
+                      </div>
+
+                      {/* Storefront Add-to-Cart Toggle */}
+                      <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>
+                            Enable Add to Cart Button on Storefront
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                            When disabled, customers can view specs and pricing, but the Add to Cart button remains disabled.
+                          </div>
+                        </div>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+                          <input
+                            type="checkbox"
+                            checked={formIsAddToCartEnabled}
+                            onChange={(e) => setFormIsAddToCartEnabled(e.target.checked)}
+                            style={{ width: '20px', height: '20px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
+                          />
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: formIsAddToCartEnabled ? '#059669' : '#dc2626' }}>
+                            {formIsAddToCartEnabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </label>
                       </div>
                     </div>
 

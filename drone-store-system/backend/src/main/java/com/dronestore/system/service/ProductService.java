@@ -292,6 +292,7 @@ public class ProductService {
         product.setGrade(request.getGrade() != null && !request.getGrade().trim().isEmpty() ? request.getGrade().trim() : "Aero Precision");
         product.setTaxInclusive(request.getTaxInclusive() != null ? request.getTaxInclusive() : true);
         product.setTaxNote(request.getTaxNote() != null && !request.getTaxNote().trim().isEmpty() ? request.getTaxNote().trim() : "GST & Taxes Included");
+        product.setIsAddToCartEnabled(request.getIsAddToCartEnabled() != null ? request.getIsAddToCartEnabled() : true);
 
         Product saved = productRepository.save(product);
 
@@ -362,6 +363,9 @@ public class ProductService {
         product.setGrade(request.getGrade() != null && !request.getGrade().trim().isEmpty() ? request.getGrade().trim() : "Aero Precision");
         product.setTaxInclusive(request.getTaxInclusive() != null ? request.getTaxInclusive() : true);
         product.setTaxNote(request.getTaxNote() != null && !request.getTaxNote().trim().isEmpty() ? request.getTaxNote().trim() : "GST & Taxes Included");
+        if (request.getIsAddToCartEnabled() != null) {
+            product.setIsAddToCartEnabled(request.getIsAddToCartEnabled());
+        }
 
         // Sync content sections if provided in request
         if (request.getContentSections() != null) {
@@ -447,6 +451,53 @@ public class ProductService {
         Long parentId = product.getParent() != null ? product.getParent().getId() : null;
         cacheEvictionService.evictProductComplete(id, parentId);
         return mapToDto(saved, false);
+    }
+
+    @Transactional
+    public ProductDto toggleAddToCartSingle(Long id, Boolean enabled) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product with ID " + id + " not found"));
+        boolean newState = enabled != null ? enabled : !Boolean.TRUE.equals(product.getIsAddToCartEnabled());
+        product.setIsAddToCartEnabled(newState);
+        Product saved = productRepository.save(product);
+        Long parentId = saved.getParent() != null ? saved.getParent().getId() : null;
+        cacheEvictionService.evictProductComplete(saved.getId(), parentId);
+        return mapToDto(saved, false);
+    }
+
+    @Transactional
+    public void toggleAddToCartBulk(com.dronestore.system.dto.BulkAddToCartToggleRequest request) {
+        if (request == null || request.getEnabled() == null) {
+            throw new BadRequestException("Enabled state is required for bulk toggle.");
+        }
+        boolean enabled = request.getEnabled();
+        if (Boolean.TRUE.equals(request.getAllProducts())) {
+            List<Product> allProducts = productRepository.findAll();
+            for (Product product : allProducts) {
+                if (product.getStatus() != ProductStatus.ARCHIVED) {
+                    product.setIsAddToCartEnabled(enabled);
+                }
+            }
+            productRepository.saveAll(allProducts);
+            cacheEvictionService.evictProductCatalog();
+            for (Product p : allProducts) {
+                cacheEvictionService.evictProductDetail(p.getId());
+                if (p.getParent() != null) {
+                    cacheEvictionService.evictProductChildren(p.getParent().getId());
+                }
+            }
+        } else if (request.getProductIds() != null && !request.getProductIds().isEmpty()) {
+            List<Product> targets = productRepository.findAllById(request.getProductIds());
+            for (Product product : targets) {
+                product.setIsAddToCartEnabled(enabled);
+            }
+            productRepository.saveAll(targets);
+            cacheEvictionService.evictProductCatalog();
+            for (Product product : targets) {
+                Long parentId = product.getParent() != null ? product.getParent().getId() : null;
+                cacheEvictionService.evictProductComplete(product.getId(), parentId);
+            }
+        }
     }
 
     // ----------------- Content Sections CRUD & Reordering -----------------
@@ -668,6 +719,7 @@ public class ProductService {
         dto.setGrade(product.getGrade() != null ? product.getGrade() : "Aero Precision");
         dto.setTaxInclusive(product.getTaxInclusive() != null ? product.getTaxInclusive() : true);
         dto.setTaxNote(product.getTaxNote() != null ? product.getTaxNote() : "GST & Taxes Included");
+        dto.setIsAddToCartEnabled(product.getIsAddToCartEnabled() != null ? product.getIsAddToCartEnabled() : true);
 
         dto.setImages(imageDtos != null ? imageDtos : Collections.emptyList());
 

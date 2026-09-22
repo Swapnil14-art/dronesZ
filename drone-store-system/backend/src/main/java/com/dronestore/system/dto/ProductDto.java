@@ -26,6 +26,7 @@ public class ProductDto {
     private String grade;
     private Boolean taxInclusive;
     private String taxNote;
+    private Boolean isAddToCartEnabled = true;
     private List<ProductContentSectionDto> contentSections = new ArrayList<>();
     private List<ProductImageDto> images = new ArrayList<>();
     private ProductImageDto primaryImage;
@@ -161,6 +162,14 @@ public class ProductDto {
 
     public void setTaxNote(String taxNote) {
         this.taxNote = taxNote;
+    }
+
+    public Boolean getIsAddToCartEnabled() {
+        return isAddToCartEnabled;
+    }
+
+    public void setIsAddToCartEnabled(Boolean isAddToCartEnabled) {
+        this.isAddToCartEnabled = isAddToCartEnabled;
     }
 
     public List<ProductContentSectionDto> getContentSections() {

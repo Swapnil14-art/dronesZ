@@ -104,6 +104,11 @@ public class CartService {
             throw new BusinessRuleException("Cannot add product series header directly to cart. Please select a specific model variant.");
         }
 
+        // Rule 1b: Admin Add-to-Cart toggle enforcement
+        if (Boolean.FALSE.equals(product.getIsAddToCartEnabled())) {
+            throw new BusinessRuleException("Adding to cart is currently disabled for product '" + product.getName() + "'.");
+        }
+
         int availableStock = product.getQuantity() != null ? product.getQuantity() : 0;
 
         // Rule 2: Check availability status and stock

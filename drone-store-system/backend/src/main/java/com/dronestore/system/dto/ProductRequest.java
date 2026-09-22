@@ -44,6 +44,8 @@ public class ProductRequest {
 
     private String taxNote;
 
+    private Boolean isAddToCartEnabled;
+
     @Valid
     private List<ProductContentSectionRequest> contentSections;
 
@@ -160,6 +162,14 @@ public class ProductRequest {
 
     public void setTaxNote(String taxNote) {
         this.taxNote = taxNote;
+    }
+
+    public Boolean getIsAddToCartEnabled() {
+        return isAddToCartEnabled;
+    }
+
+    public void setIsAddToCartEnabled(Boolean isAddToCartEnabled) {
+        this.isAddToCartEnabled = isAddToCartEnabled;
     }
 
     public List<ProductContentSectionRequest> getContentSections() {
