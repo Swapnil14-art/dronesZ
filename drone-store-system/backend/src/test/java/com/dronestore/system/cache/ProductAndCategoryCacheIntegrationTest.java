@@ -229,20 +229,20 @@ class ProductAndCategoryCacheIntegrationTest {
         cat.setCreatedAt(LocalDateTime.now());
         cat.setUpdatedAt(LocalDateTime.now());
 
-        when(categoryRepository.findAll()).thenReturn(Collections.singletonList(cat));
-        when(categoryRepository.findById(1L)).thenReturn(Optional.of(cat));
+        when(categoryRepository.findByIsDeletedFalse()).thenReturn(Collections.singletonList(cat));
+        when(categoryRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(cat));
 
         List<CategoryDto> all1 = categoryService.getAllCategories();
         List<CategoryDto> all2 = categoryService.getAllCategories();
         assertEquals(1, all1.size());
         assertEquals(1, all2.size());
-        verify(categoryRepository, times(1)).findAll();
+        verify(categoryRepository, times(1)).findByIsDeletedFalse();
 
         CategoryDto detail1 = categoryService.getCategoryById(1L);
         CategoryDto detail2 = categoryService.getCategoryById(1L);
         assertEquals("Motors", detail1.getName());
         assertEquals("Motors", detail2.getName());
-        verify(categoryRepository, times(1)).findById(1L);
+        verify(categoryRepository, times(1)).findByIdAndIsDeletedFalse(1L);
     }
 
     @Test
@@ -295,7 +295,8 @@ class ProductAndCategoryCacheIntegrationTest {
         cat.setCreatedAt(LocalDateTime.now());
         cat.setUpdatedAt(LocalDateTime.now());
 
-        when(categoryRepository.findAll()).thenReturn(Collections.singletonList(cat));
+        when(categoryRepository.findByIsDeletedFalse()).thenReturn(Collections.singletonList(cat));
+        when(categoryRepository.findByIdAndIsDeletedFalse(99L)).thenReturn(Optional.of(cat));
         when(categoryRepository.findById(99L)).thenReturn(Optional.of(cat));
 
         // Cache all categories

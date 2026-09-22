@@ -14,7 +14,7 @@ import { StitchHeader } from '../components/StitchHeader';
 import { StitchFooter } from '../components/StitchFooter';
 import { ProductGallery } from '../components/ProductGallery';
 import { ParachutePublicPage } from '../components/ParachutePublicPage';
-import { loadParachuteConfig, ParachutePageConfig } from '../services/parachuteConfig';
+import { loadParachuteConfig, getDefaultParachuteConfig, ParachutePageConfig } from '../services/parachuteConfig';
 
 const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({ section }) => {
   const sheetNumber = String(section.displayOrder !== undefined && section.displayOrder !== null ? section.displayOrder : 4).padStart(2, '0');
@@ -281,13 +281,17 @@ export const PublicStore: React.FC = () => {
   const [cartFeedbackMsg, setCartFeedbackMsg] = useState<string | null>(null);
 
   // Parachute Category State
-  const [parachuteConfig, setParachuteConfig] = useState<ParachutePageConfig>(loadParachuteConfig);
+  const [parachuteConfig, setParachuteConfig] = useState<ParachutePageConfig>(getDefaultParachuteConfig);
   const [isParachuteRoute, setIsParachuteRoute] = useState<boolean>(false);
 
   const navigateTo = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new Event('popstate'));
   };
+
+  useEffect(() => {
+    setParachuteConfig(loadParachuteConfig());
+  }, []);
 
   useEffect(() => {
     handleUrlRouting();

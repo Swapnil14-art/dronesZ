@@ -1,94 +1,80 @@
 "use client";
 
-import { useCallback, useRef } from "react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
-import { withMotionPreference } from "@/lib/motion";
-import { FrameSequenceCanvas } from "@/components/scroll/FrameSequenceCanvas";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { prefersReducedMotion } from "@/lib/motion";
 import "./hero.css";
 
 /**
- * Hero: the real drone assembles as you scroll. A pinned ScrollTrigger scrubs a progress ref
- * (0→1) that HeroSequence maps onto a frame sequence — scroll is the playhead. Replaces the old
- * R3F box-quadcopter (three.js gone from the app entirely). Reduced-motion parks progress at 1
- * so the assembled frame shows statically with no pin; a poster <img> covers no-JS.
+ * HeroSection: Plays /hero-seq/FINAL.mp4 once automatically on page load (muted).
+ * While playing, hero text is hidden and the scroll indicator is omitted.
+ * When the video reaches its final frame, the final frame is held permanently
+ * and the hero copy smoothly fades into view.
+ *
+ * Scrolling does not scrub or pause the video.
+ * Reduced motion users skip the cinematic playback and see the final hero state immediately.
  */
 export function HeroSection() {
-  const heroRef = useRef<HTMLElement>(null);
-  const progressRef = useRef(0);
-  const drawRef = useRef<(() => void) | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [isEnded, setIsEnded] = useState(false);
 
-  const handleReady = useCallback((draw: () => void) => {
-    drawRef.current = draw;
+  const handleEnded = useCallback(() => {
+    setIsEnded(true);
   }, []);
 
-  useGSAP(
-    () => {
-      const el = heroRef.current;
-      if (!el) return;
+  useEffect(() => {
+    setMounted(true);
 
-      withMotionPreference(
-        {
-          animated: () => {
-            const proxy = { t: 0 };
-            gsap.to(proxy, {
-              t: 1,
-              ease: "none",
-              scrollTrigger: {
-                trigger: el,
-                start: "top top",
-                end: "+=130%",
-                scrub: 1,
-                pin: true,
-                anticipatePin: 1,
-                // Top of the page → highest refresh priority so its pin-spacer is measured
-                // before the frame pins compute their start (stacked-pin overlap fix).
-                refreshPriority: 100,
-                invalidateOnRefresh: true,
-              },
-              onUpdate: () => {
-                progressRef.current = proxy.t;
-                drawRef.current?.();
-              },
-            });
-          },
-          reduced: () => {
-            progressRef.current = 1;
-            drawRef.current?.();
-          },
-        },
-        el,
-      );
-    },
-    { scope: heroRef },
-  );
+    // If user prefers reduced motion, immediately show text
+    if (prefersReducedMotion()) {
+      setIsEnded(true);
+      return;
+    }
+
+    const video = videoRef.current;
+    if (video) {
+      video.muted = true;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // If autoplay fails for any browser policy reason, reveal text gracefully
+          setIsEnded(true);
+        });
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mounted && prefersReducedMotion() && videoRef.current) {
+      videoRef.current.pause();
+      if (videoRef.current.duration) {
+        videoRef.current.currentTime = videoRef.current.duration;
+      }
+    }
+  }, [mounted]);
 
   return (
-    <section className="hero" ref={heroRef} aria-labelledby="hero-title">
-      {/* Full-bleed assembling-drone footage behind everything. */}
+    <section className="hero" aria-labelledby="hero-title">
+      {/* Full-bleed video footage behind everything */}
       <div className="hero-media">
-        {/* Poster fallback (no-JS / canvas failure): the initial frame. */}
-        <img
-          className="hero-poster"
-          src="/hero-seq/001.png"
-          alt="A DronesZ 5-inch FPV drone in a matte studio void with red rim light."
-          width={1280}
-          height={560}
-          fetchPriority="high"
-        />
-        <FrameSequenceCanvas
-          dir="/hero-seq"
-          count={120}
-          ext="png"
-          progressRef={progressRef}
-          onReady={handleReady}
-          className="hero-canvas"
-        />
+        {mounted && (
+          <video
+            ref={videoRef}
+            className="hero-video"
+            src="/hero-seq/FINAL.mp4"
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            onEnded={handleEnded}
+            onError={() => setIsEnded(true)}
+          />
+        )}
       </div>
 
       <div className="hero-scrim" aria-hidden="true" />
 
-      <div className="hero-copy">
+      <div className={`hero-copy ${isEnded ? "is-visible" : ""}`}>
         <p className="hero-eyebrow">DronesZ India</p>
         <h1 id="hero-title" className="hero-title">
           Redefining Flight.{" "}
@@ -99,8 +85,8 @@ export function HeroSection() {
           engineered in Indore, assembled for the mission.
         </p>
       </div>
-
-      <div className="hero-cue">Scroll</div>
     </section>
   );
 }
+
+

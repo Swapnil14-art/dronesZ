@@ -21,9 +21,9 @@ const apiOrigin = process.env.NEXT_PUBLIC_API_BASE_URL
 const csp = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  `style-src 'self' 'unsafe-inline'`,
+  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
   `img-src 'self' data: blob: http://localhost:8070 http://127.0.0.1:8070 ${apiOrigin}`.trim(),
-  `font-src 'self'`,
+  `font-src 'self' https://fonts.gstatic.com data:`,
   `media-src 'self'`,
   `connect-src 'self' http://localhost:8070 http://127.0.0.1:8070 ${apiOrigin} https://*.public.blob.vercel-storage.com https://blob.vercel-storage.com`.trim(),
   `worker-src 'self' blob:`,
