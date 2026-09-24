@@ -5,7 +5,7 @@
 .manufacturing-section {
   position: relative;
   background-color: var(--color-canvas, #fafafa);
-  padding-block: clamp(4rem, 6vw, 8rem);
+  padding-block: clamp(3rem, 4.5vw, 5rem);
   padding-inline: var(--space-gutter,
       clamp(1.25rem, 0.5rem + 3vw, 4rem));
   overflow: hidden;
@@ -25,7 +25,7 @@
   display: flex;
   align-items: flex-start;
   gap: clamp(1rem, 2.5vw, 2.5rem);
-  margin-bottom: clamp(4rem, 7vw, 7rem);
+  margin-bottom: clamp(2.5rem, 4vw, 4rem);
   position: relative;
 }
 
@@ -89,18 +89,10 @@
    TIMELINE
    ========================================================= */
 
-/*
- * Desktop:
- * Approximately 2.35–2.4 viewport heights.
- *
- * The four cards are spread vertically but remain visually
- * connected through the alternating timeline.
- */
-
 .manufacturing-timeline-wrap {
   position: relative;
   width: 100%;
-  min-height: 235vh;
+  min-height: clamp(1300px, 130vh, 1500px);
 }
 
 /* =========================================================
@@ -134,26 +126,10 @@
    GRID / CARD POSITIONING
    ========================================================= */
 
-/*
- * Absolute positioning is intentional.
- *
- * This allows the cards to alternate:
- *
- *      01 LEFT
- *
- *                  02 RIGHT
- *
- *      03 LEFT
- *
- *                  04 RIGHT
- *
- * without forcing them into normal grid rows.
- */
-
 .manufacturing-grid {
   position: relative;
   width: 100%;
-  min-height: 235vh;
+  min-height: clamp(1300px, 130vh, 1500px);
   z-index: 2;
 }
 
@@ -190,7 +166,6 @@
 
 /*
  * Stage 1
- *
  * Starting point.
  */
 .m-card--left:nth-child(1) {
@@ -200,38 +175,32 @@
 
 /*
  * Stage 2
- *
  * Right side.
- *
- * The -10% translate creates the subtle overlap with
- * the preceding stage.
  */
 .m-card--right:nth-child(2) {
   right: 0;
-  top: 19%;
-  transform: translateY(-10%);
+  top: 24%;
+  transform: translateY(-8%);
 }
 
 /*
  * Stage 3
- *
  * Back to the left.
  */
 .m-card--left:nth-child(3) {
   left: 0;
-  top: 38%;
-  transform: translateY(-10%);
+  top: 48%;
+  transform: translateY(-8%);
 }
 
 /*
  * Stage 4
- *
  * Back to the right.
  */
 .m-card--right:nth-child(4) {
   right: 0;
-  top: 57%;
-  transform: translateY(-10%);
+  top: 72%;
+  transform: translateY(-8%);
 }
 
 /* =========================================================
@@ -246,13 +215,13 @@
 }
 
 /*
- * Stages 2–4 preserve their 10% overlap on hover.
+ * Stages 2–4 preserve their overlap on hover.
  */
 .m-card--right:nth-child(2):hover,
 .m-card--left:nth-child(3):hover,
 .m-card--right:nth-child(4):hover {
   transform:
-    translateY(calc(-10% - 5px));
+    translateY(calc(-8% - 5px));
 }
 
 .m-card {
@@ -442,17 +411,12 @@
 
   .manufacturing-timeline-wrap,
   .manufacturing-grid {
-    min-height: 240vh;
+    min-height: 1450px;
   }
 
   .m-card {
     width: 44%;
   }
-
-  /*
-   * Keep the same compact stagger.
-   * DO NOT reset these to 25/50/75.
-   */
 
   .m-card--left:nth-child(1) {
     left: 0;
@@ -461,20 +425,20 @@
 
   .m-card--right:nth-child(2) {
     right: 0;
-    top: 19%;
-    transform: translateY(-10%);
+    top: 24%;
+    transform: translateY(-8%);
   }
 
   .m-card--left:nth-child(3) {
     left: 0;
-    top: 38%;
-    transform: translateY(-10%);
+    top: 48%;
+    transform: translateY(-8%);
   }
 
   .m-card--right:nth-child(4) {
     right: 0;
-    top: 57%;
-    transform: translateY(-10%);
+    top: 72%;
+    transform: translateY(-8%);
   }
 }
 
@@ -486,7 +450,7 @@
 
   .manufacturing-timeline-wrap,
   .manufacturing-grid {
-    min-height: 225vh;
+    min-height: 1400px;
   }
 
   .m-card {
@@ -500,20 +464,20 @@
 
   .m-card--right:nth-child(2) {
     right: 0;
-    top: 19%;
-    transform: translateY(-10%);
+    top: 24%;
+    transform: translateY(-8%);
   }
 
   .m-card--left:nth-child(3) {
     left: 0;
-    top: 38%;
-    transform: translateY(-10%);
+    top: 48%;
+    transform: translateY(-8%);
   }
 
   .m-card--right:nth-child(4) {
     right: 0;
-    top: 57%;
-    transform: translateY(-10%);
+    top: 72%;
+    transform: translateY(-8%);
   }
 }
 
