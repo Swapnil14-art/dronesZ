@@ -4,5 +4,5 @@ import React from "react";
 import { PublicStore } from "@/store/pages/PublicStore";
 
 export default function StorePage() {
-  return <PublicStore />;
+  return <PublicStore initialView="catalog" />;
 }

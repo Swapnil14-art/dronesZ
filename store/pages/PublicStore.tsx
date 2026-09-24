@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ProductDto,
   ProductContentSectionDto,
@@ -243,7 +244,7 @@ const CheckCircleIcon = ({ size = 18, style }: { size?: number; style?: React.CS
   </svg>
 );
 
-function slugify(name: string): string {
+export function slugify(name: string): string {
   return name
     .toLowerCase()
     .trim()
@@ -251,22 +252,193 @@ function slugify(name: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
-export const PublicStore: React.FC = () => {
+// Module-level in-memory cache to ensure instant, zero-flicker transitions and back navigation
+let cachedMainCatalog: ProductDto[] | null = null;
+const cachedParentMap = new Map<string, ProductDto>();
+const cachedChildrenMap = new Map<number, ProductDto[]>();
+const cachedProductDetailMap = new Map<number, ProductDto>();
+
+export function clearStoreCache(): void {
+  cachedMainCatalog = null;
+  cachedParentMap.clear();
+  cachedChildrenMap.clear();
+  cachedProductDetailMap.clear();
+}
+
+export function getCachedMainCatalog(): ProductDto[] | null {
+  return cachedMainCatalog;
+}
+
+export function cacheMainCatalog(products: ProductDto[]): void {
+  cachedMainCatalog = products;
+  for (const p of products) {
+    if (p.productType === 'PARENT') {
+      cacheParent(p);
+    }
+  }
+}
+
+export function getCachedParent(slugOrId: string | number): ProductDto | null {
+  const key = String(slugOrId).toLowerCase().trim();
+  if (cachedParentMap.has(key)) {
+    return cachedParentMap.get(key)!;
+  }
+  for (const p of cachedParentMap.values()) {
+    if (
+      slugify(p.name) === key ||
+      `${slugify(p.name)}-${p.id}` === key ||
+      String(p.id) === key
+    ) {
+      return p;
+    }
+  }
+  return null;
+}
+
+export function cacheParent(parent: ProductDto): void {
+  cachedParentMap.set(String(parent.id), parent);
+  cachedParentMap.set(slugify(parent.name), parent);
+  cachedParentMap.set(`${slugify(parent.name)}-${parent.id}`, parent);
+}
+
+export function getCachedChildren(parentId: number): ProductDto[] | null {
+  return cachedChildrenMap.get(parentId) || null;
+}
+
+export function cacheChildren(parentId: number, children: ProductDto[]): void {
+  cachedChildrenMap.set(parentId, children);
+  for (const c of children) {
+    cachedProductDetailMap.set(c.id, c);
+  }
+}
+
+export function getCachedProductDetail(id: number): ProductDto | null {
+  return cachedProductDetailMap.get(id) || null;
+}
+
+export function cacheProductDetail(id: number, product: ProductDto): void {
+  cachedProductDetailMap.set(id, product);
+}
+
+export type StoreView = 'catalog' | 'category' | 'product' | 'parachute';
+
+export interface PublicStoreProps {
+  initialView?: StoreView;
+  initialSlug?: string;
+  initialProductId?: string | number;
+}
+
+export const PublicStore: React.FC<PublicStoreProps> = ({
+  initialView,
+  initialSlug,
+  initialProductId,
+}) => {
+  const router = useRouter();
   const { isAuthenticated, addToCart, cart } = useUserAuth();
 
+  const computeInitialView = (): StoreView => {
+    if (initialView) return initialView;
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      if (pathname === '/store/parachute' || pathname === '/parachute') return 'parachute';
+      if (pathname.startsWith('/store/') && pathname.length > 7) return 'category';
+      if (pathname.startsWith('/products/') && pathname.length > 10) return 'product';
+    }
+    return 'catalog';
+  };
+
+  const computeInitialSlug = (): string => {
+    if (initialSlug) return initialSlug;
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/store/') && pathname.length > 7) {
+        return pathname.substring(7);
+      }
+    }
+    return '';
+  };
+
+  const computeInitialProductId = (): string => {
+    if (initialProductId !== undefined && initialProductId !== '') return String(initialProductId);
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      if (pathname.startsWith('/products/') && pathname.length > 10) {
+        return pathname.substring(10);
+      }
+    }
+    return '';
+  };
+
+  const [view, setView] = useState<StoreView>(computeInitialView);
+
   // Main catalog products (STANDALONE & PARENT)
-  const [products, setProducts] = useState<ProductDto[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [products, setProducts] = useState<ProductDto[]>(() => getCachedMainCatalog() || []);
+  const [loading, setLoading] = useState<boolean>(() => {
+    const v = computeInitialView();
+    if (v === 'catalog') {
+      return (getCachedMainCatalog()?.length || 0) === 0;
+    }
+    return false;
+  });
   const [error, setError] = useState<string | null>(null);
 
   // Active Parent Series Page State (when at /store/parent_name)
-  const [activeParent, setActiveParent] = useState<ProductDto | null>(null);
-  const [childProducts, setChildProducts] = useState<ProductDto[]>([]);
-  const [loadingChildren, setLoadingChildren] = useState<boolean>(false);
+  const [activeParent, setActiveParent] = useState<ProductDto | null>(() => {
+    const v = computeInitialView();
+    if (v === 'category') {
+      const slug = computeInitialSlug();
+      if (slug) {
+        return getCachedParent(slug);
+      }
+    }
+    return null;
+  });
+  const [childProducts, setChildProducts] = useState<ProductDto[]>(() => {
+    const v = computeInitialView();
+    if (v === 'category') {
+      const slug = computeInitialSlug();
+      if (slug) {
+        const parent = getCachedParent(slug);
+        if (parent) {
+          return getCachedChildren(parent.id) || [];
+        }
+      }
+    }
+    return [];
+  });
+  const [loadingChildren, setLoadingChildren] = useState<boolean>(() => {
+    const v = computeInitialView();
+    if (v === 'category') {
+      const slug = computeInitialSlug();
+      const parent = slug ? getCachedParent(slug) : null;
+      const children = parent ? getCachedChildren(parent.id) : null;
+      return !(parent && children && children.length > 0);
+    }
+    return false;
+  });
 
   // Active Product Detail Page State (when at /products/:id)
-  const [activeProductDetail, setActiveProductDetail] = useState<ProductDto | null>(null);
-  const [loadingProductDetail, setLoadingProductDetail] = useState<boolean>(false);
+  const [activeProductDetail, setActiveProductDetail] = useState<ProductDto | null>(() => {
+    const v = computeInitialView();
+    if (v === 'product') {
+      const pId = computeInitialProductId();
+      const id = Number(pId.match(/\d+$/)?.[0] || pId);
+      if (!isNaN(id) && id > 0) {
+        return getCachedProductDetail(id);
+      }
+    }
+    return null;
+  });
+  const [loadingProductDetail, setLoadingProductDetail] = useState<boolean>(() => {
+    const v = computeInitialView();
+    if (v === 'product') {
+      const pId = computeInitialProductId();
+      const id = Number(pId.match(/\d+$/)?.[0] || pId);
+      const cached = !isNaN(id) && id > 0 ? getCachedProductDetail(id) : null;
+      return !cached;
+    }
+    return false;
+  });
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   const [selectedPackage, setSelectedPackage] = useState<'single' | 'quad'>('single');
 
@@ -282,29 +454,62 @@ export const PublicStore: React.FC = () => {
 
   // Parachute Category State
   const [parachuteConfig, setParachuteConfig] = useState<ParachutePageConfig>(getDefaultParachuteConfig);
-  const [isParachuteRoute, setIsParachuteRoute] = useState<boolean>(false);
+  const [isParachuteRoute, setIsParachuteRoute] = useState<boolean>(() => computeInitialView() === 'parachute');
 
   const navigateTo = (path: string) => {
-    window.history.pushState({}, '', path);
-    window.dispatchEvent(new Event('popstate'));
+    router.push(path);
   };
 
   useEffect(() => {
     setParachuteConfig(loadParachuteConfig());
   }, []);
 
+  // Synchronize when route props change
   useEffect(() => {
-    handleUrlRouting();
-    const onPopState = () => handleUrlRouting();
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+    const targetView = initialView || computeInitialView();
+    setView(targetView);
 
-  useEffect(() => {
-    if (!activeParent && !activeProductDetail && !isParachuteRoute) {
+    if (targetView === 'parachute') {
+      setIsParachuteRoute(true);
+      setActiveParent(null);
+      setActiveProductDetail(null);
+      setError(null);
+    } else if (targetView === 'category') {
+      setIsParachuteRoute(false);
+      setActiveProductDetail(null);
+      const slug = initialSlug || computeInitialSlug();
+      if (slug) {
+        loadParentSeriesPage(slug);
+      }
+    } else if (targetView === 'product') {
+      setIsParachuteRoute(false);
+      setActiveParent(null);
+      const pId = initialProductId !== undefined ? String(initialProductId) : computeInitialProductId();
+      if (pId) {
+        loadProductDetailPage(pId);
+      }
+    } else {
+      setIsParachuteRoute(false);
+      setActiveParent(null);
+      setActiveProductDetail(null);
       loadMainCatalog();
     }
-  }, [search, selectedStatus]);
+  }, [initialView, initialSlug, initialProductId]);
+
+  // Fallback for popstate when props are not provided
+  useEffect(() => {
+    if (!initialView) {
+      const onPopState = () => handleUrlRouting();
+      window.addEventListener('popstate', onPopState);
+      return () => window.removeEventListener('popstate', onPopState);
+    }
+  }, [initialView]);
+
+  useEffect(() => {
+    if (view === 'catalog') {
+      loadMainCatalog();
+    }
+  }, [view, search, selectedStatus]);
 
   const handleUrlRouting = async () => {
     const pathname = window.location.pathname;
@@ -312,21 +517,25 @@ export const PublicStore: React.FC = () => {
     setParachuteConfig(currentParachuteConfig);
 
     if (pathname === '/store/parachute' || pathname === '/parachute') {
+      setView('parachute');
       setIsParachuteRoute(true);
       setActiveProductDetail(null);
       setActiveParent(null);
       setError(null);
     } else if (pathname.startsWith('/store/') && pathname.length > 7) {
+      setView('category');
       setIsParachuteRoute(false);
       const param = pathname.substring(7);
       setActiveProductDetail(null);
       await loadParentSeriesPage(param);
     } else if (pathname.startsWith('/products/') && pathname.length > 10) {
+      setView('product');
       setIsParachuteRoute(false);
       const param = pathname.substring(10);
       setActiveParent(null);
       await loadProductDetailPage(param);
     } else {
+      setView('catalog');
       setIsParachuteRoute(false);
       setActiveParent(null);
       setActiveProductDetail(null);
@@ -335,7 +544,9 @@ export const PublicStore: React.FC = () => {
   };
 
   const loadMainCatalog = async () => {
-    setLoading(true);
+    if (products.length === 0) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const res = await fetchPublicProducts({
@@ -343,6 +554,7 @@ export const PublicStore: React.FC = () => {
         status: selectedStatus || undefined,
         size: 50,
       });
+      cacheMainCatalog(res.content);
       setProducts(res.content);
     } catch (err: any) {
       setError('Unable to load storefront catalog. Please check backend connection.');
@@ -352,28 +564,42 @@ export const PublicStore: React.FC = () => {
   };
 
   const loadProductDetailPage = async (param: string) => {
-    setLoadingProductDetail(true);
     setError(null);
     setSelectedQuantity(1);
     setSelectedPackage('single');
+
+    const idMatch = param.match(/\d+$/);
+    const id = idMatch ? Number(idMatch[0]) : Number(param);
+
+    if (isNaN(id) || id <= 0) {
+      setError(`Invalid product ID "${param}".`);
+      setActiveProductDetail(null);
+      setLoadingProductDetail(false);
+      return;
+    }
+
+    const cached = getCachedProductDetail(id);
+    if (cached) {
+      setActiveProductDetail(cached);
+      setLoadingProductDetail(false);
+    } else {
+      setLoadingProductDetail(true);
+    }
+
     try {
-      const idMatch = param.match(/\d+$/);
-      const id = idMatch ? Number(idMatch[0]) : Number(param);
-      if (!isNaN(id)) {
-        const prod = await fetchPublicProductById(id);
-        if (prod) {
-          setActiveProductDetail(prod);
-        } else {
-          setError(`Product ID "${param}" not found.`);
-          setActiveProductDetail(null);
-        }
-      } else {
-        setError(`Invalid product ID "${param}".`);
+      const prod = await fetchPublicProductById(id);
+      if (prod) {
+        cacheProductDetail(id, prod);
+        setActiveProductDetail(prod);
+      } else if (!cached) {
+        setError(`Product ID "${param}" not found.`);
         setActiveProductDetail(null);
       }
     } catch (err: any) {
-      setError('Failed to load product specifications page.');
-      setActiveProductDetail(null);
+      if (!cached && !activeProductDetail) {
+        setError('Failed to load product specifications page.');
+        setActiveProductDetail(null);
+      }
     } finally {
       setLoadingProductDetail(false);
     }
@@ -384,12 +610,27 @@ export const PublicStore: React.FC = () => {
   };
 
   const loadParentSeriesPage = async (param: string) => {
-    setLoadingChildren(true);
     setError(null);
     try {
-      let matchedParent = products.find(
-        (p) => p.productType === 'PARENT' && (slugify(p.name) === param || `${slugify(p.name)}-${p.id}` === param || p.id.toString() === param)
-      );
+      let matchedParent: ProductDto | null | undefined =
+        (activeParent && (slugify(activeParent.name) === param || `${slugify(activeParent.name)}-${activeParent.id}` === param || String(activeParent.id) === param))
+          ? activeParent
+          : products.find(
+              (p) => p.productType === 'PARENT' && (slugify(p.name) === param || `${slugify(p.name)}-${p.id}` === param || p.id.toString() === param)
+            ) || getCachedParent(param);
+
+      if (matchedParent) {
+        setActiveParent(matchedParent);
+        const cachedChildren = getCachedChildren(matchedParent.id);
+        if (cachedChildren && cachedChildren.length > 0) {
+          setChildProducts(cachedChildren);
+          setLoadingChildren(false);
+        } else {
+          setLoadingChildren(true);
+        }
+      } else {
+        setLoadingChildren(true);
+      }
 
       if (!matchedParent) {
         const idMatch = param.match(/\d+$/);
@@ -401,22 +642,29 @@ export const PublicStore: React.FC = () => {
             fetchPublicChildProducts(numericId).catch(() => [])
           ]);
           if (prod && prod.productType === 'PARENT') {
+            cacheParent(prod);
+            cacheChildren(prod.id, children);
             setActiveParent(prod);
             setChildProducts(children);
+            setLoadingChildren(false);
             return;
           }
         }
 
         const parentRes = await fetchPublicProducts({ size: 50 });
         const parents = parentRes.content.filter((p) => p.productType === 'PARENT');
+        cacheMainCatalog(parentRes.content);
+        parents.forEach((p) => cacheParent(p));
         matchedParent = parents.find(
           (p) => slugify(p.name) === param || `${slugify(p.name)}-${p.id}` === param || p.id.toString() === param
-        );
+        ) || null;
       }
 
       if (matchedParent) {
+        cacheParent(matchedParent);
         setActiveParent(matchedParent);
         const children = await fetchPublicChildProducts(matchedParent.id);
+        cacheChildren(matchedParent.id, children);
         setChildProducts(children);
       } else {
         setError(`Product series "${param}" not found.`);
@@ -441,6 +689,7 @@ export const PublicStore: React.FC = () => {
 
   const navigateToParentSeries = (parentProduct: ProductDto) => {
     setIsParachuteRoute(false);
+    cacheParent(parentProduct);
     const slug = slugify(parentProduct.name);
     navigateTo(`/store/${slug}`);
   };
@@ -506,12 +755,12 @@ export const PublicStore: React.FC = () => {
 
   return (
     <div
-      className={`${activeProductDetail || isParachuteRoute ? '' : 'blueprint-bg'} min-h-screen flex flex-col pt-24`}
+      className={`${(view === 'product' || activeProductDetail || view === 'parachute' || isParachuteRoute) ? '' : 'blueprint-bg'} min-h-screen flex flex-col pt-24`}
       style={{
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        background: isParachuteRoute ? '#FBFAF7' : (activeProductDetail ? '#f3f3f3ff' : undefined)
+        background: (view === 'parachute' || isParachuteRoute) ? '#FBFAF7' : ((view === 'product' || activeProductDetail) ? '#f3f3f3ff' : undefined)
       }}
     >
       {/* Shared Stitch Header Navigation */}
@@ -556,7 +805,7 @@ export const PublicStore: React.FC = () => {
         )}
 
         {/* Hero Section (only on main store catalog view) */}
-        {!activeParent && !activeProductDetail && !isParachuteRoute && (
+        {view === 'catalog' && (
           <section style={{ maxWidth: '800px', marginBottom: '4rem' }}>
             <div style={{
               fontSize: '12px',
@@ -586,7 +835,7 @@ export const PublicStore: React.FC = () => {
           </section>
         )}
         {/* VIEW 4: PARACHUTE RECOVERY SYSTEMS WEBPAGE (/store/parachute) */}
-        {isParachuteRoute ? (
+        {(view === 'parachute' || isParachuteRoute) ? (
           parachuteConfig && parachuteConfig.isEnabled ? (
             <ParachutePublicPage config={parachuteConfig} />
           ) : (
@@ -604,7 +853,7 @@ export const PublicStore: React.FC = () => {
               </div>
             </div>
           )
-        ) : loadingProductDetail ? (
+        ) : (view === 'product' && loadingProductDetail && !activeProductDetail) ? (
           <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--color-muted)' }}>
             <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>Loading DronesZ Hardware Specifications...</div>
             <div style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)' }}>Fetching live database record for specimen ID</div>
@@ -1021,7 +1270,7 @@ export const PublicStore: React.FC = () => {
               </div>
             )}
           </div>
-        ) : activeParent ? (
+        ) : (view === 'category' || activeParent || loadingChildren) ? (
           /* VIEW 2: DEDICATED PARENT SERIES WEBPAGE (/store/parent_name) */
           <div>
             <div className="parent-series-card" style={{ marginBottom: '2.5rem', padding: '2rem' }}>
@@ -1031,9 +1280,9 @@ export const PublicStore: React.FC = () => {
                     PARENT SERIES
                   </span>
                   <h2 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-on-surface)', marginTop: '0.4rem' }}>
-                    {activeParent.name}
+                    {activeParent ? activeParent.name : 'Loading Series...'}
                   </h2>
-                  {activeParent.description && (
+                  {activeParent?.description && (
                     <p style={{ fontSize: '1rem', color: 'var(--color-on-surface-variant)', marginTop: '0.5rem', maxWidth: '800px', lineHeight: 1.5 }}>
                       {activeParent.description}
                     </p>
@@ -1056,7 +1305,7 @@ export const PublicStore: React.FC = () => {
               <input
                 type="text"
                 className="stitch-input"
-                placeholder={`Search models in ${activeParent.name}...`}
+                placeholder={activeParent ? `Search models in ${activeParent.name}...` : 'Search models...'}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ flex: '1 1 300px' }}
@@ -1079,9 +1328,13 @@ export const PublicStore: React.FC = () => {
               Series Variant Models ({filteredChildProducts.length})
             </div>
 
-            {loadingChildren ? (
+            {loadingChildren && !activeParent ? (
               <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-                Loading product variants for {activeParent.name}...
+                Loading product series and variants...
+              </div>
+            ) : loadingChildren ? (
+              <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
+                Loading product variants for {activeParent ? activeParent.name : 'series'}...
               </div>
             ) : filteredChildProducts.length === 0 ? (
               <div style={{ background: '#fff', border: '1px solid var(--color-outline)', padding: '4rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '0.5rem' }}>
