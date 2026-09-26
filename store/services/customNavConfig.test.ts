@@ -37,8 +37,8 @@ describe('customNavConfig', () => {
     expect(config).toEqual({
       framesTalkToUsUrl: '/frames',
       motorsTalkToUsUrl: '/contact',
-      parachuteTalkToUsUrl: '/store/parachute',
-      propellersTalkToUsUrl: '/store/parachute',
+      parachuteTalkToUsUrl: '/contact',
+      propellersTalkToUsUrl: '/contact',
     });
   });
 
@@ -70,6 +70,6 @@ describe('customNavConfig', () => {
     const loaded = loadCustomNavConfig();
     expect(loaded.framesTalkToUsUrl).toBe('/frames');
     expect(loaded.motorsTalkToUsUrl).toBe('/custom-motors');
-    expect(loaded.parachuteTalkToUsUrl).toBe('/store/parachute');
+    expect(loaded.parachuteTalkToUsUrl).toBe('/contact');
   });
 });

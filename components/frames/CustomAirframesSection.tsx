@@ -92,7 +92,7 @@ function CustomRevealPanel() {
   );
 
   return (
-    <section ref={ref} className="custom-reveal" aria-labelledby="custom-title">
+    <section ref={ref} className="custom-reveal" id="custom-airframes" aria-labelledby="custom-title">
       <div className="custom-reveal__copy">
         <SectionLabel>{CUSTOM_AIRFRAMES.eyebrow}</SectionLabel>
         <h2 id="custom-title" className="custom-reveal__title">
@@ -226,8 +226,7 @@ export function CustomAirframesSection({ form }: { form?: ReactNode }) {
   return (
     <div>
       <CustomRevealPanel />
-      <CustomProcess />
-      <CustomFork form={form} />
+      {form && <div>{form}</div>}
     </div>
   );
 }
