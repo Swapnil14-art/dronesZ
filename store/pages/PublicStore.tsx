@@ -442,9 +442,8 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
   const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   const [selectedPackage, setSelectedPackage] = useState<'single' | 'quad'>('single');
 
-  // Search & Availability Filters
+  // Search Filter
   const [search, setSearch] = useState<string>('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
 
   // Customer Auth Modal State
   const [isUserAuthOpen, setIsUserAuthOpen] = useState<boolean>(false);
@@ -509,7 +508,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
     if (view === 'catalog') {
       loadMainCatalog();
     }
-  }, [view, search, selectedStatus]);
+  }, [view, search]);
 
   const handleUrlRouting = async () => {
     const pathname = window.location.pathname;
@@ -551,7 +550,6 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
     try {
       const res = await fetchPublicProducts({
         search: search.trim() || undefined,
-        status: selectedStatus || undefined,
         size: 50,
       });
       cacheMainCatalog(res.content);
@@ -683,7 +681,6 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
     setActiveParent(null);
     setActiveProductDetail(null);
     setSearch('');
-    setSelectedStatus('');
     navigateTo('/store');
   };
 
@@ -747,10 +744,8 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
   const parentProducts = products.filter((p) => p.productType === 'PARENT');
 
   const filteredChildProducts = childProducts.filter((c) => {
-    const effStatus = getEffectiveProductStatus(c);
     const matchesSearch = !search || c.name.toLowerCase().includes(search.toLowerCase()) || (c.description && c.description.toLowerCase().includes(search.toLowerCase()));
-    const matchesStatus = !selectedStatus || effStatus === selectedStatus;
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   return (
@@ -1310,18 +1305,6 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ flex: '1 1 300px' }}
               />
-
-              <select
-                className="stitch-select"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                style={{ width: '200px' }}
-              >
-                <option value="">All Availability</option>
-                <option value="AVAILABLE">Available</option>
-                <option value="OUT_OF_STOCK">Out of Stock</option>
-                <option value="COMING_SOON">Coming Soon</option>
-              </select>
             </div>
 
             <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.05em', color: 'var(--color-on-surface-variant)', textTransform: 'uppercase', marginBottom: '1.5rem' }}>
@@ -1462,18 +1445,6 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ flex: '1 1 300px' }}
               />
-
-              <select
-                className="stitch-select"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                style={{ width: '200px' }}
-              >
-                <option value="">All Availability</option>
-                <option value="AVAILABLE">Available</option>
-                <option value="OUT_OF_STOCK">Out of Stock</option>
-                <option value="COMING_SOON">Coming Soon</option>
-              </select>
             </div>
 
             {/* Parent Series Grid Section */}
