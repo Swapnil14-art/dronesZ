@@ -31,6 +31,7 @@ import {
 } from '../services/api';
 import { RichTextEditor } from './RichTextEditor';
 import { TableEditor } from './TableEditor';
+import { resizeAndCompressImage } from '../services/imageOptimizer';
 
 interface Props {
   token: string;
@@ -200,58 +201,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     }
   };
 
-  const optimizeImageFile = (file: File): Promise<{ optimizedFile: File; previewUrl: string; sizeStr: string }> => {
-    return new Promise((resolve) => {
-      const origSizeStr = file.size >= 1024 * 1024
-        ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
-        : `${(file.size / 1024).toFixed(1)} KB`;
-
-      const previewUrl = URL.createObjectURL(file);
-      const img = new Image();
-      img.src = previewUrl;
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
-        const MAX_DIM = 1600;
-
-        if (width > MAX_DIM || height > MAX_DIM) {
-          const scale = Math.min(MAX_DIM / width, MAX_DIM / height);
-          width = Math.round(width * scale);
-          height = Math.round(height * scale);
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve({ optimizedFile: file, previewUrl, sizeStr: origSizeStr });
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, width, height);
-        const format = file.type.includes('png') ? 'image/png' : 'image/jpeg';
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const optimizedFile = new File([blob], file.name, {
-              type: blob.type || file.type,
-              lastModified: Date.now(),
-            });
-            const optSizeStr = blob.size >= 1024 * 1024
-              ? `${(blob.size / (1024 * 1024)).toFixed(2)} MB`
-              : `${(blob.size / 1024).toFixed(1)} KB`;
-            resolve({ optimizedFile, previewUrl: URL.createObjectURL(optimizedFile), sizeStr: optSizeStr });
-          } else {
-            resolve({ optimizedFile: file, previewUrl, sizeStr: origSizeStr });
-          }
-        }, format, 0.85);
-      };
-      img.onerror = () => {
-        resolve({ optimizedFile: file, previewUrl, sizeStr: origSizeStr });
-      };
-    });
-  };
-
   const handleAddMultipleImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
@@ -277,7 +226,10 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
 
     const newItems: FormImageItem[] = [];
     for (let i = 0; i < validFiles.length; i++) {
-      const { optimizedFile, previewUrl, sizeStr } = await optimizeImageFile(validFiles[i]);
+      const { optimizedFile, previewUrl, sizeStr } = await resizeAndCompressImage(validFiles[i], {
+        maxDimension: 1920,
+        quality: 0.85,
+      });
       newItems.push({
         file: optimizedFile,
         previewUrl,
@@ -347,7 +299,10 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     }
 
     setFileError(null);
-    const { optimizedFile, previewUrl, sizeStr } = await optimizeImageFile(file);
+    const { optimizedFile, previewUrl, sizeStr } = await resizeAndCompressImage(file, {
+      maxDimension: 1920,
+      quality: 0.85,
+    });
 
     setFormImages((prev) => {
       const next = [...prev];
