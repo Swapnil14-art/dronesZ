@@ -6,12 +6,12 @@ test.describe("Custom navigation dropdown — Desktop", () => {
     await page.goto("/");
     await page.evaluate(() => {
       localStorage.removeItem("dronesz_custom_nav_config");
+      window.dispatchEvent(new CustomEvent("dronesz_custom_nav_updated"));
     });
   });
 
   test("hover over Custom opens dropdown and mouse travel keeps it open", async ({ page }) => {
-    await page.goto("/");
-    const customTrigger = page.locator(".nav__desktop .nav__custom-trigger");
+    const customTrigger = page.locator(".nav__links .nav__custom-trigger");
     const dropdown = page.locator(".nav__custom-dropdown");
 
     await expect(dropdown).not.toBeVisible();
@@ -29,69 +29,76 @@ test.describe("Custom navigation dropdown — Desktop", () => {
     await expect(dropdown).not.toBeVisible();
   });
 
-  test("Frames is clickable and navigates to the existing custom-airframes section", async ({ page }) => {
-    await page.goto("/");
-    const customTrigger = page.locator(".nav__desktop .nav__custom-trigger");
+  test("Frames Talk to us button navigates to /frames page", async ({ page }) => {
+    const customTrigger = page.locator(".nav__links .nav__custom-trigger");
     await customTrigger.hover();
 
-    const framesBtn = page.getByRole("menuitem", { name: "Frames" });
-    await expect(framesBtn).toBeVisible();
-    await framesBtn.click();
+    const framesRow = page.locator(".nav__custom-dropdown .nav__custom-row", { hasText: "Frames" });
+    await expect(framesRow).toBeVisible();
 
-    // Check that target custom-airframes section is present
-    const airframesSection = page.locator("#custom-airframes");
-    await expect(airframesSection).toBeVisible();
+    const framesTalkBtn = framesRow.locator(".nav__custom-talk-btn");
+    await expect(framesTalkBtn).toBeVisible();
+    await framesTalkBtn.click();
+
+    // Check that we navigate to /frames
+    await expect(page).toHaveURL(/\/frames/);
+    const customTitle = page.locator("#custom-title");
+    await expect(customTitle).toBeVisible();
   });
 
-  test("Motors and Propellers labels are NOT clickable, but Talk to us buttons are", async ({ page }) => {
-    await page.goto("/");
-    const customTrigger = page.locator(".nav__desktop .nav__custom-trigger");
+  test("Frames, Motors, and Parachute labels exist with Talk to us buttons", async ({ page }) => {
+    const customTrigger = page.locator(".nav__links .nav__custom-trigger");
     await customTrigger.hover();
 
-    // Verify Motors and Propellers text labels exist as unclickable plain text
+    // Verify Frames, Motors, and Parachute text labels exist
+    const framesLabel = page.locator(".nav__custom-dropdown .nav__custom-label", { hasText: "Frames" });
     const motorsLabel = page.locator(".nav__custom-dropdown .nav__custom-label", { hasText: "Motors" });
-    const propellersLabel = page.locator(".nav__custom-dropdown .nav__custom-label", { hasText: "Propellers" });
+    const parachuteLabel = page.locator(".nav__custom-dropdown .nav__custom-label", { hasText: "Parachute" });
 
+    await expect(framesLabel).toBeVisible();
     await expect(motorsLabel).toBeVisible();
-    await expect(propellersLabel).toBeVisible();
+    await expect(parachuteLabel).toBeVisible();
 
-    // Verify both Talk to us buttons exist in desktop dropdown
+    // Verify all 3 Talk to us buttons exist in desktop dropdown
     const talkButtons = page.locator(".nav__custom-dropdown .nav__custom-talk-btn");
-    await expect(talkButtons).toHaveCount(2);
+    await expect(talkButtons).toHaveCount(3);
   });
 
   test("Talk to us buttons dynamically reflect updated URLs saved in admin settings", async ({ page }) => {
-    await page.goto("/");
-
     // Set custom URLs in localStorage (same storage key used by Admin portal)
     await page.evaluate(() => {
       localStorage.setItem(
         "dronesz_custom_nav_config",
         JSON.stringify({
+          framesTalkToUsUrl: "/frames",
           motorsTalkToUsUrl: "/contact?topic=motors-inquiry",
-          propellersTalkToUsUrl: "/contact?topic=propellers-inquiry",
+          parachuteTalkToUsUrl: "/contact?topic=parachute-inquiry",
         })
       );
       window.dispatchEvent(new CustomEvent("dronesz_custom_nav_updated"));
     });
 
     // Hover Custom
-    const customTrigger = page.locator(".nav__desktop .nav__custom-trigger");
+    const customTrigger = page.locator(".nav__links .nav__custom-trigger");
     await customTrigger.hover();
 
     const talkButtons = page.locator(".nav__custom-dropdown .nav__custom-talk-btn");
-    await expect(talkButtons).toHaveCount(2);
+    await expect(talkButtons).toHaveCount(3);
 
     // Click Motors Talk to us
-    await talkButtons.nth(0).click();
+    await talkButtons.nth(1).click();
     await expect(page).toHaveURL(/topic=motors-inquiry/);
   });
 });
 
 test.describe("Custom navigation dropdown — Mobile", () => {
-  test("Mobile drawer toggles and reveals Custom sub-navigation", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
+  test("Mobile drawer toggles and reveals Custom sub-navigation", async ({ page, isMobile }) => {
+    test.skip(!isMobile, "Mobile drawer tests are only for mobile viewport");
     await page.goto("/");
+    await page.evaluate(() => {
+      localStorage.removeItem("dronesz_custom_nav_config");
+      window.dispatchEvent(new CustomEvent("dronesz_custom_nav_updated"));
+    });
 
     const mobileToggle = page.locator(".nav__mobile-toggle");
     await expect(mobileToggle).toBeVisible();
@@ -104,15 +111,16 @@ test.describe("Custom navigation dropdown — Mobile", () => {
     const mobileCustomBtn = mobileDrawer.getByRole("button", { name: /Custom/i });
     await mobileCustomBtn.click();
 
-    const framesBtn = mobileDrawer.getByRole("button", { name: "Frames" });
-    await expect(framesBtn).toBeVisible();
+    const framesRow = mobileDrawer.locator(".nav__mobile-custom-row", { hasText: "Frames" });
+    await expect(framesRow).toBeVisible();
 
     const talkButtons = mobileDrawer.locator(".nav__custom-talk-btn");
-    await expect(talkButtons).toHaveCount(2);
+    await expect(talkButtons).toHaveCount(3);
 
-    // Click frames to ensure it navigates
-    await framesBtn.click();
-    const airframesSection = page.locator("#custom-airframes");
-    await expect(airframesSection).toBeVisible();
+    // Click frames Talk to us to ensure it navigates to /frames
+    await talkButtons.nth(0).click();
+    await expect(page).toHaveURL(/\/frames/);
+    const customTitle = page.locator("#custom-title");
+    await expect(customTitle).toBeVisible();
   });
 });

@@ -35,22 +35,26 @@ describe('customNavConfig', () => {
   it('returns default config when storage is empty', () => {
     const config = loadCustomNavConfig();
     expect(config).toEqual({
+      framesTalkToUsUrl: '/frames',
       motorsTalkToUsUrl: '/contact',
-      propellersTalkToUsUrl: '/contact',
+      parachuteTalkToUsUrl: '/store/parachute',
+      propellersTalkToUsUrl: '/store/parachute',
     });
   });
 
   it('saves and loads customized URLs correctly', () => {
     const customConfig: CustomNavConfig = {
+      framesTalkToUsUrl: '/frames',
       motorsTalkToUsUrl: 'https://example.com/motors-inquiry',
-      propellersTalkToUsUrl: '/contact?topic=propellers',
+      parachuteTalkToUsUrl: '/store/parachute',
     };
 
     saveCustomNavConfig(customConfig);
     const loaded = loadCustomNavConfig();
 
+    expect(loaded.framesTalkToUsUrl).toBe('/frames');
     expect(loaded.motorsTalkToUsUrl).toBe('https://example.com/motors-inquiry');
-    expect(loaded.propellersTalkToUsUrl).toBe('/contact?topic=propellers');
+    expect(loaded.parachuteTalkToUsUrl).toBe('/store/parachute');
   });
 
   it('falls back gracefully on invalid JSON', () => {
@@ -64,7 +68,8 @@ describe('customNavConfig', () => {
       motorsTalkToUsUrl: '/custom-motors',
     });
     const loaded = loadCustomNavConfig();
+    expect(loaded.framesTalkToUsUrl).toBe('/frames');
     expect(loaded.motorsTalkToUsUrl).toBe('/custom-motors');
-    expect(loaded.propellersTalkToUsUrl).toBe('/contact');
+    expect(loaded.parachuteTalkToUsUrl).toBe('/store/parachute');
   });
 });

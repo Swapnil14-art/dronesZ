@@ -221,7 +221,7 @@ export function Nav() {
     } else if (dest.startsWith("#")) {
       handleAnchor(dest);
     } else {
-      window.location.href = dest;
+      router.push(dest);
     }
   };
 
@@ -285,18 +285,22 @@ export function Nav() {
                           onMouseEnter={handleCustomMouseEnter}
                           onMouseLeave={handleCustomMouseLeave}
                         >
-                          {/* Frames is the ONLY category that is clickable */}
-                          <button
-                            type="button"
-                            className="nav__custom-frames-btn"
-                            role="menuitem"
-                            onClick={() => {
-                              setIsCustomDropdownOpen(false);
-                              handleAnchor("#custom-airframes");
-                            }}
-                          >
-                            <span>Frames</span>
-                          </button>
+                          {/* Frames — Text label with Talk to us button */}
+                          <div className="nav__custom-row" role="none">
+                            <span className="nav__custom-label">Frames</span>
+                            <button
+                              type="button"
+                              className="nav__custom-talk-btn"
+                              role="menuitem"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsCustomDropdownOpen(false);
+                                handleTalkToUs(customNavConfig.framesTalkToUsUrl || "/frames");
+                              }}
+                            >
+                              Talk to us
+                            </button>
+                          </div>
 
                           <div className="nav__custom-divider" />
 
@@ -309,6 +313,7 @@ export function Nav() {
                               role="menuitem"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                setIsCustomDropdownOpen(false);
                                 handleTalkToUs(customNavConfig.motorsTalkToUsUrl);
                               }}
                             >
@@ -318,16 +323,17 @@ export function Nav() {
 
                           <div className="nav__custom-divider" />
 
-                          {/* Propellers — Text NOT clickable, Talk to us button clickable */}
+                          {/* Parachute — Text NOT clickable, Talk to us button clickable */}
                           <div className="nav__custom-row" role="none">
-                            <span className="nav__custom-label">Propellers</span>
+                            <span className="nav__custom-label">Parachute</span>
                             <button
                               type="button"
                               className="nav__custom-talk-btn"
                               role="menuitem"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleTalkToUs(customNavConfig.propellersTalkToUsUrl);
+                                setIsCustomDropdownOpen(false);
+                                handleTalkToUs(customNavConfig.parachuteTalkToUsUrl || customNavConfig.propellersTalkToUsUrl || "/contact");
                               }}
                             >
                               Talk to us
@@ -506,35 +512,40 @@ export function Nav() {
 
                       {isCustomDropdownOpen && (
                         <div className="nav__mobile-custom-group">
-                          <button
-                            type="button"
-                            className="nav__mobile-sublink"
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              setIsCustomDropdownOpen(false);
-                              handleAnchor("#custom-airframes");
-                            }}
-                          >
-                            Frames
-                          </button>
-
                           <div className="nav__mobile-custom-row">
-                            <span className="nav__mobile-custom-label">Motors</span>
+                            <span className="nav__mobile-custom-label">Frames</span>
                             <button
                               type="button"
                               className="nav__custom-talk-btn"
-                              onClick={() => handleTalkToUs(customNavConfig.motorsTalkToUsUrl)}
+                              onClick={() => {
+                                handleTalkToUs(customNavConfig.framesTalkToUsUrl || "/frames");
+                              }}
                             >
                               Talk to us
                             </button>
                           </div>
 
                           <div className="nav__mobile-custom-row">
-                            <span className="nav__mobile-custom-label">Propellers</span>
+                            <span className="nav__mobile-custom-label">Motors</span>
                             <button
                               type="button"
                               className="nav__custom-talk-btn"
-                              onClick={() => handleTalkToUs(customNavConfig.propellersTalkToUsUrl)}
+                              onClick={() => {
+                                handleTalkToUs(customNavConfig.motorsTalkToUsUrl);
+                              }}
+                            >
+                              Talk to us
+                            </button>
+                          </div>
+
+                          <div className="nav__mobile-custom-row">
+                            <span className="nav__mobile-custom-label">Parachute</span>
+                            <button
+                              type="button"
+                              className="nav__custom-talk-btn"
+                              onClick={() => {
+                                handleTalkToUs(customNavConfig.parachuteTalkToUsUrl || customNavConfig.propellersTalkToUsUrl || "/contact");
+                              }}
                             >
                               Talk to us
                             </button>

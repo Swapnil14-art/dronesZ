@@ -146,7 +146,7 @@ function CustomRevealPanel() {
  * Static by design. This section already spends its motion budget on the pinned scrub above;
  * a second animated element competing with it read as busy.
  */
-function CustomProcess() {
+export function CustomProcess() {
   // Named rather than indexed — narrative[] is the client's full text of record, and only the
   // closing line is surfaced here. The other beats stay unrendered for now.
   const kicker = CUSTOM_AIRFRAMES.narrative.at(-1);
@@ -194,7 +194,7 @@ const PATHS = [
  * The nav's "Custom" anchor targets `CustomProcess` above, not this panel; this one is reached by
  * scrolling past it, same as any other section.
  */
-function CustomFork({ form }: { form?: ReactNode }) {
+export function CustomFork({ form }: { form?: ReactNode }) {
   return (
     <section className="custom-fork" aria-label="Start a custom build">
       <p className="custom-fork__tagline">{CUSTOM_AIRFRAMES.tagline}</p>

@@ -8,97 +8,48 @@ test.describe("home", () => {
     await expect(page.getByRole("button", { name: "Custom" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Contact" })).toBeVisible();
 
-    // Hover Custom to verify dropdown Frames button
+    // Hover Custom to verify dropdown items
     await page.getByRole("button", { name: "Custom" }).hover();
-    await expect(page.getByRole("menuitem", { name: "Frames" })).toBeVisible();
+    await expect(page.locator(".nav__custom-dropdown .nav__custom-row", { hasText: "Frames" })).toBeVisible();
+    await expect(page.locator(".nav__custom-dropdown .nav__custom-row", { hasText: "Motors" })).toBeVisible();
+    await expect(page.locator(".nav__custom-dropdown .nav__custom-row", { hasText: "Parachute" })).toBeVisible();
   });
 
   /**
-   * The in-page nav anchors must land on their section from ANOTHER route too, not just from home.
+   * Nav "Custom -> Frames Talk to us" lands on /frames page.
    */
-  test('nav "Custom -> Frames" lands on custom-airframes section from another route', async ({
+  test('nav "Custom -> Frames" lands on /frames from another route', async ({
     page,
     isMobile,
   }) => {
     test.skip(isMobile, "Desktop route landing check");
     await page.goto("/contact");
     await page.getByRole("button", { name: "Custom" }).hover();
-    await page.getByRole("menuitem", { name: "Frames" }).click();
-    await page.waitForURL(/#custom-airframes/);
-
-    // Poll rather than assert once: the landing deliberately waits for load + fonts + 2 frames.
-    await expect
-      .poll(
-        () =>
-          page.evaluate((sel) => {
-            const r = document.querySelector(sel)?.getBoundingClientRect();
-            const nav = document
-              .querySelector(".nav")
-              ?.getBoundingClientRect();
-            if (!r || !nav) return null;
-            return Math.round(Math.abs(r.top - nav.height));
-          }, "#custom-airframes"),
-        {
-          message: `Frames never landed clear of the nav at #custom-airframes`,
-          timeout: 20_000,
-        },
-      )
-      .toBeLessThanOrEqual(4);
+    const framesRow = page.locator(".nav__custom-dropdown .nav__custom-row", { hasText: "Frames" });
+    await framesRow.locator(".nav__custom-talk-btn").click();
+    await expect(page).toHaveURL(/\/frames/);
+    await expect(page.locator("#custom-title")).toBeVisible();
   });
 
   /**
-   * What the "Custom -> Frames" item is FOR: it is a shortcut to the process rail.
+   * Nav "Custom -> Frames Talk to us" opens the /frames page with process rail.
    */
-  test('nav "Custom -> Frames" opens the process rail, not the tagline/path-card fork', async ({
+  test('nav "Custom -> Frames" opens the /frames page with process rail', async ({
     page,
     isMobile,
   }) => {
     test.skip(isMobile, "Desktop rail scroll check");
     await page.goto("/");
     await page.getByRole("button", { name: "Custom" }).hover();
-    await page.getByRole("menuitem", { name: "Frames" }).click();
+    const framesRow = page.locator(".nav__custom-dropdown .nav__custom-row", { hasText: "Frames" });
+    await framesRow.locator(".nav__custom-talk-btn").click();
 
+    await expect(page).toHaveURL(/\/frames/);
     const rail = page.locator(".custom-process__rail");
     await expect(rail).toBeVisible();
 
-    // Wait for the Lenis scroll to SETTLE before measuring anything. Polling the assertion itself
-    // would pass on any transient frame the target swept through mid-flight — verified: with the
-    // nav offset removed, a polled assertion still went green while the final resting position had
-    // the rail behind the bar. Two equal readings 150ms apart means the animation is done.
-    await expect
-      .poll(
-        async () => {
-          const a = await page.evaluate(() => window.scrollY);
-          await page.waitForTimeout(150);
-          const b = await page.evaluate(() => window.scrollY);
-          return a === b && b > 0;
-        },
-        { message: "scroll never settled", timeout: 20_000 },
-      )
-      .toBe(true);
-
-    // Single measurement at rest — this is the landing the user actually sees. Diff against the
-    // nav height (not a strict `>=`) mirrors the cross-route check above: an un-offset or
-    // over-offset landing both fail it, an exact landing does not.
-    const resting = await page.evaluate(() => {
-      const r = document
-        .querySelector(".custom-process")
-        ?.getBoundingClientRect();
-      const nav = document.querySelector(".nav")?.getBoundingClientRect();
-      if (!r || !nav) return null;
-      return {
-        clearsNavDiff: Math.round(Math.abs(r.top - nav.height)),
-        inViewport: r.bottom > 0 && r.top < window.innerHeight,
-      };
-    });
-    expect(resting?.inViewport).toBe(true);
-    expect(resting?.clearsNavDiff).toBeLessThanOrEqual(4);
-
-    // All four steps reachable without further scrolling — this is the point of landing here.
+    // All four steps rendered
     await expect(page.locator(".process-step")).toHaveCount(4);
-    for (const step of await page.locator(".process-step").all()) {
-      await expect(step).toBeInViewport();
-    }
   });
 
   test("no horizontal overflow", async ({ page }) => {

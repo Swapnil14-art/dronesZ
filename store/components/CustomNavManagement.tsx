@@ -52,21 +52,28 @@ export const CustomNavManagement: React.FC<Props> = ({ token: _token }) => {
     if (e) e.preventDefault();
     setErrorMsg(null);
 
+    const trimmedFrames = (config.framesTalkToUsUrl || '/frames').trim();
     const trimmedMotors = config.motorsTalkToUsUrl.trim();
-    const trimmedProps = config.propellersTalkToUsUrl.trim();
+    const trimmedParachute = (config.parachuteTalkToUsUrl || config.propellersTalkToUsUrl || '/store/parachute').trim();
 
+    if (!trimmedFrames) {
+      setErrorMsg('Frames Talk to us URL cannot be empty.');
+      return;
+    }
     if (!trimmedMotors) {
       setErrorMsg('Motors Talk to us URL cannot be empty.');
       return;
     }
-    if (!trimmedProps) {
-      setErrorMsg('Propellers Talk to us URL cannot be empty.');
+    if (!trimmedParachute) {
+      setErrorMsg('Parachute Talk to us URL cannot be empty.');
       return;
     }
 
     const updatedConfig: CustomNavConfig = {
+      framesTalkToUsUrl: trimmedFrames,
       motorsTalkToUsUrl: trimmedMotors,
-      propellersTalkToUsUrl: trimmedProps,
+      parachuteTalkToUsUrl: trimmedParachute,
+      propellersTalkToUsUrl: trimmedParachute,
     };
 
     saveCustomNavConfig(updatedConfig);
@@ -76,7 +83,7 @@ export const CustomNavManagement: React.FC<Props> = ({ token: _token }) => {
   };
 
   const handleResetDefaults = () => {
-    if (window.confirm('Reset Motors and Propellers Talk to us URLs to defaults (/contact)?')) {
+    if (window.confirm('Reset Frames, Motors, and Parachute Talk to us URLs to defaults?')) {
       const defaults = getDefaultCustomNavConfig();
       saveCustomNavConfig(defaults);
       setConfig(defaults);
@@ -203,9 +210,11 @@ export const CustomNavManagement: React.FC<Props> = ({ token: _token }) => {
           LIVE PREVIEW · Custom Dropdown Navigation Behavior
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '280px', background: '#0d0f12', padding: '0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.6rem', color: '#f8fafc', fontSize: '13px', fontWeight: 600, background: 'rgba(255,255,255,0.04)', borderRadius: '4px' }}>
-            <span>Frames</span>
-            <span style={{ fontSize: '11px', color: '#94a3b8' }}>→ #custom-airframes</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.6rem', color: '#94a3b8', fontSize: '13px' }}>
+            <span style={{ fontWeight: 500, color: '#e2e8f0' }}>Frames</span>
+            <span style={{ fontSize: '13px', color: '#e52b31', fontWeight: 600 }}>
+              Talk to us →
+            </span>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.6rem', color: '#94a3b8', fontSize: '13px' }}>
@@ -216,7 +225,7 @@ export const CustomNavManagement: React.FC<Props> = ({ token: _token }) => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0.6rem', color: '#94a3b8', fontSize: '13px' }}>
-            <span style={{ fontWeight: 500, color: '#e2e8f0' }}>Propellers</span>
+            <span style={{ fontWeight: 500, color: '#e2e8f0' }}>Parachute</span>
             <span style={{ fontSize: '13px', color: '#e52b31', fontWeight: 600 }}>
               Talk to us →
             </span>
@@ -238,11 +247,49 @@ export const CustomNavManagement: React.FC<Props> = ({ token: _token }) => {
             gap: '1.75rem',
           }}
         >
+          {/* Frames URL Field */}
+          <div>
+            <FieldLabel text="Frames — Talk to us Destination URL" required />
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '0.5rem' }}>
+              Target route or URL opened when a visitor clicks &quot;Talk to us&quot; next to Frames (default: <code>/frames</code>).
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <input
+                style={inputStyle}
+                value={config.framesTalkToUsUrl || '/frames'}
+                onChange={(e) => setConfig({ ...config, framesTalkToUsUrl: e.target.value })}
+                placeholder="/frames or https://..."
+              />
+              {config.framesTalkToUsUrl && (
+                <a
+                  href={config.framesTalkToUsUrl}
+                  target={config.framesTalkToUsUrl.startsWith('http') ? '_blank' : undefined}
+                  rel="noreferrer"
+                  style={{
+                    padding: '0.65rem 1rem',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '0.375rem',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: '#0f172a',
+                    textDecoration: 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Test Link ↗
+                </a>
+              )}
+            </div>
+          </div>
+
+          <div style={{ height: '1px', background: '#f1f5f9' }} />
+
           {/* Motors URL Field */}
           <div>
             <FieldLabel text="Motors — Talk to us Destination URL" required />
             <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '0.5rem' }}>
-              Target route or external URL opened when a visitor clicks &quot;Talk to us&quot; next to Motors.
+              Target route or external URL opened when a visitor clicks &quot;Talk to us&quot; next to Motors (default: <code>/contact</code>).
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               <input
@@ -276,23 +323,23 @@ export const CustomNavManagement: React.FC<Props> = ({ token: _token }) => {
 
           <div style={{ height: '1px', background: '#f1f5f9' }} />
 
-          {/* Propellers URL Field */}
+          {/* Parachute URL Field */}
           <div>
-            <FieldLabel text="Propellers — Talk to us Destination URL" required />
+            <FieldLabel text="Parachute — Talk to us Destination URL" required />
             <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '0.5rem' }}>
-              Target route or external URL opened when a visitor clicks &quot;Talk to us&quot; next to Propellers.
+              Target route or external URL opened when a visitor clicks &quot;Talk to us&quot; next to Parachute (default: <code>/store/parachute</code>).
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               <input
                 style={inputStyle}
-                value={config.propellersTalkToUsUrl}
-                onChange={(e) => setConfig({ ...config, propellersTalkToUsUrl: e.target.value })}
-                placeholder="/contact or https://..."
+                value={config.parachuteTalkToUsUrl || config.propellersTalkToUsUrl || '/store/parachute'}
+                onChange={(e) => setConfig({ ...config, parachuteTalkToUsUrl: e.target.value, propellersTalkToUsUrl: e.target.value })}
+                placeholder="/store/parachute or /contact"
               />
-              {config.propellersTalkToUsUrl && (
+              {(config.parachuteTalkToUsUrl || config.propellersTalkToUsUrl) && (
                 <a
-                  href={config.propellersTalkToUsUrl}
-                  target={config.propellersTalkToUsUrl.startsWith('http') ? '_blank' : undefined}
+                  href={config.parachuteTalkToUsUrl || config.propellersTalkToUsUrl}
+                  target={(config.parachuteTalkToUsUrl || config.propellersTalkToUsUrl || '').startsWith('http') ? '_blank' : undefined}
                   rel="noreferrer"
                   style={{
                     padding: '0.65rem 1rem',

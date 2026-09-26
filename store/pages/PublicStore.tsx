@@ -616,8 +616,8 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
         (activeParent && (slugify(activeParent.name) === param || `${slugify(activeParent.name)}-${activeParent.id}` === param || String(activeParent.id) === param))
           ? activeParent
           : products.find(
-              (p) => p.productType === 'PARENT' && (slugify(p.name) === param || `${slugify(p.name)}-${p.id}` === param || p.id.toString() === param)
-            ) || getCachedParent(param);
+            (p) => p.productType === 'PARENT' && (slugify(p.name) === param || `${slugify(p.name)}-${p.id}` === param || p.id.toString() === param)
+          ) || getCachedParent(param);
 
       if (matchedParent) {
         setActiveParent(matchedParent);

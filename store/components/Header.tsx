@@ -152,13 +152,20 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
                   onMouseEnter={handleCustomMouseEnter}
                   onMouseLeave={handleCustomMouseLeave}
                 >
-                  <button
-                    type="button"
-                    className="dronesz-custom-frames-btn"
-                    onClick={() => navigateTo('/#custom-airframes')}
-                  >
-                    Frames
-                  </button>
+                  <div className="dronesz-custom-row">
+                    <span className="dronesz-custom-label">Frames</span>
+                    <button
+                      type="button"
+                      className="dronesz-custom-talk-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsCustomDropdownOpen(false);
+                        handleTalkToUs(customNavConfig.framesTalkToUsUrl || '/frames');
+                      }}
+                    >
+                      Talk to us
+                    </button>
+                  </div>
 
                   <div className="dronesz-custom-divider" />
 
@@ -169,6 +176,7 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
                       className="dronesz-custom-talk-btn"
                       onClick={(e) => {
                         e.stopPropagation();
+                        setIsCustomDropdownOpen(false);
                         handleTalkToUs(customNavConfig.motorsTalkToUsUrl);
                       }}
                     >
@@ -179,13 +187,14 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
                   <div className="dronesz-custom-divider" />
 
                   <div className="dronesz-custom-row">
-                    <span className="dronesz-custom-label">Propellers</span>
+                    <span className="dronesz-custom-label">Parachute</span>
                     <button
                       type="button"
                       className="dronesz-custom-talk-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleTalkToUs(customNavConfig.propellersTalkToUsUrl);
+                        setIsCustomDropdownOpen(false);
+                        handleTalkToUs(customNavConfig.parachuteTalkToUsUrl || customNavConfig.propellersTalkToUsUrl || '/store/parachute');
                       }}
                     >
                       Talk to us
@@ -421,31 +430,46 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
 
                   {isCustomDropdownOpen && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingLeft: '0.75rem', marginTop: '0.5rem', marginBottom: '0.5rem', borderLeft: '2px solid rgba(255, 255, 255, 0.12)' }}>
-                      <button
-                        className="dronesz-mobile-link"
-                        onClick={() => navigateTo('/#custom-airframes')}
-                        style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc' }}
-                      >
-                        Frames
-                      </button>
-
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0' }}>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 500, color: '#94a3b8' }}>Motors</span>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 500, color: '#94a3b8' }}>Frames</span>
                         <button
                           type="button"
                           className="dronesz-custom-talk-btn"
-                          onClick={() => handleTalkToUs(customNavConfig.motorsTalkToUsUrl)}
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            setIsCustomDropdownOpen(false);
+                            handleTalkToUs(customNavConfig.framesTalkToUsUrl || '/frames');
+                          }}
                         >
                           Talk to us
                         </button>
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0' }}>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 500, color: '#94a3b8' }}>Propellers</span>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 500, color: '#94a3b8' }}>Motors</span>
                         <button
                           type="button"
                           className="dronesz-custom-talk-btn"
-                          onClick={() => handleTalkToUs(customNavConfig.propellersTalkToUsUrl)}
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            setIsCustomDropdownOpen(false);
+                            handleTalkToUs(customNavConfig.motorsTalkToUsUrl);
+                          }}
+                        >
+                          Talk to us
+                        </button>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.25rem 0' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 500, color: '#94a3b8' }}>Parachute</span>
+                        <button
+                          type="button"
+                          className="dronesz-custom-talk-btn"
+                          onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            setIsCustomDropdownOpen(false);
+                            handleTalkToUs(customNavConfig.parachuteTalkToUsUrl || customNavConfig.propellersTalkToUsUrl || '/store/parachute');
+                          }}
                         >
                           Talk to us
                         </button>

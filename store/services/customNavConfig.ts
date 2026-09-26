@@ -7,8 +7,10 @@
 import { useEffect, useState } from 'react';
 
 export interface CustomNavConfig {
+  framesTalkToUsUrl: string;
   motorsTalkToUsUrl: string;
-  propellersTalkToUsUrl: string;
+  parachuteTalkToUsUrl: string;
+  propellersTalkToUsUrl?: string; // backwards compatibility alias
 }
 
 const STORAGE_KEY = 'dronesz_custom_nav_config';
@@ -16,7 +18,9 @@ const EVENT_KEY = 'dronesz_custom_nav_updated';
 
 export function getDefaultCustomNavConfig(): CustomNavConfig {
   return {
+    framesTalkToUsUrl: '/frames',
     motorsTalkToUsUrl: '/contact',
+    parachuteTalkToUsUrl: '/contact',
     propellersTalkToUsUrl: '/contact',
   };
 }
@@ -27,9 +31,16 @@ export function loadCustomNavConfig(): CustomNavConfig {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<CustomNavConfig>;
+      const parachuteUrl = parsed.parachuteTalkToUsUrl || parsed.propellersTalkToUsUrl || '/contact';
+      const framesUrl = (!parsed.framesTalkToUsUrl || parsed.framesTalkToUsUrl === '#custom-airframes' || parsed.framesTalkToUsUrl === '#custom')
+        ? '/frames'
+        : parsed.framesTalkToUsUrl;
       return {
         ...getDefaultCustomNavConfig(),
         ...parsed,
+        framesTalkToUsUrl: framesUrl,
+        parachuteTalkToUsUrl: parachuteUrl,
+        propellersTalkToUsUrl: parachuteUrl,
       };
     }
   } catch {
