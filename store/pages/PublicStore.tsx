@@ -755,12 +755,12 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
 
   return (
     <div
-      className={`${(view === 'product' || activeProductDetail || view === 'parachute' || isParachuteRoute) ? '' : 'blueprint-bg'} min-h-screen flex flex-col pt-24`}
+      className="min-h-screen flex flex-col pt-24"
       style={{
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        background: (view === 'parachute' || isParachuteRoute) ? '#FBFAF7' : ((view === 'product' || activeProductDetail) ? '#f3f3f3ff' : undefined)
+        background: (view === 'product' || activeProductDetail) ? '#f3f3f3ff' : '#FBFAF7'
       }}
     >
       {/* Shared Stitch Header Navigation */}
