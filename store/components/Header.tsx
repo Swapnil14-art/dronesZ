@@ -119,9 +119,9 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
             <button
               type="button"
               className="dronesz-nav__link"
-              onClick={() => navigateTo('/#manufacturing')}
+              onClick={() => navigateTo('/contact')}
             >
-              Process
+              Bulk Order
             </button>
             
             {/* Custom Dropdown Trigger */}
@@ -410,9 +410,9 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
               <li>
                 <button
                   className="dronesz-mobile-link"
-                  onClick={() => navigateTo('/#manufacturing')}
+                  onClick={() => navigateTo('/contact')}
                 >
-                  Process
+                  Bulk Order
                 </button>
               </li>
               <li>
