@@ -100,6 +100,7 @@ export function Nav() {
 
   const customNavConfig = useCustomNavConfig();
   const [isCustomDropdownOpen, setIsCustomDropdownOpen] = useState(false);
+  const [isMobileCustomOpen, setIsMobileCustomOpen] = useState(false);
   const customDropdownRef = useRef<HTMLLIElement>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -108,6 +109,17 @@ export function Nav() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Prefetch common custom and store routes for instant client-side transition
+  useEffect(() => {
+    try {
+      router.prefetch('/frames');
+      router.prefetch('/contact');
+      router.prefetch('/store');
+    } catch {
+      // Graceful fallback
+    }
+  }, [router]);
 
   useEffect(() => {
     const hero = document.querySelector(".hero");
@@ -178,10 +190,11 @@ export function Nav() {
   const handleAnchor = (href: string) => {
     setMobileMenuOpen(false);
     setIsCustomDropdownOpen(false);
+    setIsMobileCustomOpen(false);
     if (pathname === "/") {
       scrollTo(href, { offset: navOffset() });
     } else {
-      window.location.href = `/${href}`;
+      router.push(`/${href}`);
     }
   };
 
@@ -191,6 +204,9 @@ export function Nav() {
       closeTimeoutRef.current = null;
     }
     setIsCustomDropdownOpen(true);
+    if (customNavConfig.framesTalkToUsUrl?.startsWith("/")) router.prefetch(customNavConfig.framesTalkToUsUrl);
+    if (customNavConfig.motorsTalkToUsUrl?.startsWith("/")) router.prefetch(customNavConfig.motorsTalkToUsUrl);
+    if (customNavConfig.parachuteTalkToUsUrl?.startsWith("/")) router.prefetch(customNavConfig.parachuteTalkToUsUrl);
   };
 
   const handleCustomMouseLeave = () => {
@@ -209,6 +225,7 @@ export function Nav() {
 
   const handleTalkToUs = (url: string) => {
     setIsCustomDropdownOpen(false);
+    setIsMobileCustomOpen(false);
     setMobileMenuOpen(false);
     const dest = url || '/contact';
     if (
@@ -490,7 +507,13 @@ export function Nav() {
           <button
             type="button"
             className="nav__mobile-toggle"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => {
+              setMobileMenuOpen((prev) => {
+                const next = !prev;
+                if (!next) setIsMobileCustomOpen(false);
+                return next;
+              });
+            }}
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
           >
@@ -514,17 +537,21 @@ export function Nav() {
                         <button
                           type="button"
                           className="nav__mobile-link"
-                          onClick={() => setIsCustomDropdownOpen(!isCustomDropdownOpen)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsMobileCustomOpen((prev) => !prev);
+                          }}
                           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}
+                          aria-expanded={isMobileCustomOpen}
                         >
                           <span>Custom</span>
                           <span style={{ fontSize: '11px', opacity: 0.7 }}>
-                            {isCustomDropdownOpen ? '▴' : '▾'}
+                            {isMobileCustomOpen ? '▴' : '▾'}
                           </span>
                         </button>
                       </div>
 
-                      {isCustomDropdownOpen && (
+                      {isMobileCustomOpen && (
                         <div className="nav__mobile-custom-group">
                           <div className="nav__mobile-custom-row">
                             <span className="nav__mobile-custom-label">Frames</span>
@@ -545,7 +572,7 @@ export function Nav() {
                               type="button"
                               className="nav__custom-talk-btn"
                               onClick={() => {
-                                handleTalkToUs(customNavConfig.motorsTalkToUsUrl);
+                                handleTalkToUs(customNavConfig.motorsTalkToUsUrl || "/contact");
                               }}
                             >
                               Talk to us
