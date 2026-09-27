@@ -148,8 +148,13 @@ public class RedisConfig extends CachingConfigurerSupport {
         return new GenericJackson2JsonRedisSerializer(objectMapper);
     }
 
-    @Bean
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
+        return cacheManager(redisConnectionFactory, (com.dronestore.system.cache.CacheMetricsCollector) null);
+    }
+
+    @Bean
+    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory,
+                                     com.dronestore.system.cache.CacheMetricsCollector metricsCollector) {
         GenericJackson2JsonRedisSerializer jsonSerializer = createJsonRedisSerializer();
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
 
@@ -185,7 +190,7 @@ public class RedisConfig extends CachingConfigurerSupport {
         org.springframework.data.redis.cache.RedisCacheWriter cacheWriter =
                 org.springframework.data.redis.cache.RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory);
 
-        return new ResilientRedisCacheManager(cacheWriter, defaultCacheConfig, cacheConfigurations);
+        return new ResilientRedisCacheManager(cacheWriter, defaultCacheConfig, cacheConfigurations, metricsCollector);
     }
 
     @Bean

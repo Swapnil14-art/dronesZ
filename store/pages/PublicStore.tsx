@@ -504,11 +504,16 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
     }
   }, [initialView]);
 
+  // Re-fetch catalog when search query changes
+  const prevSearchRef = React.useRef(search);
   useEffect(() => {
-    if (view === 'catalog') {
-      loadMainCatalog();
+    if (prevSearchRef.current !== search) {
+      prevSearchRef.current = search;
+      if (view === 'catalog') {
+        loadMainCatalog();
+      }
     }
-  }, [view, search]);
+  }, [search, view]);
 
   const handleUrlRouting = async () => {
     const pathname = window.location.pathname;
@@ -1338,7 +1343,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                   >
                     <div className="image-void-stage">
                       {child.image ? (
-                        <img src={getProductImageUrl(child.image)!} alt={child.name} className="product-img" />
+                        <img src={getProductImageUrl(child.image)!} alt={child.name} className="product-img" loading="lazy" decoding="async" />
                       ) : (
                         <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: '#94a3b8', textTransform: 'uppercase' }}>
                           DRONESZ SPECIMEN

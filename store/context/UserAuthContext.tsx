@@ -51,10 +51,18 @@ export const UserAuthProvider: React.FC<{ children: ReactNode }> = ({ children }
       const storedToken = typeof window !== 'undefined' ? localStorage.getItem(USER_TOKEN_KEY) : null;
       if (storedToken) {
         try {
-          const profile = await fetchUserProfile(storedToken);
+          const [profile, cartData] = await Promise.all([
+            fetchUserProfile(storedToken),
+            fetchUserCart(storedToken).catch((err) => {
+              console.error('Error fetching user cart:', err);
+              return null;
+            }),
+          ]);
           setUser(profile);
           setToken(storedToken);
-          await loadCartData(storedToken);
+          if (cartData) {
+            setCart(cartData);
+          }
         } catch {
           localStorage.removeItem(USER_TOKEN_KEY);
           setToken(null);

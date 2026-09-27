@@ -174,6 +174,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
           <img
             src={activeImage.url}
             alt={`${productName} - ${activeImage.label}`}
+            decoding="async"
             style={{
               width: '100%',
               height: '100%',
@@ -247,6 +248,8 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
                   <img
                     src={img.url}
                     alt={img.label}
+                    loading="lazy"
+                    decoding="async"
                     style={{
                       width: '100%',
                       height: '100%',
