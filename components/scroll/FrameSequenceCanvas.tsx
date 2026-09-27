@@ -30,8 +30,8 @@ export function FrameSequenceCanvas({
   count: number;
   ext?: string;
   progressRef: MutableRefObject<number>;
-  /** Hands draw() up so the owner can request a repaint each scroll tick. */
-  onReady: (draw: () => void) => void;
+  /** Hands draw() up so the owner can request a repaint each scroll tick or frame step. */
+  onReady?: (draw: (force?: boolean) => void) => void;
   className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -77,14 +77,14 @@ export function FrameSequenceCanvas({
       return -1;
     };
 
-    const draw = () => {
+    const draw = (force = false) => {
       if (isUnmounted || !canvas || !ctx) return;
 
       const targetIdx = Math.round(clamp01(progressRef.current) * (count - 1));
       const bestIdx = findBestFrameIndex(targetIdx);
 
       if (bestIdx < 0) return;
-      if (bestIdx === lastDrawnIndex && canvas.width > 0 && canvas.height > 0) return;
+      if (!force && bestIdx === lastDrawnIndex && canvas.width > 0 && canvas.height > 0) return;
 
       const img = frames[bestIdx];
       if (!img || !img.complete || img.naturalWidth === 0) return;
@@ -107,11 +107,14 @@ export function FrameSequenceCanvas({
       ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
     };
 
-    const requestRedraw = () => {
-      if (animFrameId !== null) return;
+    const requestRedraw = (force = false) => {
+      if (animFrameId !== null && !force) return;
+      if (animFrameId !== null) {
+        cancelAnimationFrame(animFrameId);
+      }
       animFrameId = requestAnimationFrame(() => {
         animFrameId = null;
-        draw();
+        draw(force);
       });
     };
 
@@ -227,7 +230,7 @@ export function FrameSequenceCanvas({
     const initialTimer = window.setTimeout(scheduleNextChunk, 40);
     activeTimeouts.push(initialTimer);
 
-    onReadyRef.current(draw);
+    onReadyRef.current?.(draw);
     resize();
     requestRedraw();
 

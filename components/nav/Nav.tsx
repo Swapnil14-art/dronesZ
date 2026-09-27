@@ -237,7 +237,16 @@ export function Nav() {
     <>
       <header className="nav" data-over-hero={overHero || undefined}>
         {/* Logo on Left */}
-        <Link href="/" className="nav__brand" aria-label={`${SITE.name} home`}>
+        <Link
+          href="/"
+          className="nav__brand"
+          aria-label={`${SITE.name} home`}
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("dronesz:home-entry"));
+            }
+          }}
+        >
           <img
             src="/brand/drone-mark.png"
             alt=""
@@ -375,6 +384,11 @@ export function Nav() {
                         href={item.href}
                         className="nav__link"
                         aria-current={isActive ? "page" : undefined}
+                        onClick={() => {
+                          if (item.href === "/" && typeof window !== "undefined") {
+                            window.dispatchEvent(new CustomEvent("dronesz:home-entry"));
+                          }
+                        }}
                       >
                         {item.label}
                       </Link>
@@ -580,7 +594,12 @@ export function Nav() {
                       <Link
                         href={item.href}
                         className="nav__mobile-link"
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          if (item.href === "/" && typeof window !== "undefined") {
+                            window.dispatchEvent(new CustomEvent("dronesz:home-entry"));
+                          }
+                        }}
                       >
                         {item.label}
                       </Link>
