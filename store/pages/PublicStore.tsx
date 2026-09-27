@@ -716,9 +716,9 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
     if (currentInCart + quantity > availableStock) {
       const remaining = Math.max(0, availableStock - currentInCart);
       if (remaining === 0) {
-        alert(`You already have the maximum available stock (${availableStock} units) of "${product.name}" in your cart.`);
+        alert(`You already have the maximum available limit of "${product.name}" in your cart.`);
       } else {
-        alert(`Cannot add ${quantity} units. Only ${remaining} more unit(s) available for "${product.name}" (you already have ${currentInCart} in your cart).`);
+        alert(`Cannot add ${quantity} units for "${product.name}" as it exceeds available inventory limit.`);
       }
       return;
     }
@@ -1375,9 +1375,6 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                                 textTransform: 'uppercase'
                               }}>
                                 ● {childEffectiveStatus.replace('_', ' ')}
-                              </div>
-                              <div style={{ fontSize: '11px', color: 'var(--color-muted)', fontWeight: 600 }}>
-                                {isChildOutOfStock ? '0 in stock' : `${childStock} in stock`}
                               </div>
                             </div>
 

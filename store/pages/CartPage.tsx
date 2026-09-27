@@ -22,7 +22,7 @@ export const CartPage: React.FC = () => {
       return handleRemove(itemId);
     }
     if (newQty > maxStock) {
-      setError(`Cannot set quantity above available stock (${maxStock}).`);
+      setError('Cannot increase quantity beyond available inventory limit.');
       return;
     }
     try {
@@ -213,11 +213,11 @@ export const CartPage: React.FC = () => {
                         {item.productName}
                       </h3>
 
-                      <div style={{ fontSize: '12px', color: isItemOutOfStock ? 'var(--color-error)' : 'var(--color-muted)', fontWeight: isItemOutOfStock ? 700 : 400 }}>
-                        {isItemOutOfStock
-                          ? 'Item is currently unavailable in inventory'
-                          : `Stock available: ${stock} unit${stock === 1 ? '' : 's'}`}
-                      </div>
+                      {isItemOutOfStock && (
+                        <div style={{ fontSize: '12px', color: 'var(--color-error)', fontWeight: 700 }}>
+                          Item is currently unavailable in inventory
+                        </div>
+                      )}
 
                       <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--color-primary)', marginTop: '0.4rem' }}>
                         ₹{item.price.toLocaleString('en-IN')}
@@ -245,7 +245,7 @@ export const CartPage: React.FC = () => {
                           style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           disabled={updatingId === item.id || item.quantity >= stock || isItemOutOfStock}
                           onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity + 1, stock)}
-                          title={item.quantity >= stock ? `Cannot exceed available stock (${stock})` : "Increase quantity"}
+                          title={item.quantity >= stock ? "Maximum available limit reached" : "Increase quantity"}
                         >
                           +
                         </button>
