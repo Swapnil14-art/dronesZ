@@ -24,10 +24,34 @@ public class DroneStoreSystemApplication {
      * Keeps production and cloud deployments unaffected while providing seamless zero-setup local performance.
      */
     private static void ensureRedisAvailable() {
-        String host = System.getProperty("REDIS_HOST");
-        if (host == null || host.trim().isEmpty()) {
-            host = System.getenv("REDIS_HOST");
+        String redisUrl = System.getProperty("REDIS_URL");
+        if (redisUrl == null || redisUrl.trim().isEmpty()) {
+            redisUrl = System.getenv("REDIS_URL");
         }
+
+        String host = null;
+        int port = 6379;
+
+        if (redisUrl != null && !redisUrl.trim().isEmpty()) {
+            try {
+                java.net.URI uri = java.net.URI.create(redisUrl.trim());
+                if (uri.getHost() != null && !uri.getHost().trim().isEmpty()) {
+                    host = uri.getHost().trim();
+                }
+                if (uri.getPort() > 0) {
+                    port = uri.getPort();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        if (host == null || host.trim().isEmpty()) {
+            host = System.getProperty("REDIS_HOST");
+            if (host == null || host.trim().isEmpty()) {
+                host = System.getenv("REDIS_HOST");
+            }
+        }
+
         if (host == null || host.trim().isEmpty()) {
             host = "localhost";
         }
@@ -36,7 +60,6 @@ public class DroneStoreSystemApplication {
         if (portStr == null || portStr.trim().isEmpty()) {
             portStr = System.getenv("REDIS_PORT");
         }
-        int port = 6379;
         if (portStr != null && !portStr.trim().isEmpty()) {
             try {
                 port = Integer.parseInt(portStr.trim());

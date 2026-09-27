@@ -93,31 +93,46 @@ public class RedisConfig extends CachingConfigurerSupport {
             builder.useSsl();
         }
 
-        LettuceClientConfiguration clientConfiguration = builder.build();
-
         String url = redisProperties.getUrl();
+        if (url == null || url.trim().isEmpty()) {
+            url = System.getProperty("REDIS_URL");
+            if (url == null || url.trim().isEmpty()) {
+                url = System.getenv("REDIS_URL");
+            }
+        }
+
+        RedisStandaloneConfiguration standaloneConfig;
         if (url != null && !url.trim().isEmpty()) {
-            RedisURI redisUri = RedisURI.create(url);
-            RedisStandaloneConfiguration standaloneConfig = new RedisStandaloneConfiguration();
-            standaloneConfig.setHostName(redisUri.getHost());
-            standaloneConfig.setPort(redisUri.getPort());
+            RedisURI redisUri = RedisURI.create(url.trim());
+            if (redisUri.isSsl() || url.trim().toLowerCase().startsWith("rediss://")) {
+                builder.useSsl();
+            }
+            standaloneConfig = new RedisStandaloneConfiguration();
+            standaloneConfig.setHostName(redisUri.getHost() != null ? redisUri.getHost() : "localhost");
+            standaloneConfig.setPort(redisUri.getPort() > 0 ? redisUri.getPort() : 6379);
+            if (redisUri.getUsername() != null && !redisUri.getUsername().trim().isEmpty()) {
+                standaloneConfig.setUsername(redisUri.getUsername().trim());
+            }
             if (redisUri.getPassword() != null && redisUri.getPassword().length > 0) {
                 standaloneConfig.setPassword(RedisPassword.of(new String(redisUri.getPassword())));
             }
             if (redisUri.getDatabase() >= 0) {
                 standaloneConfig.setDatabase(redisUri.getDatabase());
             }
-            return new LettuceConnectionFactory(standaloneConfig, clientConfiguration);
+        } else {
+            standaloneConfig = new RedisStandaloneConfiguration();
+            standaloneConfig.setHostName(redisProperties.getHost() != null ? redisProperties.getHost() : "localhost");
+            standaloneConfig.setPort(redisProperties.getPort() > 0 ? redisProperties.getPort() : 6379);
+            if (redisProperties.getUsername() != null && !redisProperties.getUsername().trim().isEmpty()) {
+                standaloneConfig.setUsername(redisProperties.getUsername().trim());
+            }
+            if (redisProperties.getPassword() != null && !redisProperties.getPassword().isEmpty()) {
+                standaloneConfig.setPassword(RedisPassword.of(redisProperties.getPassword()));
+            }
+            standaloneConfig.setDatabase(redisProperties.getDatabase());
         }
 
-        RedisStandaloneConfiguration standaloneConfig = new RedisStandaloneConfiguration();
-        standaloneConfig.setHostName(redisProperties.getHost() != null ? redisProperties.getHost() : "localhost");
-        standaloneConfig.setPort(redisProperties.getPort() > 0 ? redisProperties.getPort() : 6379);
-        if (redisProperties.getPassword() != null && !redisProperties.getPassword().isEmpty()) {
-            standaloneConfig.setPassword(RedisPassword.of(redisProperties.getPassword()));
-        }
-        standaloneConfig.setDatabase(redisProperties.getDatabase());
-
+        LettuceClientConfiguration clientConfiguration = builder.build();
         return new LettuceConnectionFactory(standaloneConfig, clientConfiguration);
     }
 
