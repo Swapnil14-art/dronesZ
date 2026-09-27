@@ -1,170 +1,76 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { usePathname } from "next/navigation";
 import { prefersReducedMotion } from "@/lib/motion";
-import { FrameSequenceCanvas } from "@/components/scroll/FrameSequenceCanvas";
 import "./hero.css";
 
-const HERO_FRAME_COUNT = 120;
-const PLAYBACK_DURATION_MS = 3800; // ~32 fps across 120 frames
-
 /**
- * HeroSection: Plays /hero-seq/ frame-by-frame automatically on page load.
- * While playing, hero text is hidden.
- * When the animation reaches its final frame, the final frame is held permanently
+ * HeroSection: Plays /hero-seq/FINAL.mp4 once automatically on page load (muted).
+ * While playing, hero text is hidden and the scroll indicator is omitted.
+ * When the video reaches its final frame, the final frame is held permanently
  * and the hero copy smoothly fades into view.
  *
- * Robust lifecycle:
- * - Initializes immediately on mount.
- * - Starts preloading frames with critical first frames prioritized.
- * - Resets to frame 0 and restarts animation smoothly on every home entry (brand click, nav link, bfcache pageshow, popstate).
- * - Reduced motion skips playback and displays the assembled drone immediately.
+ * Scrolling does not scrub or pause the video.
+ * Reduced motion users skip the cinematic playback and see the final hero state immediately.
  */
 export function HeroSection() {
-  const pathname = usePathname();
-  const progressRef = useRef(0);
-  const drawRef = useRef<((force?: boolean) => void) | null>(null);
-  const animFrameRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
-  const isPlayingRef = useRef(false);
-
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [mounted, setMounted] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
 
-  const stopPlayback = useCallback(() => {
-    if (animFrameRef.current !== null) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-    }
-    isPlayingRef.current = false;
-    startTimeRef.current = null;
+  const handleEnded = useCallback(() => {
+    setIsEnded(true);
   }, []);
 
-  const startPlayback = useCallback(() => {
-    stopPlayback();
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    // Reduced motion users skip the animation and see the final hero state immediately
+  useEffect(() => {
+    if (!mounted) return;
+
+    // If user prefers reduced motion, immediately show text
     if (prefersReducedMotion()) {
-      progressRef.current = 1;
-      drawRef.current?.(true);
       setIsEnded(true);
+      if (videoRef.current) {
+        videoRef.current.pause();
+        if (videoRef.current.duration) {
+          videoRef.current.currentTime = videoRef.current.duration;
+        }
+      }
       return;
     }
 
-    setIsEnded(false);
-    progressRef.current = 0;
-    drawRef.current?.(true);
-
-    isPlayingRef.current = true;
-    startTimeRef.current = performance.now();
-
-    const step = (timestamp: number) => {
-      if (!isPlayingRef.current) return;
-      if (startTimeRef.current === null) {
-        startTimeRef.current = timestamp;
+    const video = videoRef.current;
+    if (video) {
+      video.muted = true;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // If autoplay fails for any browser policy reason, reveal text gracefully
+          setIsEnded(true);
+        });
       }
-      const elapsed = timestamp - startTimeRef.current;
-      const progress = Math.min(elapsed / PLAYBACK_DURATION_MS, 1);
-
-      progressRef.current = progress;
-      drawRef.current?.();
-
-      if (progress < 1) {
-        animFrameRef.current = requestAnimationFrame(step);
-      } else {
-        progressRef.current = 1;
-        drawRef.current?.(true);
-        setIsEnded(true);
-        isPlayingRef.current = false;
-        animFrameRef.current = null;
-      }
-    };
-
-    animFrameRef.current = requestAnimationFrame(step);
-  }, [stopPlayback]);
-
-  const handleReady = useCallback(
-    (draw: (force?: boolean) => void) => {
-      drawRef.current = draw;
-      draw(true);
-      if (!isPlayingRef.current && !isEnded) {
-        startPlayback();
-      }
-    },
-    [isEnded, startPlayback],
-  );
-
-  // Initial mount trigger
-  useEffect(() => {
-    startPlayback();
-    return () => {
-      stopPlayback();
-    };
-  }, [startPlayback, stopPlayback]);
-
-  // Route transition trigger (Next.js pathname)
-  useEffect(() => {
-    if (pathname === "/") {
-      startPlayback();
-    } else {
-      stopPlayback();
     }
-  }, [pathname, startPlayback, stopPlayback]);
-
-  // Handle browser back/swipe navigation, bfcache restore, tab visibility, and custom header clicks
-  useEffect(() => {
-    const handleHomeEntry = () => {
-      if (pathname === "/" || (typeof window !== "undefined" && window.location.pathname === "/")) {
-        startPlayback();
-      }
-    };
-
-    const handleVisibilityChange = () => {
-      if (
-        document.visibilityState === "visible" &&
-        (pathname === "/" || (typeof window !== "undefined" && window.location.pathname === "/"))
-      ) {
-        if (!isEnded && !isPlayingRef.current) {
-          startPlayback();
-        }
-      }
-    };
-
-    window.addEventListener("pageshow", handleHomeEntry);
-    window.addEventListener("popstate", handleHomeEntry);
-    window.addEventListener("dronesz:home-entry", handleHomeEntry);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener("pageshow", handleHomeEntry);
-      window.removeEventListener("popstate", handleHomeEntry);
-      window.removeEventListener("dronesz:home-entry", handleHomeEntry);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      stopPlayback();
-    };
-  }, [pathname, isEnded, startPlayback, stopPlayback]);
+  }, [mounted]);
 
   return (
     <section className="hero" aria-labelledby="hero-title">
-      {/* Full-bleed frame sequence canvas behind everything */}
+      {/* Full-bleed video footage behind everything */}
       <div className="hero-media">
-        {/* Poster fallback (no-JS / instant paint before first frame): the initial frame */}
-        <img
-          className="hero-poster"
-          src="/hero-seq/001.png"
-          alt="A DronesZ 5-inch FPV drone in a matte studio void with red rim light."
-          width={1280}
-          height={560}
-          fetchPriority="high"
-        />
-        <FrameSequenceCanvas
-          dir="/hero-seq"
-          count={HERO_FRAME_COUNT}
-          ext="png"
-          progressRef={progressRef}
-          onReady={handleReady}
-          className="hero-canvas"
-        />
+        {mounted && (
+          <video
+            ref={videoRef}
+            className="hero-video"
+            src="/hero-seq/FINAL.mp4"
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            onEnded={handleEnded}
+            onError={() => setIsEnded(true)}
+          />
+        )}
       </div>
 
       <div className="hero-scrim" aria-hidden="true" />
@@ -183,5 +89,6 @@ export function HeroSection() {
     </section>
   );
 }
+
 
 
