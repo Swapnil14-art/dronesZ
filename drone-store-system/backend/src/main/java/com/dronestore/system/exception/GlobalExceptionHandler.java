@@ -105,8 +105,32 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
+    @ExceptionHandler(org.apache.catalina.connector.ClientAbortException.class)
+    public void handleClientAbort(org.apache.catalina.connector.ClientAbortException ex) {
+        log.debug("Client aborted connection during response transmission: {}", ex.getMessage());
+    }
+
+    @ExceptionHandler(java.io.IOException.class)
+    public ResponseEntity<ErrorResponse> handleIOException(java.io.IOException ex) {
+        if (isClientDisconnect(ex)) {
+            log.debug("Client disconnected prematurely (I/O): {}", ex.getMessage());
+            return null;
+        }
+        log.error("I/O Exception: ", ex);
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                "I/O Error: " + ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+        if (isClientDisconnect(ex)) {
+            log.debug("Client disconnected prematurely: {}", ex.getMessage());
+            return null;
+        }
         log.error("Unhandled Exception: ", ex);
         ErrorResponse error = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -114,5 +138,28 @@ public class GlobalExceptionHandler {
                 "Internal Server Error: " + ex.getMessage()
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    private boolean isClientDisconnect(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            String className = current.getClass().getName();
+            if (className.contains("ClientAbortException")) {
+                return true;
+            }
+            String msg = current.getMessage();
+            if (msg != null) {
+                String lower = msg.toLowerCase();
+                if (lower.contains("broken pipe") ||
+                    lower.contains("connection reset") ||
+                    lower.contains("connection was aborted") ||
+                    lower.contains("connection aborted") ||
+                    lower.contains("socket closed")) {
+                    return true;
+                }
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }

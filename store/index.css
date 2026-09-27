@@ -373,12 +373,12 @@ h6 {
   bottom: 0;
   background: rgba(15, 23, 42, 0.4);
   backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1.5rem;
-  touch-action: none;
+  padding: clamp(0.5rem, 2vw, 1.5rem);
   overscroll-behavior: contain;
 }
 
@@ -389,7 +389,8 @@ h6 {
   border-top: 4px solid var(--color-primary);
   max-width: 600px;
   width: 100%;
-  max-height: 85vh;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -399,6 +400,8 @@ h6 {
 .stitch-admin-container {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   background-color: var(--color-background);
 }
 
@@ -436,8 +439,39 @@ h6 {
 
 .stitch-admin-main {
   flex: 1;
-  padding: 2.5rem;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
   overflow-y: auto;
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 860px) {
+  .stitch-admin-container {
+    flex-direction: column;
+  }
+  .stitch-admin-sidebar {
+    width: 100%;
+    padding: 1rem clamp(0.75rem, 3vw, 1.25rem);
+    border-right: none;
+    border-bottom: 1px solid #1e293b;
+  }
+  .stitch-admin-sidebar nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  .stitch-admin-nav-item {
+    white-space: nowrap;
+    margin-bottom: 0;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.82rem;
+  }
+  .stitch-admin-main {
+    padding: 1.25rem 1rem;
+  }
 }
 
 /* Tables */
@@ -445,7 +479,9 @@ h6 {
   background: var(--color-surface);
   border: 1px solid var(--color-outline);
   border-radius: 0.5rem;
-  overflow: hidden;
+  overflow-x: auto;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 
@@ -533,3 +569,74 @@ h6 {
   font-weight: 700;
   color: var(--color-on-surface);
 }
+
+/* Responsive Grid and Layout Utilities for Store & Checkout */
+.stitch-cart-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .stitch-cart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stitch-cart-item {
+  display: grid;
+  grid-template-columns: 90px 1fr auto auto;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .stitch-cart-item {
+    grid-template-columns: 80px 1fr;
+    gap: 1rem;
+  }
+  .stitch-cart-item__actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--color-outline);
+    padding-top: 0.85rem;
+    margin-top: 0.25rem;
+  }
+}
+
+.stitch-checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .stitch-checkout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stitch-form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.stitch-form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .stitch-form-row-2,
+  .stitch-form-row-3 {
+    grid-template-columns: 1fr;
+  }
+}
+

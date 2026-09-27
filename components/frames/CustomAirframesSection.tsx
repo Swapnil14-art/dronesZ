@@ -29,28 +29,9 @@ function CustomRevealPanel() {
   const ref = useRef<HTMLElement>(null);
   const progressRef = useRef(0);
   const drawRef = useRef<(() => void) | null>(null);
-  // Below the fold — don't preload the 100-frame sequence until the section nears the
-  // viewport, so it doesn't compete with the hero's own preload at initial page load.
-  const [near, setNear] = useState(false);
 
   const handleReady = useCallback((draw: () => void) => {
     drawRef.current = draw;
-  }, []);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setNear(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: "60% 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
   }, []);
 
   useGSAP(
@@ -111,15 +92,13 @@ function CustomRevealPanel() {
           alt="A bespoke DronesZ airframe rendered from CAD into a finished carbon-and-red frame."
           loading="lazy"
         />
-        {near && (
-          <FrameSequenceCanvas
-            dir="/custom-seq"
-            count={CUSTOM_SEQ_COUNT}
-            progressRef={progressRef}
-            onReady={handleReady}
-            className="custom-reveal__canvas"
-          />
-        )}
+        <FrameSequenceCanvas
+          dir="/custom-seq"
+          count={CUSTOM_SEQ_COUNT}
+          progressRef={progressRef}
+          onReady={handleReady}
+          className="custom-reveal__canvas"
+        />
         {/* Names the panel for what it is. Reuses the SectionLabel eyebrow so it matches every
             other section marker on the page; the wrapper only positions it and flips it to
             light ink for the dark plate underneath. */}

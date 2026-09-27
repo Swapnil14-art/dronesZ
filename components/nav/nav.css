@@ -7,7 +7,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem var(--space-gutter);
+  padding: clamp(0.75rem, 2vw, 1rem) var(--space-gutter);
+  padding-top: max(clamp(0.75rem, 2vw, 1rem), env(safe-area-inset-top));
   background: color-mix(in oklch, var(--color-canvas) 70%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -176,6 +177,7 @@
   right: 0;
   top: calc(100% + 12px);
   width: 220px;
+  max-width: calc(100vw - 24px);
   padding: 0.75rem 0;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
   z-index: 100;
@@ -486,9 +488,12 @@
   top: 100%;
   left: 0;
   right: 0;
+  max-height: calc(100dvh - 70px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--color-canvas-deep, #0d0f12);
   border-bottom: 1px solid var(--color-line, rgba(255, 255, 255, 0.1));
-  padding: 1.5rem 2rem;
+  padding: clamp(1rem, 3vw, 1.5rem) clamp(1rem, 4vw, 2rem);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;

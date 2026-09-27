@@ -23,6 +23,14 @@ export const metadata: Metadata = {
   description,
   applicationName: "DronesZ India",
   alternates: { canonical: "/" },
+  icons: {
+    icon: [
+      { url: "/icon.png" },
+      { url: "/favicon.ico" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/icon.png",
+  },
   // og:image / twitter:image are auto-wired from app/opengraph-image.tsx.
   openGraph: {
     title,

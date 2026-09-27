@@ -1401,7 +1401,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                         1. Basic Information &amp; Product Hierarchy
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '1.25rem' }}>
+                      <div className="stitch-form-row-3">
                         <div className="stitch-form-group">
                           <label className="stitch-label">Product Name *</label>
                           <input
@@ -1481,7 +1481,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                         2. Pricing, Inventory &amp; Status
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: formProductType === 'PARENT' ? '1fr' : '1fr 1fr 1fr', gap: '1.25rem' }}>
+                      <div className={formProductType === 'PARENT' ? '' : 'stitch-form-row-3'}>
                         {formProductType === 'CHILD' && (
                           <>
                             <div className="stitch-form-group">
@@ -1557,7 +1557,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                         3. Delivery, Warranty, Specification Grade &amp; GST/Tax
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                      <div className="stitch-form-row-3" style={{ marginBottom: '1.25rem' }}>
                         <div className="stitch-form-group">
                           <label className="stitch-label">Dispatch / Delivery Time</label>
                           <input
@@ -1592,7 +1592,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem', alignItems: 'center', background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                      <div className="stitch-form-row-2" style={{ alignItems: 'center', background: '#f8fafc', padding: '1rem', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                           <input
                             type="checkbox"

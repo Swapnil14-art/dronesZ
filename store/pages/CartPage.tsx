@@ -90,13 +90,13 @@ export const CartPage: React.FC = () => {
     <div className="blueprint-bg min-h-screen flex flex-col pt-24" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <StitchHeader activePage="cart" />
 
-      <main style={{ flex: 1, maxWidth: 'var(--max-width)', width: '100%', margin: '0 auto', padding: '3rem 2rem 5rem 2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+      <main style={{ flex: 1, maxWidth: 'var(--max-width)', width: '100%', margin: '0 auto', padding: 'clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 5vw, 5rem)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
               CUSTOMER SHOPPING CART
-            </div><br></br><br></br>
-            <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
+            </div>
+            <h1 style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.5vw, 2.25rem)', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
               Selected Components &amp; Hardware
             </h1>
           </div>
@@ -136,9 +136,9 @@ export const CartPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '2rem' }}>
+          <div className="stitch-cart-grid">
             {/* Cart Item List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', minWidth: 0 }}>
               {cart.items.map((item) => {
                 const stock = item.stockAvailable !== undefined && item.stockAvailable !== null ? item.stockAvailable : 0;
                 const isItemOutOfStock = stock <= 0 || item.status === 'OUT_OF_STOCK';
@@ -147,13 +147,8 @@ export const CartPage: React.FC = () => {
                 return (
                   <div
                     key={item.id}
-                    className="stitch-card"
+                    className="stitch-card stitch-cart-item"
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: '90px 1fr auto auto',
-                      gap: '1.5rem',
-                      alignItems: 'center',
-                      padding: '1.25rem',
                       border: isItemOutOfStock ? '1px solid #fca5a5' : undefined,
                       background: isItemOutOfStock ? '#fff5f5' : undefined
                     }}
@@ -162,7 +157,8 @@ export const CartPage: React.FC = () => {
                     <div
                       className="image-void-stage"
                       style={{
-                        width: '90px',
+                        width: '100%',
+                        maxWidth: '90px',
                         height: '90px',
                         borderRadius: '0.375rem',
                         fontSize: '1.75rem',
@@ -172,7 +168,8 @@ export const CartPage: React.FC = () => {
                         justifyContent: 'center',
                         overflow: 'hidden',
                         background: 'var(--color-surface, #f8fafc)',
-                        border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))'
+                        border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
+                        flexShrink: 0
                       }}
                     >
                       {item.productImage ? (
@@ -182,7 +179,6 @@ export const CartPage: React.FC = () => {
                           className="product-img"
                           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                           onError={(e) => {
-                            // Fallback to emoji if image cannot be loaded
                             (e.target as HTMLElement).style.display = 'none';
                             if ((e.target as HTMLElement).parentElement) {
                               const fallback = document.createElement('span');
@@ -197,7 +193,7 @@ export const CartPage: React.FC = () => {
                     </div>
 
                     {/* Info */}
-                    <div>
+                    <div style={{ minWidth: 0, overflowWrap: 'break-word' }}>
                       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
                         <span className="badge-category" style={{ display: 'inline-block' }}>
                           {item.productType}
@@ -213,7 +209,7 @@ export const CartPage: React.FC = () => {
                         ) : null}
                       </div>
 
-                      <h3 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--color-on-surface)', marginBottom: '0.25rem' }}>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-on-surface)', marginBottom: '0.25rem', lineHeight: 1.3 }}>
                         {item.productName}
                       </h3>
 
@@ -228,58 +224,61 @@ export const CartPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Quantity controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <button
-                        className="btn-stitch-ghost"
-                        style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        disabled={updatingId === item.id || isItemOutOfStock}
-                        onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity - 1, stock)}
-                        title={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
-                      >
-                        -
-                      </button>
-                      <span style={{ fontWeight: 700, width: '28px', textAlign: 'center', fontSize: '1rem', color: isItemOutOfStock ? 'var(--color-muted)' : 'inherit' }}>
-                        {item.quantity}
-                      </span>
-                      <button
-                        className="btn-stitch-ghost"
-                        style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        disabled={updatingId === item.id || item.quantity >= stock || isItemOutOfStock}
-                        onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity + 1, stock)}
-                        title={item.quantity >= stock ? `Cannot exceed available stock (${stock})` : "Increase quantity"}
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    {/* Subtotal & Delete */}
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--color-on-surface)' }}>
-                        ₹{item.subtotal.toLocaleString('en-IN')}
+                    {/* Actions Group (Quantity Stepper & Subtotal/Delete) */}
+                    <div className="stitch-cart-item__actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
+                      {/* Quantity controls */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <button
+                          className="btn-stitch-ghost"
+                          style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          disabled={updatingId === item.id || isItemOutOfStock}
+                          onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity - 1, stock)}
+                          title={item.quantity === 1 ? "Remove item" : "Decrease quantity"}
+                        >
+                          -
+                        </button>
+                        <span style={{ fontWeight: 700, width: '28px', textAlign: 'center', fontSize: '1rem', color: isItemOutOfStock ? 'var(--color-muted)' : 'inherit' }}>
+                          {item.quantity}
+                        </span>
+                        <button
+                          className="btn-stitch-ghost"
+                          style={{ width: '32px', height: '32px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          disabled={updatingId === item.id || item.quantity >= stock || isItemOutOfStock}
+                          onClick={() => handleQuantityChange(item.id, item.quantity, item.quantity + 1, stock)}
+                          title={item.quantity >= stock ? `Cannot exceed available stock (${stock})` : "Increase quantity"}
+                        >
+                          +
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(item.id)}
-                        disabled={updatingId === item.id}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--color-error)',
-                          cursor: updatingId === item.id ? 'wait' : 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          opacity: updatingId === item.id ? 0.6 : 1,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                        title="Remove item from cart"
-                      >
-                        {updatingId === item.id ? 'Removing...' : 'Remove 🗑️'}
-                      </button>
+
+                      {/* Subtotal & Delete */}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: '0.25rem', color: 'var(--color-on-surface)' }}>
+                          ₹{item.subtotal.toLocaleString('en-IN')}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(item.id)}
+                          disabled={updatingId === item.id}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--color-error)',
+                            cursor: updatingId === item.id ? 'wait' : 'pointer',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            padding: '2px 4px',
+                            borderRadius: '4px',
+                            opacity: updatingId === item.id ? 0.6 : 1,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                          title="Remove item from cart"
+                        >
+                          {updatingId === item.id ? 'Removing...' : 'Remove 🗑️'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

@@ -198,12 +198,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
     <div className="blueprint-bg min-h-screen flex flex-col pt-24" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <StitchHeader activePage="dashboard" />
 
-      <main style={{ flex: 1, maxWidth: 'var(--max-width)', width: '100%', margin: '0 auto', padding: '3rem 2rem 5rem 2rem' }}>
-        <div style={{ marginBottom: '2.5rem' }}>
+      <main style={{ flex: 1, maxWidth: 'var(--max-width)', width: '100%', margin: '0 auto', padding: 'clamp(1.5rem, 4vw, 3rem) clamp(1rem, 3vw, 2rem) 5rem clamp(1rem, 3vw, 2rem)' }}>
+        <div style={{ marginBottom: '2rem' }}>
           <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
             CUSTOMER ACCOUNT PORTAL
           </div>
-          <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
+          <h1 style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
             Welcome back, {user?.fullName}
           </h1>
           <p style={{ color: 'var(--color-muted)', marginTop: '0.25rem' }}>
@@ -218,11 +218,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
         )}
 
         {/* Tab Navigation */}
-        <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--color-outline)', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--color-outline)', marginBottom: '2rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', paddingBottom: '2px' }}>
           <button
             onClick={() => setActiveTab('profile')}
             style={{
-              padding: '0.85rem 1.5rem',
+              padding: '0.75rem 1.25rem',
               background: 'none',
               border: 'none',
               borderBottom: activeTab === 'profile' ? '3px solid var(--color-primary)' : 'none',
@@ -230,6 +230,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
               fontWeight: 700,
               fontSize: '0.95rem',
               cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
             👤 Personal Profile
@@ -237,7 +239,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
           <button
             onClick={() => setActiveTab('addresses')}
             style={{
-              padding: '0.85rem 1.5rem',
+              padding: '0.75rem 1.25rem',
               background: 'none',
               border: 'none',
               borderBottom: activeTab === 'addresses' ? '3px solid var(--color-primary)' : 'none',
@@ -245,6 +247,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
               fontWeight: 700,
               fontSize: '0.95rem',
               cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
             📍 Delivery Addresses
@@ -252,7 +256,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
           <button
             onClick={() => setActiveTab('orders')}
             style={{
-              padding: '0.85rem 1.5rem',
+              padding: '0.75rem 1.25rem',
               background: 'none',
               border: 'none',
               borderBottom: activeTab === 'orders' ? '3px solid var(--color-primary)' : 'none',
@@ -260,6 +264,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
               fontWeight: 700,
               fontSize: '0.95rem',
               cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
             📦 Order History
@@ -268,7 +274,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
 
         {/* TAB 1: PROFILE */}
         {activeTab === 'profile' && (
-          <div className="stitch-card" style={{ maxWidth: '600px', padding: '2rem' }}>
+          <div className="stitch-card" style={{ maxWidth: '600px', padding: 'clamp(1.25rem, 3vw, 2rem)' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--color-on-surface)' }}>
               Profile Account Settings
             </h2>
@@ -328,7 +334,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
         {/* TAB 2: ADDRESSES */}
         {activeTab === 'addresses' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-on-surface)' }}>
                 Saved Shipping &amp; Billing Addresses
               </h2>
@@ -338,7 +344,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
             </div>
 
             {addresses.length === 0 ? (
-              <div className="stitch-card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+              <div className="stitch-card" style={{ textAlign: 'center', padding: 'clamp(2rem, 5vw, 4rem) 1.5rem' }}>
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📍</div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>No addresses saved</h3>
                 <p style={{ color: 'var(--color-muted)', marginBottom: '1.5rem' }}>Add a delivery address for faster multirotor checkout.</p>
@@ -347,7 +353,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: '1.5rem' }}>
                 {addresses.map((addr) => (
                   <div key={addr.id} className="stitch-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
@@ -363,7 +369,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--color-outline)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--color-outline)' }}>
                       {!addr.isDefault && (
                         <button className="btn-stitch-ghost" style={{ fontSize: '12px' }} onClick={() => handleSetDefaultAddress(addr.id)}>
                           Set Default
@@ -393,7 +399,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
             {loadingOrders ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>Loading order history...</div>
             ) : orders.length === 0 ? (
-              <div className="stitch-card" style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+              <div className="stitch-card" style={{ textAlign: 'center', padding: 'clamp(2rem, 5vw, 4rem) 1.5rem' }}>
                 <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>📦</div>
                 <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>No orders placed yet</h3>
                 <p style={{ color: 'var(--color-muted)', marginBottom: '1.5rem' }}>Your order history will appear here once you place an order.</p>
@@ -401,8 +407,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 {orders.map((order) => (
-                  <div key={order.id} className="stitch-card" style={{ padding: '1.75rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--color-outline)', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
+                  <div key={order.id} className="stitch-card" style={{ padding: 'clamp(1rem, 3vw, 1.75rem)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', borderBottom: '1px solid var(--color-outline)', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
                       <div>
                         <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--color-on-surface)' }}>
                           Order #{order.orderNumber}
@@ -412,7 +418,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
                         <span className={order.status === 'DELIVERED' ? 'badge-tertiary' : order.status === 'CANCELLED' ? 'badge-error' : 'badge-amber'}>
                           {order.status}
                         </span>
@@ -424,12 +430,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       {order.items.map((item) => (
-                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', fontSize: '14px' }}>
                           <div>
                             <span style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>{item.productName}</span>
                             <span style={{ color: 'var(--color-muted)', marginLeft: '0.5rem' }}>× {item.quantity}</span>
                           </div>
-                          <div style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>₹{item.price.toLocaleString('en-IN')}</div>
+                          <div style={{ fontWeight: 600, color: 'var(--color-on-surface)', flexShrink: 0 }}>₹{item.price.toLocaleString('en-IN')}</div>
                         </div>
                       ))}
                     </div>
@@ -449,7 +455,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
               {editingAddress ? 'Edit Shipping Address' : 'Add New Shipping Address'}
             </h3>
             <form onSubmit={handleSaveAddress} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="stitch-form-row-2">
                 <div className="stitch-form-group">
                   <label className="stitch-label">Full Name *</label>
                   <input type="text" className="stitch-input" value={addrFullName} onChange={(e) => setAddrFullName(e.target.value)} required />
@@ -470,7 +476,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
                 <input type="text" className="stitch-input" value={addrLine2} onChange={(e) => setAddrLine2(e.target.value)} />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div className="stitch-form-row-3">
                 <div className="stitch-form-group">
                   <label className="stitch-label">City *</label>
                   <input type="text" className="stitch-input" value={addrCity} onChange={(e) => setAddrCity(e.target.value)} required />
@@ -485,7 +491,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
                 <button type="button" className="btn-stitch-ghost" onClick={() => setShowAddressModal(false)}>
                   Cancel
                 </button>

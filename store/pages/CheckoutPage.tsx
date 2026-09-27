@@ -167,13 +167,13 @@ export const CheckoutPage: React.FC = () => {
     <div className="blueprint-bg min-h-screen flex flex-col pt-24" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <StitchHeader activePage="checkout" />
 
-      <main style={{ flex: 1, maxWidth: 'var(--max-width)', width: '100%', margin: '0 auto', padding: '3rem 2rem 5rem 2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+      <main style={{ flex: 1, maxWidth: 'var(--max-width)', width: '100%', margin: '0 auto', padding: 'clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 5vw, 5rem)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--color-primary)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
               FINAL ORDER CHECKOUT
             </div>
-            <h1 style={{ fontSize: '2.25rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
+            <h1 style={{ fontSize: 'clamp(1.75rem, 1.4rem + 1.5vw, 2.25rem)', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-on-surface)' }}>
               Shipping &amp; Order Breakdown
             </h1>
           </div>
@@ -188,12 +188,12 @@ export const CheckoutPage: React.FC = () => {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2rem' }}>
+        <div className="stitch-checkout-grid">
           {/* Left Column: Delivery Address & Cart Items */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', width: '100%', minWidth: 0 }}>
             {/* 1. Address Selection Card */}
             <div className="stitch-card" style={{ padding: '1.75rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-on-surface)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   📍 Delivery Address
                 </h3>
@@ -208,7 +208,7 @@ export const CheckoutPage: React.FC = () => {
 
               {showAddressForm ? (
                 <form onSubmit={handleAddAddress} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="stitch-form-row-2">
                     <div className="stitch-form-group">
                       <label className="stitch-label">Full Name *</label>
                       <input type="text" className="stitch-input" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
@@ -229,7 +229,7 @@ export const CheckoutPage: React.FC = () => {
                     <input type="text" className="stitch-input" value={addressLine2} onChange={(e) => setAddressLine2(e.target.value)} placeholder="Landmark, Area" />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  <div className="stitch-form-row-3">
                     <div className="stitch-form-group">
                       <label className="stitch-label">City *</label>
                       <input type="text" className="stitch-input" value={city} onChange={(e) => setCity(e.target.value)} required />

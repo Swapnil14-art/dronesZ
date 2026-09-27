@@ -25,7 +25,7 @@ const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({
       <div style={{
         background: '#ffffff',
         border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
-        padding: '2rem 2.5rem',
+        padding: 'clamp(1.25rem, 3vw, 2rem) clamp(1rem, 4vw, 2.5rem)',
         borderRadius: '8px',
         marginBottom: '2rem',
         width: '100%',
@@ -86,7 +86,7 @@ const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({
     <div style={{
       background: '#ffffff',
       border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
-      padding: '2rem 2.5rem',
+      padding: 'clamp(1.25rem, 3vw, 2rem) clamp(1rem, 4vw, 2.5rem)',
       borderRadius: '8px',
       marginBottom: '2rem',
       width: '100%',
@@ -791,7 +791,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
         maxWidth: isParachuteRoute ? '100%' : 'var(--max-width)',
         width: '100%',
         margin: '0 auto',
-        padding: isParachuteRoute ? '0' : '3rem 2rem 5rem 2rem'
+        padding: isParachuteRoute ? '0' : 'clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 5vw, 5rem)'
       }}>
         {error && (
           <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.375rem', marginBottom: '2rem' }}>
@@ -890,8 +890,8 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
             {/* Primary Hero Section: 2-Column Responsive Blueprint & Spec Layout */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: '3rem',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+              gap: 'clamp(1.5rem, 3vw, 3rem)',
               alignItems: 'start',
               width: '100%',
               minWidth: 0
@@ -1326,7 +1326,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
             ) : (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))',
                 gap: '1.5rem'
               }}>
                 {filteredChildProducts.map((child) => (
@@ -1463,7 +1463,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
 
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
                   gap: '1.5rem'
                 }}>
                   {parentProducts.map((parent) => (
@@ -1525,7 +1525,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
 
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
                   gap: '1.5rem'
                 }}>
                   <div

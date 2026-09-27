@@ -131,6 +131,7 @@
 .parachute-page .p-hero-cta {
   margin-top: 36px;
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: center;
 }
@@ -577,4 +578,10 @@
   .parachute-page .p-capability-grid { grid-template-columns: 1fr; }
   .parachute-page .p-process-list { grid-template-columns: 1fr; }
   .parachute-page .p-stage-item .desc { display: none; }
+}
+@media (max-width: 480px) {
+  .parachute-page .p-wrap { padding: 0 16px; }
+  .parachute-page .p-hero-cta .p-btn { width: 100%; justify-content: center; }
+  .parachute-page .p-range-row { grid-template-columns: 1fr; }
+  .parachute-page .p-range-row .rlink { grid-column: auto; }
 }
