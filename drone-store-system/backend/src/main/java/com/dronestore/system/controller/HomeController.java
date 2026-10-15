@@ -10,6 +10,13 @@ import java.util.Map;
 @RestController
 public class HomeController {
 
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> healthCheck() {
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "UP");
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/")
     public ResponseEntity<Map<String, Object>> getApiInfo() {
         Map<String, Object> response = new HashMap<>();
@@ -21,6 +28,7 @@ public class HomeController {
 
         Map<String, String> endpoints = new HashMap<>();
         endpoints.put("Interactive Swagger API Docs", "http://localhost:8070/swagger-ui.html");
+        endpoints.put("Health Check", "GET /health");
         endpoints.put("Public Storefront Products", "GET /api/products (Standalone & Parent products)");
         endpoints.put("Public Parent Product Children", "GET /api/products/{id}/children");
         endpoints.put("Public Storefront Categories", "GET /api/categories");

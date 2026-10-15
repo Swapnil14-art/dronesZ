@@ -55,7 +55,7 @@ public class SecurityConfig {
             .and()
             .authorizeRequests()
                 // Public root & Swagger UI endpoints
-                .antMatchers("/", "/api/info", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                .antMatchers("/", "/health", "/api/info", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                 // Public authentication endpoints (Admin & User login/signup)
                 .antMatchers("/api/auth/**").permitAll()
                 // Public storefront read-only product and category APIs
