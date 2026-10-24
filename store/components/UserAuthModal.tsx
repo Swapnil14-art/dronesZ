@@ -279,7 +279,7 @@ export const UserAuthModal: React.FC<UserAuthModalProps> = ({
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '13px', color: 'var(--color-muted, #64748b)' }}>
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <button
                 type="button"
                 onClick={() => { setMode('signup'); setError(null); }}

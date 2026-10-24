@@ -82,7 +82,7 @@ export function HeroSection() {
           <span className="accent">Assembling the Future.</span>
         </h1>
         <p className="hero-sub">
-          Custom builds, Indigenous UAV components, counter-UAS, consumer drones, or setting up a lab — we'll call you back.
+          Custom builds, Indigenous UAV components, counter-UAS, consumer drones, or setting up a lab — we&apos;ll call you back.
         </p>
       </div>
     </section>
