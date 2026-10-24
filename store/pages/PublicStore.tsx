@@ -1212,42 +1212,6 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                         paddingTop: '0.5rem',
                         flexWrap: 'wrap',
                       }}>
-                        {/* Free Express Dispatch */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '12px', color: '#475569', fontWeight: 500 }}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="1" y="3" width="15" height="13"></rect>
-                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                            <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                            <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                          </svg>
-                          <span>Free Express Dispatch</span>
-                        </div>
-
-                        {/* 2-Year Warranty */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '12px', color: '#475569', fontWeight: 500 }}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                            <path d="M9 12l2 2 4-4"></path>
-                          </svg>
-                          <span>2-Year Precision Warranty</span>
-                        </div>
-
-                        {/* Flight Sim Profile Included */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '12px', color: '#475569', fontWeight: 500 }}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
-                            <rect x="9" y="9" width="6" height="6"></rect>
-                            <line x1="9" y1="1" x2="9" y2="4"></line>
-                            <line x1="15" y1="1" x2="15" y2="4"></line>
-                            <line x1="9" y1="20" x2="9" y2="23"></line>
-                            <line x1="15" y1="20" x2="15" y2="23"></line>
-                            <line x1="20" y1="9" x2="23" y2="9"></line>
-                            <line x1="20" y1="14" x2="23" y2="14"></line>
-                            <line x1="1" y1="9" x2="4" y2="9"></line>
-                            <line x1="1" y1="14" x2="4" y2="14"></line>
-                          </svg>
-                          <span>Flight Sim Profile Included</span>
-                        </div>
                       </div>
                     </>
                   );

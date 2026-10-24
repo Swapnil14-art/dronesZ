@@ -52,7 +52,7 @@ export const PILLARS: Pillar[] = [
 ];
 
 export const CONTACT = {
-  email: "enquiry.dronesz@gmail.com",
+  email: "sales@dronesz.in",
   phone: "+91 98273 44411",
   address: "Indore, Madhya Pradesh, India",
   /** Registered legal entity — shown on every custom-build form (contact + both fork paths) per

@@ -12,7 +12,7 @@ bottom. Takes ~15 minutes.
 ## 1. Resend — sends each enquiry to your email
 
 Every time someone submits the form, Resend emails the details (and any attached file) to
-`enquiry.dronesz@gmail.com`.
+`sales@dronesz.in`.
 
 1. Create a free account at **https://resend.com** (the free plan covers 3,000 emails/month —
    plenty for enquiries).
@@ -24,13 +24,13 @@ Every time someone submits the form, Resend emails the details (and any attached
    - Open **Domains → Add Domain** and enter your website domain (e.g. `dronesz.in`).
    - Resend shows a few DNS records (DKIM / SPF). Add them at wherever your domain is registered
      (GoDaddy, Namecheap, etc.), then wait for the status to turn **Verified**.
-   - Once verified, your "from" address can be `enquiry@dronesz.in`.
+   - Once verified, your "from" address can be `sales@dronesz.in`.
    - *If you skip this step*, we can launch using a temporary test sender, but real inbox delivery
      is unreliable — verifying the domain is strongly recommended before going live.
 
 **Send us:**
 - The API key (`re_…`)
-- The "from" address you want enquiries to appear from (e.g. `DronesZ <enquiry@dronesz.in>`)
+- The "from" address you want enquiries to appear from (e.g. `DronesZ <sales@dronesz.in>`)
 
 ---
 
@@ -61,8 +61,8 @@ Vercel account that hosts the site.
 | Value | Looks like | From |
 |-------|------------|------|
 | `RESEND_API_KEY` | `re_…` | Resend → API Keys |
-| `RESEND_FROM` | `DronesZ <enquiry@dronesz.in>` | your verified Resend domain |
+| `RESEND_FROM` | `DronesZ <sales@dronesz.in>` | your verified Resend domain |
 | `BLOB_READ_WRITE_TOKEN` | `vercel_blob_rw_…` | Vercel → Storage → Blob |
-| Recipient email (confirm) | `enquiry.dronesz@gmail.com` | where enquiries should land |
+| Recipient email (confirm) | `sales@dronesz.in` | where enquiries should land |
 
 Once we have these, we connect them, test a real enquiry end-to-end, and the form goes live.

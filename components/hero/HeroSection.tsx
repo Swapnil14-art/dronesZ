@@ -82,8 +82,7 @@ export function HeroSection() {
           <span className="accent">Assembling the Future.</span>
         </h1>
         <p className="hero-sub">
-          Custom airframes, propulsion systems, and flight-ready platforms —
-          engineered in Indore, assembled for the mission.
+          Custom builds, Indigenous UAV components, counter-UAS, consumer drones, or setting up a lab — we'll call you back.
         </p>
       </div>
     </section>
