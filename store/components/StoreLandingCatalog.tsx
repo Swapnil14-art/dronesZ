@@ -193,6 +193,7 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
 
   return (
     <div className="store-landing">
+      <br></br>
       {/* ------------------------------------------------------------
           1. HERO SECTION — MADE IN BHARAT · INDIGENOUS TECHNOLOGY
           Aerospace HUD / Mission Control aesthetic
