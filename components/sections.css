@@ -101,11 +101,25 @@
   border-top: 1px solid var(--color-line);
   padding: var(--space-4) var(--space-gutter) var(--space-3);
   display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.footer__top {
+  display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
 }
+
+.footer__brand-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 48ch;
+}
+
 .footer__brand {
   display: inline-flex;
   align-items: center;
@@ -114,28 +128,119 @@
   font-weight: 700;
   font-size: var(--text-xl);
 }
+
 .footer__brand-mark {
   height: 1.5em;
   width: auto;
 }
+
 .footer__brand .accent {
   color: var(--color-brand-red);
   /* Optical correction — mirrors the nav wordmark (see nav.css .nav__brand .accent). */
   display: inline-block;
   transform: translateY(0.8px);
 }
+
 .footer__blurb {
   color: var(--color-muted);
-  margin-top: var(--space-1);
-  max-width: 32ch;
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
+
+/* Indigenous & Made in India Badges */
+.footer__indigenous-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+}
+
+.footer__indigenous-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-white);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.footer__indigenous-pill:hover {
+  border-color: var(--color-brand-red);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.footer__flag-svg {
+  display: inline-block;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.footer__pill-icon {
+  color: var(--color-brand-red);
+  flex-shrink: 0;
+}
+
 .footer__meta {
   color: var(--color-faint);
   font-size: var(--text-sm);
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
+
+.footer__meta-legal {
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.footer__meta a {
+  color: inherit;
+  transition: color 0.15s ease;
+}
+
 .footer__meta a:hover {
   color: var(--color-brand-red-hi);
+}
+
+/* Footer Bottom Strip */
+.footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-line);
+  font-size: var(--text-xs);
+  color: var(--color-faint);
+}
+
+.footer__aatmanirbhar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+
+.footer__copyright {
+  letter-spacing: 0.01em;
 }
 
 @media (max-width: 768px) {
@@ -143,10 +248,19 @@
     grid-template-columns: 1fr;
   }
   .footer {
+    gap: var(--space-2);
+  }
+  .footer__top {
     flex-direction: column;
     align-items: flex-start;
   }
   .footer__meta {
     text-align: left;
+    margin-top: var(--space-1);
+  }
+  .footer__bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
   }
 }
