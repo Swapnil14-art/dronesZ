@@ -15,6 +15,7 @@ import { StitchHeader } from '../components/StitchHeader';
 import { StitchFooter } from '../components/StitchFooter';
 import { ProductGallery } from '../components/ProductGallery';
 import { ParachutePublicPage } from '../components/ParachutePublicPage';
+import { StoreLandingCatalog } from '../components/StoreLandingCatalog';
 import { loadParachuteConfig, getDefaultParachuteConfig, ParachutePageConfig } from '../services/parachuteConfig';
 
 const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({ section }) => {
@@ -804,36 +805,6 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
           </div>
         )}
 
-        {/* Hero Section (only on main store catalog view) */}
-        {view === 'catalog' && (
-          <section style={{ maxWidth: '800px', marginBottom: '4rem' }}>
-            <div style={{
-              fontSize: '12px',
-              fontWeight: 600,
-              letterSpacing: '0.1em',
-              color: 'var(--color-primary)',
-              textTransform: 'uppercase',
-              marginBottom: '1rem'
-            }}>
-              — PRODUCT CATALOG
-            </div>
-            <h1 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(2.4rem, 1.8rem + 2.5vw, 3.5rem)',
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.1,
-              color: 'var(--color-on-surface)',
-              marginBottom: '1.25rem',
-              textWrap: 'balance'
-            }}><br></br>
-              DronesZ Flight Specs &amp; Components
-            </h1>
-            <p style={{ fontSize: '1.125rem', color: 'var(--color-on-surface-variant)', lineHeight: 1.6, maxWidth: '650px' }}>
-              Engineering-grade multirotor systems designed for cinematic precision and high-performance tactical applications.
-            </p>
-          </section>
-        )}
         {/* VIEW 4: PARACHUTE RECOVERY SYSTEMS WEBPAGE (/store/parachute) */}
         {(view === 'parachute' || isParachuteRoute) ? (
           parachuteConfig && parachuteConfig.isEnabled ? (
@@ -1400,148 +1371,17 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
           </div>
         ) : (
           /* VIEW 3: ROOT STORE CATALOG WEBPAGE (/ or /store) */
-          <div>
-            {/* Search & Filter Bar */}
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '3rem' }}>
-              <input
-                type="text"
-                className="stitch-input"
-                placeholder="Search catalog products & flight components..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{ flex: '1 1 300px' }}
-              />
-            </div>
-
-            {/* Parent Series Grid Section */}
-            {parentProducts.length > 0 && (
-              <section style={{ marginBottom: '4rem' }}>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  letterSpacing: '0.05em',
-                  color: 'var(--color-on-surface-variant)',
-                  textTransform: 'uppercase',
-                  marginBottom: '1.5rem'
-                }}>
-                  Parent Series
-                </div>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
-                  gap: '1.5rem'
-                }}>
-                  {parentProducts.map((parent) => (
-                    <div
-                      key={parent.id}
-                      className="parent-series-card"
-                      onClick={() => navigateToParentSeries(parent)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <br></br>
-
-                      <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-on-surface)', marginBottom: '0.4rem' }}>
-                        {parent.name}
-                      </h3>
-
-                      {parent.description && (
-                        <p style={{ fontSize: '0.9rem', color: 'var(--color-on-surface-variant)', marginBottom: '1rem', lineHeight: 1.4 }}>
-                          {parent.description}
-                        </p>
-                      )}
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-tertiary)' }} />
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-tertiary)', textTransform: 'uppercase' }}>
-                          AVAILABLE
-                        </span>
-                      </div>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigateToParentSeries(parent);
-                        }}
-                        className="btn-stitch-secondary-link"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-                      >
-                        Explore Variant Series
-                        <ArrowRightIcon size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Parachute / Recovery Systems Card Section */}
-            {parachuteConfig && parachuteConfig.isEnabled && (!search || parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase()) || 'parachute systems for drones'.includes(search.toLowerCase()) || 'parachute recovery systems'.includes(search.toLowerCase())) && (
-              <section style={{ marginBottom: '4rem' }}>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  letterSpacing: '0.05em',
-                  color: 'var(--color-on-surface-variant)',
-                  textTransform: 'uppercase',
-                  marginBottom: '1.5rem'
-                }}>
-                  RECOVERY SYSTEM
-                </div>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
-                  gap: '1.5rem'
-                }}>
-                  <div
-                    className="parent-series-card"
-                    onClick={navigateToParachute}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <br></br>
-
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-on-surface)', marginBottom: '0.4rem' }}>
-                      {parachuteConfig.displayName || 'Parachute systems for drones'}
-                    </h3>
-
-                    <p style={{ fontSize: '0.9rem', color: 'var(--color-on-surface-variant)', marginBottom: '1rem', lineHeight: 1.4 }}>
-                      {parachuteConfig.hero.subheading || 'Engineered autonomous recovery systems for critical payload protection.'}
-                    </p>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-tertiary)' }} />
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-tertiary)', textTransform: 'uppercase' }}>
-                        ACTIVE SYSTEM
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigateToParachute();
-                      }}
-                      className="btn-stitch-secondary-link"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
-                    >
-                      Explore Recovery Systems
-                      <ArrowRightIcon size={16} />
-                    </button>
-                  </div>
-                </div>
-              </section>
-            )}
-
-            {loading ? (
-              <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-                Loading DronesZ storefront catalog...
-              </div>
-            ) : parentProducts.length === 0 && (!parachuteConfig || !parachuteConfig.isEnabled || (search && !parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase()) && !'parachute recovery systems'.includes(search.toLowerCase()))) ? (
-              <div style={{ background: '#fff', border: '1px solid var(--color-outline)', padding: '4rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '0.5rem' }}>
-                No product series found matching your search query.
-              </div>
-            ) : null}
-          </div>
+          <StoreLandingCatalog
+            parentProducts={parentProducts}
+            search={search}
+            setSearch={setSearch}
+            loading={loading}
+            error={error}
+            parachuteConfig={parachuteConfig}
+            navigateToParentSeries={navigateToParentSeries}
+            navigateToParachute={navigateToParachute}
+            navigateToProductDetail={navigateToProductDetail}
+          />
         )}
       </main>
 

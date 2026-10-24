@@ -1,0 +1,885 @@
+/* ============================================================
+   DronesZ Store Landing Page — Dedicated Scoped Stylesheet
+   STRICTLY SCOPED to .store-landing container
+   Does not affect nested routes (/store/*) or any other page.
+   ============================================================ */
+
+.store-landing {
+  width: 100%;
+  max-width: var(--max-width, 1280px);
+  margin: 0 auto;
+  padding: 0 1rem 4rem;
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------
+   1. HERO SECTION
+   ------------------------------------------------------------ */
+.store-landing__hero {
+  position: relative;
+  margin-top: 1.5rem;
+  margin-bottom: 3.5rem;
+  padding: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem);
+  background: linear-gradient(135deg, #0b1120 0%, #0f172a 60%, #1e293b 100%);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  color: #ffffff;
+}
+
+/* Blueprint grid overlay */
+.store-landing__hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Radial ambient accent glow */
+.store-landing__hero-glow {
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(229, 43, 49, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+.store-landing__hero-content {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1.25fr 0.95fr;
+  gap: clamp(2rem, 4vw, 3.5rem);
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .store-landing__hero-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.store-landing__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fca5a5;
+  margin-bottom: 1.25rem;
+  backdrop-filter: blur(8px);
+}
+
+.store-landing__flag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 12px;
+}
+
+.store-landing__flag-svg {
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.store-landing__hero-title {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(2.2rem, 1.8rem + 2vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: #ffffff;
+  margin-bottom: 1.2rem;
+  text-wrap: balance;
+}
+
+.store-landing__hero-title .accent {
+  color: #e52b31;
+  background: linear-gradient(135deg, #f87171 0%, #e52b31 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.store-landing__hero-desc {
+  font-size: clamp(0.95rem, 0.9rem + 0.3vw, 1.1rem);
+  line-height: 1.65;
+  color: #94a3b8;
+  max-width: 580px;
+  margin-bottom: 2rem;
+}
+
+.store-landing__hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 2.25rem;
+}
+
+.store-landing__btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  background: #e52b31;
+  color: #ffffff;
+  border: 1px solid #dc2626;
+  border-radius: 0.5rem;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(229, 43, 49, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.store-landing__btn-primary:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(229, 43, 49, 0.45);
+}
+
+.store-landing__btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.5rem;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.store-landing__btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+/* Hero Telemetry Spec Bar */
+.store-landing__telemetry-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 640px) {
+  .store-landing__telemetry-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.store-landing__telemetry-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.store-landing__telemetry-val {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+}
+
+.store-landing__telemetry-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+/* Hero Visual Showcase */
+.store-landing__hero-visual {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.store-landing__visual-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 4/3.5;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.store-landing__visual-img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.7));
+  transition: transform 0.4s ease;
+}
+
+.store-landing__visual-card:hover .store-landing__visual-img {
+  transform: scale(1.04);
+}
+
+/* Floating telemetry chips */
+.store-landing__chip-badge {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.5rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  color: #f1f5f9;
+}
+
+.store-landing__chip-badge--top {
+  top: 12px;
+  left: 12px;
+}
+
+.store-landing__chip-badge--bottom {
+  bottom: 12px;
+  right: 12px;
+}
+
+.store-landing__chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+/* ------------------------------------------------------------
+   2. INDIAN MANUFACTURING IDENTITY SECTION
+   ------------------------------------------------------------ */
+.store-landing__mfg-section {
+  margin-bottom: 4rem;
+  padding: clamp(2rem, 4vw, 3rem);
+  background: #ffffff;
+  border: 1px solid var(--color-outline, rgba(15, 23, 42, 0.08));
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.03);
+}
+
+.store-landing__section-header {
+  margin-bottom: 2.25rem;
+}
+
+.store-landing__section-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #dc2626;
+  margin-bottom: 0.5rem;
+}
+
+.store-landing__section-title {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(1.8rem, 1.4rem + 1.4vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+
+.store-landing__section-subtitle {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #64748b;
+  max-width: 680px;
+}
+
+.store-landing__mfg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 860px) {
+  .store-landing__mfg-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.store-landing__mfg-card {
+  position: relative;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 0.6rem;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.store-landing__mfg-card:hover {
+  background: #ffffff;
+  border-color: rgba(229, 43, 49, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.08);
+}
+
+.store-landing__mfg-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dc2626;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04);
+}
+
+.store-landing__mfg-card-title {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.6rem;
+  line-height: 1.3;
+}
+
+.store-landing__mfg-card-desc {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+/* ------------------------------------------------------------
+   3. FEATURED ENGINEERING SPOTLIGHT (8017 Motor)
+   ------------------------------------------------------------ */
+.store-landing__spotlight {
+  margin-bottom: 4rem;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.85rem;
+  padding: clamp(2rem, 4vw, 3rem);
+  color: #ffffff;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.store-landing__spotlight-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 4vw, 3.5rem);
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  .store-landing__spotlight-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.store-landing__spotlight-media {
+  position: relative;
+  background: radial-gradient(circle at center, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.65rem;
+  aspect-ratio: 4/3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+.store-landing__spotlight-img {
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.8));
+  transition: transform 0.3s ease;
+}
+
+.store-landing__spotlight-media:hover .store-landing__spotlight-img {
+  transform: scale(1.05);
+}
+
+.store-landing__spotlight-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e52b31;
+  margin-bottom: 0.75rem;
+}
+
+.store-landing__spotlight-title {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(1.8rem, 1.4rem + 1.2vw, 2.3rem);
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+  line-height: 1.15;
+}
+
+.store-landing__spotlight-desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #94a3b8;
+  margin-bottom: 1.75rem;
+}
+
+.store-landing__spec-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
+.store-landing__spec-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.45rem;
+  padding: 0.6rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-landing__spec-chip-val {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.store-landing__spec-chip-lbl {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.15rem;
+}
+
+.store-landing__spotlight-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.store-landing__spotlight-price {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.store-landing__spotlight-price-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  display: block;
+}
+
+/* ------------------------------------------------------------
+   4. PRODUCT DISCOVERY & CATALOGUE
+   ------------------------------------------------------------ */
+.store-landing__catalogue-section {
+  margin-bottom: 4rem;
+}
+
+/* Category Filter Tabs & Search Bar */
+.store-landing__filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-outline, rgba(15, 23, 42, 0.08));
+}
+
+.store-landing__category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.store-landing__chip-btn {
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--color-outline, rgba(15, 23, 42, 0.1));
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.store-landing__chip-btn:hover {
+  border-color: #0f172a;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+.store-landing__chip-btn--active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+.store-landing__search-box {
+  position: relative;
+  min-width: 260px;
+  flex: 0 1 320px;
+}
+
+.store-landing__search-input {
+  width: 100%;
+  padding: 0.55rem 0.85rem 0.55rem 2.25rem;
+  background: #ffffff;
+  border: 1px solid var(--color-outline, rgba(15, 23, 42, 0.12));
+  border-radius: 0.5rem;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.store-landing__search-input:focus {
+  border-color: #e52b31;
+  box-shadow: 0 0 0 3px rgba(229, 43, 49, 0.1);
+}
+
+.store-landing__search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* Parent Systems / Flagship Series Cards Grid */
+.store-landing__series-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 1.75rem;
+  margin-bottom: 3.5rem;
+}
+
+.store-landing__series-card {
+  background: #ffffff;
+  border: 1px solid var(--color-outline, rgba(15, 23, 42, 0.08));
+  border-radius: 0.75rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  cursor: pointer;
+}
+
+.store-landing__series-card:hover {
+  border-color: rgba(229, 43, 49, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px -8px rgba(15, 23, 42, 0.12);
+}
+
+.store-landing__series-thumb-area {
+  position: relative;
+  aspect-ratio: 16/10;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.store-landing__series-thumb-img {
+  max-width: 80%;
+  max-height: 80%;
+  object-fit: contain;
+  transition: transform 0.35s ease;
+}
+
+.store-landing__series-card:hover .store-landing__series-thumb-img {
+  transform: scale(1.06);
+}
+
+.store-landing__series-tag-badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0f172a;
+  backdrop-filter: blur(4px);
+}
+
+.store-landing__series-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.store-landing__series-title {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.45rem;
+  line-height: 1.25;
+}
+
+.store-landing__series-desc {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #475569;
+  margin-bottom: 1.25rem;
+  flex-grow: 1;
+}
+
+.store-landing__series-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  margin-top: auto;
+}
+
+.store-landing__series-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: #059669;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.store-landing__series-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #059669;
+}
+
+.store-landing__series-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e52b31;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: gap 0.2s ease, color 0.2s ease;
+}
+
+.store-landing__series-card:hover .store-landing__series-link-btn {
+  gap: 0.55rem;
+  color: #dc2626;
+}
+
+/* Individual Hardware Specs Carousel / Grid */
+.store-landing__hardware-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: 1.25rem;
+}
+
+.store-landing__hw-card {
+  background: #ffffff;
+  border: 1px solid var(--color-outline, rgba(15, 23, 42, 0.08));
+  border-radius: 0.6rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.store-landing__hw-card:hover {
+  border-color: rgba(15, 23, 42, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.08);
+}
+
+.store-landing__hw-media {
+  position: relative;
+  aspect-ratio: 1;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.store-landing__hw-img {
+  max-width: 85%;
+  max-height: 85%;
+  object-fit: contain;
+  transition: transform 0.25s ease;
+}
+
+.store-landing__hw-card:hover .store-landing__hw-img {
+  transform: scale(1.05);
+}
+
+.store-landing__hw-info {
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.store-landing__hw-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+
+.store-landing__hw-category {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+}
+
+.store-landing__hw-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.store-landing__hw-price {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.store-landing__hw-action-btn {
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.35rem;
+  font-size: 12px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.store-landing__hw-action-btn:hover {
+  background: #e52b31;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+/* ------------------------------------------------------------
+   5. CLOSING CONSULTATION SECTION
+   ------------------------------------------------------------ */
+.store-landing__closing {
+  padding: clamp(2rem, 4vw, 3rem);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid var(--color-outline, rgba(15, 23, 42, 0.08));
+  border-radius: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.store-landing__closing-text {
+  max-width: 600px;
+}
+
+.store-landing__closing-title {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.4rem;
+}
+
+.store-landing__closing-desc {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.store-landing__closing-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
