@@ -34,7 +34,7 @@ export interface FeatureHighlight {
 
 export interface AgriDroneCertification {
   title: string;
-  certificateNo: string;
+  status: string;
   regulation: string;
   classType: string;
 }
@@ -70,7 +70,7 @@ export function getDefaultAgriDroneConfig(): AgriDronePageConfig {
 
     certification: {
       title: 'DGCA Type Certified',
-      certificateNo: 'T05260000094/00',
+      status: 'Type Certified & Compliant',
       regulation: 'Issued under Drone Rules 2021 (Rule 8 & 9(3))',
       classType: 'Medium Class Rotorcraft RPAS',
     },
@@ -183,7 +183,7 @@ export function getDefaultAgriDroneConfig(): AgriDronePageConfig {
         category: 'Regulatory Certification & Compliance',
         items: [
           { label: 'DGCA Certification', value: 'DGCA Type Certified' },
-          { label: 'Type Certificate Number', value: 'T05260000094/00' },
+          { label: 'Airworthiness Status', value: 'Type Certified & Compliant' },
           { label: 'Statutory Authority', value: 'Issued under Drone Rules 2021 (Rule 8 & 9(3))' },
           { label: 'Manufacturing Facility', value: 'DronesZ Facilities · Indore, Madhya Pradesh, India' },
         ],

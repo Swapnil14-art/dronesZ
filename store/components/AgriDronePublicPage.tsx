@@ -131,8 +131,8 @@ export const AgriDronePublicPage: React.FC<Props> = ({ config }) => {
 
               <div className="agri-cert-meta-grid">
                 <div className="agri-cert-meta-box">
-                  <div className="k">Type Certificate No.</div>
-                  <div className="v">{c.certification.certificateNo}</div>
+                  <div className="k">Airworthiness Status</div>
+                  <div className="v">{c.certification.status}</div>
                 </div>
                 <div className="agri-cert-meta-box">
                   <div className="k">Statutory Rule</div>
@@ -148,7 +148,7 @@ export const AgriDronePublicPage: React.FC<Props> = ({ config }) => {
             <div className="agri-cert-seal-wrap">
               <img
                 src="/agri-drone/dgca_cert_badge.png"
-                alt="DGCA Type Certified Certificate No. T05260000094/00"
+                alt="DGCA Type Certified RPAS"
                 className="agri-cert-seal-img"
               />
             </div>

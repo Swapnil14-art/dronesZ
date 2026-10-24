@@ -11,7 +11,7 @@ describe('agriDroneConfig', () => {
 
     // Certification
     expect(config.certification.title).toBe('DGCA Type Certified');
-    expect(config.certification.certificateNo).toBe('T05260000094/00');
+    expect(config.certification.status).toBe('Type Certified & Compliant');
     expect(config.certification.regulation).toContain('Rule 8 & 9(3)');
     expect(config.certification.classType).toBe('Medium Class Rotorcraft RPAS');
 

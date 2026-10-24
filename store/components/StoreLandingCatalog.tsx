@@ -281,14 +281,14 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
               className={`store-landing__chip-btn ${activeCategoryFilter === 'motors' ? 'store-landing__chip-btn--active' : ''}`}
               onClick={() => setActiveCategoryFilter('motors')}
             >
-              Propulsion &amp; Motors
+              Motors
             </button>
             <button
               type="button"
               className={`store-landing__chip-btn ${activeCategoryFilter === 'frames' ? 'store-landing__chip-btn--active' : ''}`}
               onClick={() => setActiveCategoryFilter('frames')}
             >
-              Carbon Airframes
+              Frames
             </button>
             {parachuteConfig && parachuteConfig.isEnabled && (
               <button
@@ -344,312 +344,312 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
         )}
 
         <div className="store-landing__series-grid">
-              {/* Motors Parent Series */}
-              {filteredParents
-                .filter((p) => p.name.toLowerCase().includes('motor'))
-                .map((parent) => (
-                  <div
-                    key={parent.id}
-                    className="store-landing__series-card"
-                    onClick={() => navigateToParentSeries(parent)}
-                  >
-                    <div className="store-landing__series-thumb-area">
-                      <span className="store-landing__series-tag-badge">12S HV Propulsion</span>
-                      <img
-                        src={
-                          featuredMotor?.image
-                            ? getProductImageUrl(featuredMotor.image) || '/manufacturing/stage-2-hd.jpg'
-                            : '/manufacturing/stage-2-hd.jpg'
-                        }
-                        alt={parent.name}
-                        className="store-landing__series-thumb-img"
-                      />
+          {/* Motors Parent Series */}
+          {filteredParents
+            .filter((p) => p.name.toLowerCase().includes('motor'))
+            .map((parent) => (
+              <div
+                key={parent.id}
+                className="store-landing__series-card"
+                onClick={() => navigateToParentSeries(parent)}
+              >
+                <div className="store-landing__series-thumb-area">
+                  <span className="store-landing__series-tag-badge">12S HV Propulsion</span>
+                  <img
+                    src={
+                      featuredMotor?.image
+                        ? getProductImageUrl(featuredMotor.image) || '/manufacturing/stage-2-hd.jpg'
+                        : '/manufacturing/stage-2-hd.jpg'
+                    }
+                    alt={parent.name}
+                    className="store-landing__series-thumb-img"
+                  />
+                </div>
+                <div className="store-landing__series-body">
+                  <h3 className="store-landing__series-title">{parent.name}</h3>
+                  <p className="store-landing__series-desc">
+                    {parent.description ||
+                      'Industrial-grade multirotor propulsion stators engineered for high efficiency, high torque, and low thermal load.'}
+                  </p>
+                  <div className="store-landing__series-footer">
+                    <div className="store-landing__series-status">
+                      <span className="store-landing__series-status-dot" />
+                      <span>Active Series ({childProductsMap[parent.id]?.length || 2} Variants)</span>
                     </div>
-                    <div className="store-landing__series-body">
-                      <h3 className="store-landing__series-title">{parent.name}</h3>
-                      <p className="store-landing__series-desc">
-                        {parent.description ||
-                          'Industrial-grade multirotor propulsion stators engineered for high efficiency, high torque, and low thermal load.'}
-                      </p>
-                      <div className="store-landing__series-footer">
-                        <div className="store-landing__series-status">
-                          <span className="store-landing__series-status-dot" />
-                          <span>Active Series ({childProductsMap[parent.id]?.length || 2} Variants)</span>
-                        </div>
-                        <button
-                          type="button"
-                          className="store-landing__series-link-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigateToParentSeries(parent);
-                          }}
-                        >
-                          <span>Explore Series</span>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-              {/* Frames Parent Series */}
-              {filteredParents
-                .filter((p) => p.name.toLowerCase().includes('frame'))
-                .map((parent) => (
-                  <div
-                    key={parent.id}
-                    className="store-landing__series-card"
-                    onClick={() => navigateToParentSeries(parent)}
-                  >
-                    <div className="store-landing__series-thumb-area">
-                      <span className="store-landing__series-tag-badge">CNC 3K Carbon Fiber</span>
-                      <img
-                        src="/frames/7.webp"
-                        alt={parent.name}
-                        className="store-landing__series-thumb-img"
-                      />
-                    </div>
-                    <div className="store-landing__series-body">
-                      <h3 className="store-landing__series-title">{parent.name}</h3>
-                      <p className="store-landing__series-desc">
-                        {parent.description ||
-                          'Precision-engineered drone frames built for strength, stability, vibration damping, and flight endurance.'}
-                      </p>
-                      <div className="store-landing__series-footer">
-                        <div className="store-landing__series-status">
-                          <span className="store-landing__series-status-dot" />
-                          <span>Active Series ({childProductsMap[parent.id]?.length || 4} Geometries)</span>
-                        </div>
-                        <button
-                          type="button"
-                          className="store-landing__series-link-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigateToParentSeries(parent);
-                          }}
-                        >
-                          <span>Explore Series</span>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-              {/* Autonomous Parachute Recovery Systems Card */}
-              {isParachuteVisible && (
-                <div
-                  className="store-landing__series-card"
-                  onClick={navigateToParachute}
-                >
-                  <div className="store-landing__series-thumb-area">
-                    <span className="store-landing__series-tag-badge">Payload Safety</span>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: '#e52b31' }}>
-                      <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        <path d="m9 12 2 2 4-4" />
+                    <button
+                      type="button"
+                      className="store-landing__series-link-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateToParentSeries(parent);
+                      }}
+                    >
+                      <span>Explore Series</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
                       </svg>
-                    </div>
-                  </div>
-                  <div className="store-landing__series-body">
-                    <h3 className="store-landing__series-title">
-                      {parachuteConfig.displayName || 'Parachute systems for drones'}
-                    </h3>
-                    <p className="store-landing__series-desc">
-                      {parachuteConfig.hero.subheading ||
-                        'Engineered autonomous recovery systems for critical payload protection and emergency airframe descent.'}
-                    </p>
-                    <div className="store-landing__series-footer">
-                      <div className="store-landing__series-status">
-                        <span className="store-landing__series-status-dot" />
-                        <span>Autonomous System</span>
-                      </div>
-                      <button
-                        type="button"
-                        className="store-landing__series-link-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigateToParachute();
-                        }}
-                      >
-                        <span>Explore Recovery Systems</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
+                    </button>
                   </div>
                 </div>
-              )}
+              </div>
+            ))}
 
-              {/* Standalone Agricultural Spraying Drone Card */}
-              {isAgriDroneVisible && (
-                <div
-                  className="store-landing__series-card"
-                  onClick={() => {
-                    if (navigateToAgriDrone) navigateToAgriDrone();
-                  }}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="store-landing__series-thumb-area">
-                    <span className="store-landing__series-tag-badge" style={{ background: '#15803d', color: '#ffffff' }}>
-                      DGCA Type Certified
-                    </span>
-                    <img
-                      src="/agri-drone/store_card_thumb.png"
-                      alt="Agricultural Spraying Drone hexacopter platform"
-                      className="store-landing__series-thumb-img"
-                    />
-                  </div>
-                  <div className="store-landing__series-body">
-                    <h3 className="store-landing__series-title">
-                      Agricultural Spraying Drone
-                    </h3>
-                    <p className="store-landing__series-desc">
-                      Medium class hexacopter RPAS with 10L tank, 4 flat-jet nozzles, 6x 2399W heavy-lift BLDC motors, and 23-minute endurance.
-                    </p>
-                    <div className="store-landing__series-footer">
-                      <div className="store-landing__series-status">
-                        <span className="store-landing__series-status-dot" style={{ background: '#16a34a', boxShadow: '0 0 6px rgba(22, 163, 74, 0.5)' }} />
-                        <span>Type Cert. T05260000094/00</span>
-                      </div>
-                      <button
-                        type="button"
-                        className="store-landing__series-link-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (navigateToAgriDrone) navigateToAgriDrone();
-                        }}
-                      >
-                        <span>Explore Drone</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                      </button>
+          {/* Frames Parent Series */}
+          {filteredParents
+            .filter((p) => p.name.toLowerCase().includes('frame'))
+            .map((parent) => (
+              <div
+                key={parent.id}
+                className="store-landing__series-card"
+                onClick={() => navigateToParentSeries(parent)}
+              >
+                <div className="store-landing__series-thumb-area">
+                  <span className="store-landing__series-tag-badge">CNC 3K Carbon Fiber</span>
+                  <img
+                    src="/frames/7.webp"
+                    alt={parent.name}
+                    className="store-landing__series-thumb-img"
+                  />
+                </div>
+                <div className="store-landing__series-body">
+                  <h3 className="store-landing__series-title">{parent.name}</h3>
+                  <p className="store-landing__series-desc">
+                    {parent.description ||
+                      'Precision-engineered drone frames built for strength, stability, vibration damping, and flight endurance.'}
+                  </p>
+                  <div className="store-landing__series-footer">
+                    <div className="store-landing__series-status">
+                      <span className="store-landing__series-status-dot" />
+                      <span>Active Series ({childProductsMap[parent.id]?.length || 4} Geometries)</span>
                     </div>
+                    <button
+                      type="button"
+                      className="store-landing__series-link-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateToParentSeries(parent);
+                      }}
+                    >
+                      <span>Explore Series</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
-              )}
+              </div>
+            ))}
+
+          {/* Autonomous Parachute Recovery Systems Card */}
+          {isParachuteVisible && (
+            <div
+              className="store-landing__series-card"
+              onClick={navigateToParachute}
+            >
+              <div className="store-landing__series-thumb-area">
+                <span className="store-landing__series-tag-badge">Payload Safety</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: '#e52b31' }}>
+                  <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="m9 12 2 2 4-4" />
+                  </svg>
+                </div>
+              </div>
+              <div className="store-landing__series-body">
+                <h3 className="store-landing__series-title">
+                  {parachuteConfig.displayName || 'Parachute systems for drones'}
+                </h3>
+                <p className="store-landing__series-desc">
+                  {parachuteConfig.hero.subheading ||
+                    'Engineered autonomous recovery systems for critical payload protection and emergency airframe descent.'}
+                </p>
+                <div className="store-landing__series-footer">
+                  <div className="store-landing__series-status">
+                    <span className="store-landing__series-status-dot" />
+                    <span>Autonomous System</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="store-landing__series-link-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigateToParachute();
+                    }}
+                  >
+                    <span>Explore Recovery Systems</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Standalone Agricultural Spraying Drone Card */}
+          {isAgriDroneVisible && (
+            <div
+              className="store-landing__series-card"
+              onClick={() => {
+                if (navigateToAgriDrone) navigateToAgriDrone();
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="store-landing__series-thumb-area">
+                <span className="store-landing__series-tag-badge" style={{ background: '#15803d', color: '#ffffff' }}>
+                  DGCA Type Certified
+                </span>
+                <img
+                  src="/agri-drone/store_card_thumb.png"
+                  alt="Agricultural Spraying Drone hexacopter platform"
+                  className="store-landing__series-thumb-img"
+                />
+              </div>
+              <div className="store-landing__series-body">
+                <h3 className="store-landing__series-title">
+                  Agricultural Spraying Drone
+                </h3>
+                <p className="store-landing__series-desc">
+                  Medium class hexacopter RPAS with 10L tank, 4 flat-jet nozzles, 6x 2399W heavy-lift BLDC motors, and 23-minute endurance.
+                </p>
+                <div className="store-landing__series-footer">
+                  <div className="store-landing__series-status">
+                    <span className="store-landing__series-status-dot" style={{ background: '#16a34a', boxShadow: '0 0 6px rgba(22, 163, 74, 0.5)' }} />
+                    <span>DGCA Type Certified RPAS</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="store-landing__series-link-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (navigateToAgriDrone) navigateToAgriDrone();
+                    }}
+                  >
+                    <span>Explore Drone</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Individual Hardware Components & Specs Section */}
+        {filteredHardware.length > 0 && (
+          <div style={{ marginTop: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              <h3 style={{
+                fontFamily: 'var(--font-display, "Space Grotesk", sans-serif)',
+                fontSize: '1.25rem',
+                fontWeight: 700,
+                color: '#0f172a'
+              }}>
+                Hardware Components &amp; Stators
+              </h3>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
+                {filteredHardware.length} verified item{filteredHardware.length > 1 ? 's' : ''}
+              </span>
             </div>
 
-            {/* Individual Hardware Components & Specs Section */}
-            {filteredHardware.length > 0 && (
-              <div style={{ marginTop: '2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                  <h3 style={{
-                    fontFamily: 'var(--font-display, "Space Grotesk", sans-serif)',
-                    fontSize: '1.25rem',
-                    fontWeight: 700,
-                    color: '#0f172a'
-                  }}>
-                    Hardware Components &amp; Stators
-                  </h3>
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
-                    {filteredHardware.length} verified item{filteredHardware.length > 1 ? 's' : ''}
-                  </span>
-                </div>
+            <div className="store-landing__hardware-grid">
+              {filteredHardware.map(({ product, categoryLabel }) => {
+                const status = getEffectiveProductStatus(product);
+                const isAvailable = status === 'AVAILABLE';
 
-                <div className="store-landing__hardware-grid">
-                  {filteredHardware.map(({ product, categoryLabel }) => {
-                    const status = getEffectiveProductStatus(product);
-                    const isAvailable = status === 'AVAILABLE';
+                return (
+                  <div
+                    key={product.id}
+                    className="store-landing__hw-card"
+                    onClick={() => navigateToProductDetail(product.id)}
+                  >
+                    <div className="store-landing__hw-media">
+                      <img
+                        src={
+                          product.image
+                            ? getProductImageUrl(product.image) || '/frames/5.webp'
+                            : product.name.includes('5')
+                              ? '/frames/5.webp'
+                              : product.name.includes('7')
+                                ? '/frames/7.webp'
+                                : product.name.includes('10')
+                                  ? '/frames/10.webp'
+                                  : product.name.includes('13')
+                                    ? '/frames/13.webp'
+                                    : '/manufacturing/stage-2-hd.jpg'
+                        }
+                        alt={product.name}
+                        className="store-landing__hw-img"
+                        loading="lazy"
+                      />
+                    </div>
 
-                    return (
-                      <div
-                        key={product.id}
-                        className="store-landing__hw-card"
-                        onClick={() => navigateToProductDetail(product.id)}
-                      >
-                        <div className="store-landing__hw-media">
-                          <img
-                            src={
-                              product.image
-                                ? getProductImageUrl(product.image) || '/frames/5.webp'
-                                : product.name.includes('5')
-                                  ? '/frames/5.webp'
-                                  : product.name.includes('7')
-                                    ? '/frames/7.webp'
-                                    : product.name.includes('10')
-                                      ? '/frames/10.webp'
-                                      : product.name.includes('13')
-                                        ? '/frames/13.webp'
-                                        : '/manufacturing/stage-2-hd.jpg'
-                            }
-                            alt={product.name}
-                            className="store-landing__hw-img"
-                            loading="lazy"
-                          />
+                    <div className="store-landing__hw-info">
+                      <span className="store-landing__hw-category">{categoryLabel}</span>
+                      <h4 className="store-landing__hw-title">{product.name}</h4>
+
+                      <div className="store-landing__hw-price-row">
+                        <div>
+                          <span className="store-landing__hw-price">
+                            {product.price > 0 ? `₹${product.price.toFixed(2)}` : 'Spec-Based'}
+                          </span>
+                          <span style={{
+                            display: 'block',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            color: isAvailable ? '#059669' : '#dc2626',
+                            marginTop: '2px'
+                          }}>
+                            ● {status.replace('_', ' ')}
+                          </span>
                         </div>
 
-                        <div className="store-landing__hw-info">
-                          <span className="store-landing__hw-category">{categoryLabel}</span>
-                          <h4 className="store-landing__hw-title">{product.name}</h4>
-
-                          <div className="store-landing__hw-price-row">
-                            <div>
-                              <span className="store-landing__hw-price">
-                                {product.price > 0 ? `₹${product.price.toFixed(2)}` : 'Spec-Based'}
-                              </span>
-                              <span style={{
-                                display: 'block',
-                                fontSize: '10px',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                color: isAvailable ? '#059669' : '#dc2626',
-                                marginTop: '2px'
-                              }}>
-                                ● {status.replace('_', ' ')}
-                              </span>
-                            </div>
-
-                            <button
-                              type="button"
-                              className="store-landing__hw-action-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigateToProductDetail(product.id);
-                              }}
-                            >
-                              Inspect Specs
-                            </button>
-                          </div>
-                        </div>
+                        <button
+                          type="button"
+                          className="store-landing__hw-action-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigateToProductDetail(product.id);
+                          }}
+                        >
+                          Inspect Specs
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-            {filteredParents.length === 0 && !isParachuteVisible && !isAgriDroneVisible && filteredHardware.length === 0 && !loading && (
-              <div style={{
-                background: '#ffffff',
-                border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
-                borderRadius: '0.5rem',
-                padding: '3rem 2rem',
-                textAlign: 'center',
-                color: '#64748b'
-              }}>
-                <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#0f172a', marginBottom: '0.35rem' }}>
-                  No Hardware Found
-                </div>
-                <p style={{ fontSize: '14px', maxWidth: '420px', margin: '0 auto 1.25rem' }}>
-                  No products match &quot;{search}&quot;. Try searching for &quot;motor&quot;, &quot;frame&quot;, or &quot;8017&quot;.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="store-landing__btn-secondary"
-                  style={{ color: '#0f172a', borderColor: '#cbd5e1' }}
-                >
-                  Clear Search Filter
-                </button>
-              </div>
-            )}
+        {filteredParents.length === 0 && !isParachuteVisible && !isAgriDroneVisible && filteredHardware.length === 0 && !loading && (
+          <div style={{
+            background: '#ffffff',
+            border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
+            borderRadius: '0.5rem',
+            padding: '3rem 2rem',
+            textAlign: 'center',
+            color: '#64748b'
+          }}>
+            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#0f172a', marginBottom: '0.35rem' }}>
+              No Hardware Found
+            </div>
+            <p style={{ fontSize: '14px', maxWidth: '420px', margin: '0 auto 1.25rem' }}>
+              No products match &quot;{search}&quot;. Try searching for &quot;motor&quot;, &quot;frame&quot;, or &quot;8017&quot;.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="store-landing__btn-secondary"
+              style={{ color: '#0f172a', borderColor: '#cbd5e1' }}
+            >
+              Clear Search Filter
+            </button>
+          </div>
+        )}
       </section>
 
       {/* ------------------------------------------------------------
