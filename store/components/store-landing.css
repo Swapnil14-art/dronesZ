@@ -13,19 +13,40 @@
 }
 
 /* ------------------------------------------------------------
-   1. HERO SECTION
+   1. HERO BANNER — MADE IN INDIA & INDIGENOUS TECHNOLOGY
    ------------------------------------------------------------ */
 .store-landing__hero {
   position: relative;
-  margin-top: 1.5rem;
-  margin-bottom: 3.5rem;
-  padding: clamp(2.5rem, 5vw, 4rem) clamp(1.5rem, 4vw, 3.5rem);
-  background: linear-gradient(135deg, #0b1120 0%, #0f172a 60%, #1e293b 100%);
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  width: 100%;
+  height: 25vh;
+  min-height: 180px;
+  max-height: 230px;
+  margin-top: 0.5rem;
+  margin-bottom: 2.5rem;
+  padding: 1.25rem clamp(1.25rem, 4vw, 3rem);
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #070c18 0%, #0b1324 50%, #111a2e 100%);
+  border-radius: 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 36px -12px rgba(2, 6, 23, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   overflow: hidden;
   color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* Indian Tricolor top accent rule */
+.store-landing__hero-tricolor-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #FF9933 0%, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%, #138808 100%);
+  opacity: 0.95;
 }
 
 /* Blueprint grid overlay */
@@ -33,257 +54,94 @@
   position: absolute;
   inset: 0;
   background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-  background-size: 32px 32px;
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
   pointer-events: none;
   opacity: 0.6;
 }
 
-/* Radial ambient accent glow */
-.store-landing__hero-glow {
+/* Ambient glow accents */
+.store-landing__hero-glow-left {
   position: absolute;
-  top: -20%;
-  right: -10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(229, 43, 49, 0.18) 0%, transparent 70%);
+  top: -30%;
+  left: -8%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(255, 153, 51, 0.16) 0%, transparent 70%);
   pointer-events: none;
   filter: blur(40px);
 }
 
-.store-landing__hero-content {
+.store-landing__hero-glow-right {
+  position: absolute;
+  bottom: -30%;
+  right: -8%;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(19, 136, 8, 0.16) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+.store-landing__hero-banner {
   position: relative;
   z-index: 2;
-  display: grid;
-  grid-template-columns: 1.25fr 0.95fr;
-  gap: clamp(2rem, 4vw, 3.5rem);
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  max-width: 900px;
+  width: 100%;
 }
 
-@media (max-width: 960px) {
-  .store-landing__hero-content {
-    grid-template-columns: 1fr;
-  }
-}
-
-.store-landing__eyebrow {
+.store-landing__hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.85rem;
+  gap: 0.45rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #fca5a5;
-  margin-bottom: 1.25rem;
+  color: #e2e8f0;
   backdrop-filter: blur(8px);
-}
-
-.store-landing__flag-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 12px;
 }
 
 .store-landing__flag-svg {
   border-radius: 2px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
   display: inline-block;
   vertical-align: middle;
 }
 
 .store-landing__hero-title {
   font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: clamp(2.2rem, 1.8rem + 2vw, 3.4rem);
-  font-weight: 800;
+  font-size: clamp(1.85rem, 1.4rem + 2.4vw, 3.1rem);
+  font-weight: 900;
   letter-spacing: -0.025em;
-  line-height: 1.1;
+  line-height: 1.08;
   color: #ffffff;
-  margin-bottom: 1.2rem;
-  text-wrap: balance;
+  margin: 0;
+  text-transform: uppercase;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
 }
 
-.store-landing__hero-title .accent {
-  color: #e52b31;
-  background: linear-gradient(135deg, #f87171 0%, #e52b31 100%);
+.store-landing__hero-subtitle {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(0.95rem, 0.8rem + 0.7vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fca5a5;
+  background: linear-gradient(135deg, #ff9933 0%, #ffffff 50%, #22c55e 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-.store-landing__hero-desc {
-  font-size: clamp(0.95rem, 0.9rem + 0.3vw, 1.1rem);
-  line-height: 1.65;
-  color: #94a3b8;
-  max-width: 580px;
-  margin-bottom: 2rem;
-}
-
-.store-landing__hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-  margin-bottom: 2.25rem;
-}
-
-.store-landing__btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.85rem 1.75rem;
-  background: #e52b31;
-  color: #ffffff;
-  border: 1px solid #dc2626;
-  border-radius: 0.5rem;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  text-decoration: none;
-  box-shadow: 0 4px 14px rgba(229, 43, 49, 0.35);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.store-landing__btn-primary:hover {
-  background: #dc2626;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(229, 43, 49, 0.45);
-}
-
-.store-landing__btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.85rem 1.5rem;
-  background: rgba(255, 255, 255, 0.06);
-  color: #f1f5f9;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 0.5rem;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.store-landing__btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #ffffff;
-}
-
-/* Hero Telemetry Spec Bar */
-.store-landing__telemetry-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-@media (max-width: 640px) {
-  .store-landing__telemetry-bar {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.store-landing__telemetry-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.store-landing__telemetry-val {
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #f8fafc;
-  letter-spacing: -0.02em;
-}
-
-.store-landing__telemetry-lbl {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
-  margin-top: 0.15rem;
-}
-
-/* Hero Visual Showcase */
-.store-landing__hero-visual {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.store-landing__visual-card {
-  position: relative;
-  width: 100%;
-  max-width: 440px;
-  aspect-ratio: 4/3.5;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0.75rem;
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(12px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.store-landing__visual-img {
-  width: 90%;
-  height: 90%;
-  object-fit: contain;
-  filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.7));
-  transition: transform 0.4s ease;
-}
-
-.store-landing__visual-card:hover .store-landing__visual-img {
-  transform: scale(1.04);
-}
-
-/* Floating telemetry chips */
-.store-landing__chip-badge {
-  position: absolute;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.85rem;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.5rem;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-  font-size: 12px;
-  color: #f1f5f9;
-}
-
-.store-landing__chip-badge--top {
-  top: 12px;
-  left: 12px;
-}
-
-.store-landing__chip-badge--bottom {
-  bottom: 12px;
-  right: 12px;
-}
-
-.store-landing__chip-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
+  margin: 0;
 }
 
 /* ------------------------------------------------------------

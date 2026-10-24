@@ -127,7 +127,6 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
     (!search.trim() ||
       (parachuteConfig.displayName && parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase())) ||
       'parachute recovery systems for drones'.includes(search.toLowerCase()));
-
   const scrollToCatalog = () => {
     const el = document.getElementById('store-catalogue');
     if (el) {
@@ -138,266 +137,45 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
   return (
     <div className="store-landing">
       {/* ------------------------------------------------------------
-          1. HERO SECTION
+          1. HERO SECTION — MADE IN INDIA & INDIGENOUS TECHNOLOGY
           ------------------------------------------------------------ */}
-      <section className="store-landing__hero" aria-label="DronesZ Store Hero">
+      <section className="store-landing__hero" aria-label="Made In India Indigenous Technology">
         <div className="store-landing__hero-grid" aria-hidden="true" />
-        <div className="store-landing__hero-glow" aria-hidden="true" />
+        <div className="store-landing__hero-glow-left" aria-hidden="true" />
+        <div className="store-landing__hero-glow-right" aria-hidden="true" />
+        <div className="store-landing__hero-tricolor-line" aria-hidden="true" />
 
-        <div className="store-landing__hero-content">
-          <div>
-            <div className="store-landing__eyebrow">
-              <span className="store-landing__flag-badge">
-                <svg
-                  width="18"
-                  height="12"
-                  viewBox="0 0 24 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="store-landing__flag-svg"
-                  aria-hidden="true"
-                >
-                  <rect width="24" height="5.33" fill="#FF9933" rx="1.5" />
-                  <rect y="5.33" width="24" height="5.33" fill="#FFFFFF" />
-                  <rect y="10.66" width="24" height="5.33" fill="#138808" rx="1.5" />
-                  <circle cx="12" cy="8" r="2.1" stroke="#000080" strokeWidth="0.6" fill="none" />
-                  <circle cx="12" cy="8" r="0.6" fill="#000080" />
-                </svg>
-                Indore Facility
-              </span>
-              <span>•</span>
-              <span>Precision UAV Systems</span>
-            </div>
-
-            <h1 className="store-landing__hero-title">
-              Aerospace-Grade Drone Hardware.{' '}
-              <span className="accent">Engineered in India.</span>
-            </h1>
-
-            <p className="store-landing__hero-desc">
-              In-house designed carbon airframes, high-voltage brushless propulsion, and autonomous payload recovery systems.
-              Engineered, bench-tested, and flight-validated in Indore for demanding mission profiles.
-            </p>
-
-            <div className="store-landing__hero-actions">
-              <button
-                type="button"
-                onClick={scrollToCatalog}
-                className="store-landing__btn-primary"
-              >
-                <span>Explore Catalog</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M19 12l-7 7-7-7" />
-                </svg>
-              </button>
-
-              <Link href="/frames" className="store-landing__btn-secondary">
-                <span>Custom Airframes</span>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-
-            {/* Hardware Telemetry Spec Bar */}
-            <div className="store-landing__telemetry-bar">
-              <div className="store-landing__telemetry-item">
-                <span className="store-landing__telemetry-val">17.1 kg</span>
-                <span className="store-landing__telemetry-lbl">Peak Thrust</span>
-              </div>
-              <div className="store-landing__telemetry-item">
-                <span className="store-landing__telemetry-val">5" – 13"</span>
-                <span className="store-landing__telemetry-lbl">Carbon Frames</span>
-              </div>
-              <div className="store-landing__telemetry-item">
-                <span className="store-landing__telemetry-val">12S HV</span>
-                <span className="store-landing__telemetry-lbl">Power System</span>
-              </div>
-              <div className="store-landing__telemetry-item">
-                <span className="store-landing__telemetry-val">Indore</span>
-                <span className="store-landing__telemetry-lbl">Testing Bench</span>
-              </div>
-            </div>
+        <div className="store-landing__hero-banner">
+          <div className="store-landing__hero-badge">
+            <svg
+              width="18"
+              height="12"
+              viewBox="0 0 24 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="store-landing__flag-svg"
+              aria-hidden="true"
+            >
+              <rect width="24" height="5.33" fill="#FF9933" rx="1" />
+              <rect y="5.33" width="24" height="5.33" fill="#FFFFFF" />
+              <rect y="10.66" width="24" height="5.33" fill="#138808" rx="1" />
+              <circle cx="12" cy="8" r="2.1" stroke="#000080" strokeWidth="0.6" fill="none" />
+              <circle cx="12" cy="8" r="0.6" fill="#000080" />
+            </svg>
+            <span>Indore Facility • Bharat</span>
           </div>
 
-          {/* Hero Visual Card with High-Res Motor CAD Specimen */}
-          <div className="store-landing__hero-visual">
-            <div className="store-landing__visual-card">
-              <div className="store-landing__chip-badge store-landing__chip-badge--top">
-                <span className="store-landing__chip-dot" />
-                <span>DZ-8017 UAV Stator • 120KV</span>
-              </div>
+          <h1 className="store-landing__hero-title">
+            Made In India
+          </h1>
 
-              <img
-                src={
-                  featuredMotor?.image
-                    ? getProductImageUrl(featuredMotor.image) || '/manufacturing/stage-2-hd.jpg'
-                    : '/manufacturing/stage-2-hd.jpg'
-                }
-                alt="DronesZ Heavy-Lift UAV Motor Hardware"
-                className="store-landing__visual-img"
-              />
-
-              <div className="store-landing__chip-badge store-landing__chip-badge--bottom">
-                <span style={{ color: '#10b981', fontWeight: 700 }}>3.3 kW</span>
-                <span style={{ color: '#94a3b8' }}>| 36N42P Architecture</span>
-              </div>
-            </div>
+          <div className="store-landing__hero-subtitle">
+            Indigenous Technology
           </div>
         </div>
       </section>
-
       {/* ------------------------------------------------------------
-          2. INDIAN MANUFACTURING IDENTITY
-          ------------------------------------------------------------ */}
-      <section className="store-landing__mfg-section" aria-label="Indian Manufacturing Excellence">
-        <div className="store-landing__section-header">
-          <div className="store-landing__section-tag">
-            <span style={{ fontSize: '13px' }}>🇮🇳</span>
-            <span>Domestic Manufacturing Excellence</span>
-          </div>
-          <h2 className="store-landing__section-title">
-            Advancing India&apos;s Drone Hardware Ecosystem
-          </h2>
-          <p className="store-landing__section-subtitle">
-            In an industry historically reliant on foreign imports, DronesZ designs, machines, and bench-tests
-            precision multirotor hardware directly in Indore. We establish domestic engineering capability with
-            transparent specifications and flight-proven reliability.
-          </p>
-        </div>
-
-        <div className="store-landing__mfg-grid">
-          {/* Pillar 1 */}
-          <div className="store-landing__mfg-card">
-            <div className="store-landing__mfg-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 2 7 12 12 22 7 12 2}" />
-                <polyline points="2 17 12 22 22 17" />
-                <polyline points="2 12 12 17 22 12" />
-              </svg>
-            </div>
-            <h3 className="store-landing__mfg-card-title">
-              In-House CAD &amp; Airframe Architecture
-            </h3>
-            <p className="store-landing__mfg-card-desc">
-              From 5-inch cinematic quadcopters to 13-inch heavy-lift geometries, our airframes are modelled,
-              FEA-simulated, and CNC-cut from aerospace-grade carbon fiber for maximum payload rigidity and minimum resonance.
-            </p>
-          </div>
-
-          {/* Pillar 2 */}
-          <div className="store-landing__mfg-card">
-            <div className="store-landing__mfg-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-            </div>
-            <h3 className="store-landing__mfg-card-title">
-              Dynamometer Bench Calibration
-            </h3>
-            <p className="store-landing__mfg-card-desc">
-              Every motor series is benchmarked on calibrated thrust stands. We record real-world voltage, RPM, current draw,
-              and thermal efficiency across varying throttle curves before publishing exact specifications.
-            </p>
-          </div>
-
-          {/* Pillar 3 */}
-          <div className="store-landing__mfg-card">
-            <div className="store-landing__mfg-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-            </div>
-            <h3 className="store-landing__mfg-card-title">
-              Indore Assembly &amp; Flight Testing
-            </h3>
-            <p className="store-landing__mfg-card-desc">
-              Final assembly, stator inspection, balance testing, and parachute ejection checks occur under our direct supervision.
-              Hardware is validated in real flight environments to verify reliability in mission-critical deployments.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------
-          3. FEATURED ENGINEERING PRODUCT SPOTLIGHT
-          ------------------------------------------------------------ */}
-      {featuredMotor && (
-        <section className="store-landing__spotlight" aria-label="Featured Engineering Product">
-          <div className="store-landing__spotlight-grid">
-            <div className="store-landing__spotlight-media">
-              <img
-                src={getProductImageUrl(featuredMotor.image) || '/manufacturing/stage-2-hd.jpg'}
-                alt={featuredMotor.name}
-                className="store-landing__spotlight-img"
-              />
-            </div>
-
-            <div>
-              <div className="store-landing__spotlight-badge">
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#e52b31' }} />
-                <span>Hardware Spotlight • Heavy-Lift Stator</span>
-              </div>
-
-              <h2 className="store-landing__spotlight-title">
-                {featuredMotor.name}
-              </h2>
-
-              <p className="store-landing__spotlight-desc">
-                {featuredMotor.description ||
-                  'The DronesZ 8017 120KV is a high-performance heavy-lift UAV motor engineered for demanding industrial drone applications. Designed for 12S systems, it delivers up to 3.3 kW of power and maximum thrust of 17.1 kg.'}
-              </p>
-
-              <div className="store-landing__spec-chips-grid">
-                <div className="store-landing__spec-chip">
-                  <span className="store-landing__spec-chip-val">17,178 g</span>
-                  <span className="store-landing__spec-chip-lbl">Max Thrust</span>
-                </div>
-                <div className="store-landing__spec-chip">
-                  <span className="store-landing__spec-chip-val">3,313 W</span>
-                  <span className="store-landing__spec-chip-lbl">Peak Power (12S)</span>
-                </div>
-                <div className="store-landing__spec-chip">
-                  <span className="store-landing__spec-chip-val">36N42P</span>
-                  <span className="store-landing__spec-chip-lbl">Framework Config</span>
-                </div>
-                <div className="store-landing__spec-chip">
-                  <span className="store-landing__spec-chip-val">28&quot; – 30&quot;</span>
-                  <span className="store-landing__spec-chip-lbl">Recommended Prop</span>
-                </div>
-              </div>
-
-              <div className="store-landing__spotlight-footer">
-                <div>
-                  <span className="store-landing__spotlight-price">
-                    ₹{featuredMotor.price > 0 ? featuredMotor.price.toFixed(2) : '26,200.00'}
-                  </span>
-                  <span className="store-landing__spotlight-price-sub">
-                    GST &amp; Express Dispatch Included
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => navigateToProductDetail(featuredMotor.id)}
-                  className="store-landing__btn-primary"
-                  style={{ marginLeft: 'auto' }}
-                >
-                  <span>Inspect Engineering Specifications</span>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ------------------------------------------------------------
-          4. PRODUCT DISCOVERY & CATALOGUE
+          2. PRODUCT DISCOVERY & CATALOGUE
           ------------------------------------------------------------ */}
       <section id="store-catalogue" className="store-landing__catalogue-section" aria-label="Product Catalogue">
         <div className="store-landing__section-header">
@@ -746,7 +524,7 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
       </section>
 
       {/* ------------------------------------------------------------
-          5. CLOSING CONSULTATION SECTION
+          3. CLOSING CONSULTATION SECTION
           ------------------------------------------------------------ */}
       <section className="store-landing__closing" aria-label="Custom Engineering Consultation">
         <div className="store-landing__closing-text">
