@@ -137,19 +137,77 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
   return (
     <div className="store-landing">
       {/* ------------------------------------------------------------
-          1. HERO SECTION — MADE IN INDIA & INDIGENOUS TECHNOLOGY
+          1. HERO SECTION — MADE IN BHARAT · INDIGENOUS TECHNOLOGY
+          Aerospace HUD / Mission Control aesthetic
           ------------------------------------------------------------ */}
-      <section className="store-landing__hero" aria-label="Made In India Indigenous Technology">
+      <section className="store-landing__hero" aria-label="Made In Bharat — Indigenous Technology">
+        {/* Layered background effects */}
+        <div className="store-landing__hero-noise" aria-hidden="true" />
         <div className="store-landing__hero-grid" aria-hidden="true" />
-        <div className="store-landing__hero-glow-left" aria-hidden="true" />
-        <div className="store-landing__hero-glow-right" aria-hidden="true" />
-        <div className="store-landing__hero-tricolor-line" aria-hidden="true" />
+        <div className="store-landing__hero-scanline" aria-hidden="true" />
+        <div className="store-landing__hero-vignette" aria-hidden="true" />
 
-        <div className="store-landing__hero-banner">
+        {/* Saffron & Green ambient light pools */}
+        <div className="store-landing__hero-aura store-landing__hero-aura--saffron" aria-hidden="true" />
+        <div className="store-landing__hero-aura store-landing__hero-aura--green" aria-hidden="true" />
+
+        {/* Ashoka Chakra — animated radar-sweep SVG */}
+        <div className="store-landing__chakra-wrap" aria-hidden="true">
+          <svg className="store-landing__chakra" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Concentric rings */}
+            <circle cx="100" cy="100" r="96" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+            <circle cx="100" cy="100" r="72" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
+            <circle cx="100" cy="100" r="48" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+            <circle cx="100" cy="100" r="24" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+            {/* Cross-hairs */}
+            <line x1="100" y1="2" x2="100" y2="198" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+            <line x1="2" y1="100" x2="198" y2="100" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+            {/* 24-spoke Ashoka Chakra lines */}
+            {Array.from({ length: 24 }).map((_, i) => {
+              const angle = (i * 15 * Math.PI) / 180;
+              return (
+                <line
+                  key={i}
+                  x1={100 + 20 * Math.cos(angle)}
+                  y1={100 + 20 * Math.sin(angle)}
+                  x2={100 + 96 * Math.cos(angle)}
+                  y2={100 + 96 * Math.sin(angle)}
+                  stroke="rgba(255,255,255,0.025)"
+                  strokeWidth="0.5"
+                />
+              );
+            })}
+            {/* Radar sweep beam */}
+            <line x1="100" y1="100" x2="100" y2="4" stroke="url(#sweepGrad)" strokeWidth="1.5" className="store-landing__radar-beam" />
+            <defs>
+              <linearGradient id="sweepGrad" x1="100" y1="100" x2="100" y2="4" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="rgba(255,153,51,0)" />
+                <stop offset="60%" stopColor="rgba(255,153,51,0.25)" />
+                <stop offset="100%" stopColor="rgba(255,153,51,0.6)" />
+              </linearGradient>
+            </defs>
+            {/* Center pip */}
+            <circle cx="100" cy="100" r="2.5" fill="#FF9933" className="store-landing__chakra-pip" />
+          </svg>
+        </div>
+
+        {/* Indian tricolor bottom edge */}
+        <div className="store-landing__hero-tricolor" aria-hidden="true" />
+
+        {/* HUD corner coordinates */}
+        <span className="store-landing__hud-coord store-landing__hud-coord--tl" aria-hidden="true">22.7196° N</span>
+        <span className="store-landing__hud-coord store-landing__hud-coord--tr" aria-hidden="true">75.8577° E</span>
+        <span className="store-landing__hud-coord store-landing__hud-coord--bl" aria-hidden="true">ALT 553m</span>
+        <span className="store-landing__hud-coord store-landing__hud-coord--br" aria-hidden="true">DZ–MFG–01</span>
+
+        {/* Main content layer */}
+        <div className="store-landing__hero-content">
+          {/* Facility badge */}
           <div className="store-landing__hero-badge">
+            <span className="store-landing__badge-pulse" aria-hidden="true" />
             <svg
-              width="18"
-              height="12"
+              width="16"
+              height="11"
               viewBox="0 0 24 16"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -159,19 +217,27 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
               <rect width="24" height="5.33" fill="#FF9933" rx="1" />
               <rect y="5.33" width="24" height="5.33" fill="#FFFFFF" />
               <rect y="10.66" width="24" height="5.33" fill="#138808" rx="1" />
-              <circle cx="12" cy="8" r="2.1" stroke="#000080" strokeWidth="0.6" fill="none" />
-              <circle cx="12" cy="8" r="0.6" fill="#000080" />
+              <circle cx="12" cy="8" r="2" stroke="#000080" strokeWidth="0.5" fill="none" />
+              <circle cx="12" cy="8" r="0.5" fill="#000080" />
             </svg>
-            <span>Indore Facility • Bharat</span>
+            <span>Indore Manufacturing Facility</span>
           </div>
 
-          <h1 className="store-landing__hero-title">
-            Made In India
+          {/* Main display — stacked typographic lockup */}
+          <h1 className="store-landing__hero-display" aria-label="Made In Bharat">
+            <span className="store-landing__hero-line-top">Made In</span>
+            <span className="store-landing__hero-line-bottom">Bharat</span>
           </h1>
 
-          <div className="store-landing__hero-subtitle">
-            Indigenous Technology
-          </div>
+          {/* Divider rule with tricolor gradient */}
+          <div className="store-landing__hero-rule" aria-hidden="true" />
+
+          {/* Sub-tagline */}
+          <p className="store-landing__hero-tagline">
+            <span className="store-landing__tagline-label">Indigenous Technology</span>
+            <span className="store-landing__tagline-sep" aria-hidden="true" />
+            <span className="store-landing__tagline-detail">Precision UAV Engineering · Indore, MP</span>
+          </p>
         </div>
       </section>
       {/* ------------------------------------------------------------

@@ -12,136 +12,345 @@
   box-sizing: border-box;
 }
 
-/* ------------------------------------------------------------
-   1. HERO BANNER — MADE IN INDIA & INDIGENOUS TECHNOLOGY
-   ------------------------------------------------------------ */
+/* ================================================================
+   1. HERO — AEROSPACE HUD / MISSION CONTROL
+   Immersive radar-display aesthetic. Proudly Indian.
+   ================================================================ */
+
+/* ---- Keyframe Animations ---- */
+@keyframes sl-radar-sweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes sl-scan-move {
+  0%   { top: -2px; opacity: 0; }
+  10%  { opacity: 0.7; }
+  90%  { opacity: 0.7; }
+  100% { top: calc(100% + 2px); opacity: 0; }
+}
+@keyframes sl-pip-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,153,51,0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(255,153,51,0); }
+}
+@keyframes sl-badge-live {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+@keyframes sl-grain {
+  0%, 100% { transform: translate(0, 0); }
+  10%  { transform: translate(-1%, -1%); }
+  20%  { transform: translate(1%, 0%); }
+  30%  { transform: translate(-1%, 1%); }
+  40%  { transform: translate(1%, -1%); }
+  50%  { transform: translate(-1%, 0%); }
+  60%  { transform: translate(1%, 1%); }
+  70%  { transform: translate(0%, -1%); }
+  80%  { transform: translate(-1%, 1%); }
+  90%  { transform: translate(1%, 0%); }
+}
+@keyframes sl-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ---- Hero container ---- */
 .store-landing__hero {
   position: relative;
   width: 100%;
   height: 25vh;
-  min-height: 180px;
-  max-height: 230px;
+  min-height: 190px;
+  max-height: 240px;
   margin-top: 0.5rem;
   margin-bottom: 2.5rem;
-  padding: 1.25rem clamp(1.25rem, 4vw, 3rem);
+  padding: 1rem clamp(1rem, 3.5vw, 2.5rem);
   box-sizing: border-box;
-  background: linear-gradient(135deg, #070c18 0%, #0b1324 50%, #111a2e 100%);
-  border-radius: 0.875rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 16px 36px -12px rgba(2, 6, 23, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background: radial-gradient(ellipse 120% 100% at 50% 110%, #0d1525 0%, #060a14 70%);
+  border-radius: var(--radius-md, 0.75rem);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 1px 0 inset rgba(255,255,255,0.08),
+    0 20px 50px -16px rgba(0,0,0,0.7);
   overflow: hidden;
-  color: #ffffff;
+  color: #f0f4f8;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  text-align: center;
+  justify-content: center;
 }
 
-/* Indian Tricolor top accent rule */
-.store-landing__hero-tricolor-line {
+/* ---- Film-grain noise overlay ---- */
+.store-landing__hero-noise {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #FF9933 0%, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%, #138808 100%);
-  opacity: 0.95;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.6;
+  animation: sl-grain 0.8s steps(6) infinite;
 }
 
-/* Blueprint grid overlay */
+/* ---- Blueprint coordinate grid ---- */
 .store-landing__hero-grid {
   position: absolute;
   inset: 0;
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, black 30%, transparent 80%);
   pointer-events: none;
-  opacity: 0.6;
 }
 
-/* Ambient glow accents */
-.store-landing__hero-glow-left {
+/* ---- Horizontal scanning line ---- */
+.store-landing__hero-scanline {
   position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,153,51,0.4) 30%, rgba(255,255,255,0.6) 50%, rgba(19,136,8,0.4) 70%, transparent 100%);
+  pointer-events: none;
+  animation: sl-scan-move 4.5s ease-in-out infinite;
+}
+
+/* ---- Edge vignette ---- */
+.store-landing__hero-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(4,8,18,0.65) 100%);
+  pointer-events: none;
+}
+
+/* ---- Saffron & Green ambient aura pools ---- */
+.store-landing__hero-aura {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(60px);
+  opacity: 0.35;
+}
+.store-landing__hero-aura--saffron {
   top: -30%;
-  left: -8%;
-  width: 280px;
-  height: 280px;
-  background: radial-gradient(circle, rgba(255, 153, 51, 0.16) 0%, transparent 70%);
-  pointer-events: none;
-  filter: blur(40px);
+  left: 5%;
+  background: #FF9933;
 }
-
-.store-landing__hero-glow-right {
-  position: absolute;
+.store-landing__hero-aura--green {
   bottom: -30%;
-  right: -8%;
-  width: 280px;
-  height: 280px;
-  background: radial-gradient(circle, rgba(19, 136, 8, 0.16) 0%, transparent 70%);
-  pointer-events: none;
-  filter: blur(40px);
+  right: 5%;
+  background: #138808;
 }
 
-.store-landing__hero-banner {
+/* ---- Ashoka Chakra radar overlay ---- */
+.store-landing__chakra-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.store-landing__chakra {
+  width: min(85%, 320px);
+  height: auto;
+  display: block;
+}
+.store-landing__radar-beam {
+  transform-origin: 100px 100px;
+  animation: sl-radar-sweep 6s linear infinite;
+}
+.store-landing__chakra-pip {
+  filter: drop-shadow(0 0 4px rgba(255,153,51,0.6));
+  animation: sl-pip-pulse 2s ease-in-out infinite;
+}
+
+/* ---- Indian tricolor bottom accent ---- */
+.store-landing__hero-tricolor {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #FF9933 15%, #FF9933 30%,
+    #FFFFFF 38%, #FFFFFF 50%,
+    #FFFFFF 62%,
+    #138808 70%, #138808 85%,
+    transparent 100%
+  );
+  opacity: 0.85;
+}
+
+/* ---- HUD corner coordinates ---- */
+.store-landing__hud-coord {
+  position: absolute;
+  z-index: 3;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.2);
+  pointer-events: none;
+  user-select: none;
+}
+.store-landing__hud-coord--tl { top: 10px; left: 14px; }
+.store-landing__hud-coord--tr { top: 10px; right: 14px; }
+.store-landing__hud-coord--bl { bottom: 10px; left: 14px; }
+.store-landing__hud-coord--br { bottom: 10px; right: 14px; }
+
+/* ---- Content layer ---- */
+.store-landing__hero-content {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  max-width: 900px;
+  gap: 0.3rem;
   width: 100%;
+  max-width: 720px;
+  text-align: center;
 }
 
+/* ---- Facility badge ---- */
 .store-landing__hero-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.7rem 0.2rem 0.5rem;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 11px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #e2e8f0;
-  backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.55);
+  backdrop-filter: blur(4px);
+  margin-bottom: 0.15rem;
 }
-
+.store-landing__badge-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  animation: sl-badge-live 1.5s ease-in-out infinite;
+}
 .store-landing__flag-svg {
-  border-radius: 2px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
-  display: inline-block;
-  vertical-align: middle;
+  border-radius: 1.5px;
+  box-shadow: 0 0 0 0.5px rgba(0,0,0,0.25);
+  display: block;
+  flex-shrink: 0;
 }
 
-.store-landing__hero-title {
+/* ---- Stacked typographic lockup ---- */
+.store-landing__hero-display {
   font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: clamp(1.85rem, 1.4rem + 2.4vw, 3.1rem);
-  font-weight: 900;
-  letter-spacing: -0.025em;
-  line-height: 1.08;
-  color: #ffffff;
   margin: 0;
+  line-height: 1;
   text-transform: uppercase;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-
-.store-landing__hero-subtitle {
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: clamp(0.95rem, 0.8rem + 0.7vw, 1.35rem);
+.store-landing__hero-line-top {
+  font-size: clamp(0.85rem, 0.7rem + 0.8vw, 1.25rem);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #fca5a5;
-  background: linear-gradient(135deg, #ff9933 0%, #ffffff 50%, #22c55e 100%);
+  letter-spacing: 0.35em;
+  color: rgba(255,255,255,0.5);
+}
+.store-landing__hero-line-bottom {
+  font-size: clamp(2.6rem, 2rem + 3.2vw, 4.8rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+  color: #ffffff;
+  text-shadow:
+    0 0 40px rgba(255,153,51,0.15),
+    0 2px 12px rgba(0,0,0,0.5);
+  /* Subtle shimmer */
+  background: linear-gradient(
+    100deg,
+    #ffffff 0%, #ffffff 40%,
+    rgba(255,153,51,0.9) 48%,
+    #ffffff 56%,
+    #ffffff 100%
+  );
+  background-size: 200% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  animation: sl-shimmer 6s ease-in-out infinite;
+}
+
+/* ---- Tricolor divider rule ---- */
+.store-landing__hero-rule {
+  width: clamp(80px, 18vw, 160px);
+  height: 2px;
+  background: linear-gradient(90deg, #FF9933, #FFFFFF 50%, #138808);
+  border-radius: 2px;
+  margin: 0.15rem 0;
+  opacity: 0.75;
+}
+
+/* ---- Tagline row ---- */
+.store-landing__hero-tagline {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   margin: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.store-landing__tagline-label {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(0.7rem, 0.6rem + 0.5vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #FF9933 0%, #e8c56d 50%, #138808 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.store-landing__tagline-sep {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  flex-shrink: 0;
+}
+.store-landing__tagline-detail {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.3);
+}
+
+/* ---- Responsive & reduced-motion ---- */
+@media (max-width: 600px) {
+  .store-landing__hud-coord { display: none; }
+  .store-landing__hero-aura { width: 140px; height: 140px; }
+  .store-landing__hero-tagline { flex-direction: column; gap: 0.2rem; }
+  .store-landing__tagline-sep { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-landing__radar-beam,
+  .store-landing__chakra-pip,
+  .store-landing__badge-pulse,
+  .store-landing__hero-noise,
+  .store-landing__hero-scanline {
+    animation: none !important;
+  }
+  .store-landing__hero-line-bottom {
+    animation: none !important;
+    background: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
 }
 
 /* ------------------------------------------------------------
