@@ -18,6 +18,7 @@ interface StoreLandingCatalogProps {
   parachuteConfig: ParachutePageConfig | null;
   navigateToParentSeries: (parent: ProductDto) => void;
   navigateToParachute: () => void;
+  navigateToAgriDrone?: () => void;
   navigateToProductDetail: (id: number) => void;
 }
 
@@ -30,9 +31,10 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
   parachuteConfig,
   navigateToParentSeries,
   navigateToParachute,
+  navigateToAgriDrone,
   navigateToProductDetail,
 }) => {
-  const [activeCategoryFilter, setActiveCategoryFilter] = useState<'all' | 'motors' | 'frames' | 'parachute'>('all');
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<'all' | 'motors' | 'frames' | 'parachute' | 'agri'>('all');
   const [childProductsMap, setChildProductsMap] = useState<Record<number, ProductDto[]>>({});
   const [loadingChildren, setLoadingChildren] = useState(false);
 
@@ -96,6 +98,7 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
     if (activeCategoryFilter === 'frames' && !isFrame) return false;
     if (activeCategoryFilter === 'motors' && !isMotor) return false;
     if (activeCategoryFilter === 'parachute') return false; // Handled separately
+    if (activeCategoryFilter === 'agri') return false; // Handled separately
 
     if (!search.trim()) return true;
     const q = search.toLowerCase();
@@ -110,6 +113,7 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
     if (activeCategoryFilter === 'frames' && !categoryLabel.includes('Airframe')) return false;
     if (activeCategoryFilter === 'motors' && !categoryLabel.includes('Propulsion')) return false;
     if (activeCategoryFilter === 'parachute') return false;
+    if (activeCategoryFilter === 'agri') return false;
 
     if (!search.trim()) return true;
     const q = search.toLowerCase();
@@ -127,6 +131,11 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
     (!search.trim() ||
       (parachuteConfig.displayName && parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase())) ||
       'parachute recovery systems for drones'.includes(search.toLowerCase()));
+
+  const isAgriDroneVisible =
+    (activeCategoryFilter === 'all' || activeCategoryFilter === 'agri') &&
+    (!search.trim() ||
+      'agricultural spraying drone hexacopter rpas 10l precision spraying'.includes(search.toLowerCase()));
   const scrollToCatalog = () => {
     const el = document.getElementById('store-catalogue');
     if (el) {
@@ -290,6 +299,13 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
                 Recovery Parachutes
               </button>
             )}
+            <button
+              type="button"
+              className={`store-landing__chip-btn ${activeCategoryFilter === 'agri' ? 'store-landing__chip-btn--active' : ''}`}
+              onClick={() => setActiveCategoryFilter('agri')}
+            >
+              Agricultural Drones
+            </button>
           </div>
 
           <div className="store-landing__search-box">
@@ -318,16 +334,16 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
         </div>
 
         {/* Flagship Product Series Cards */}
-        {loading ? (
-          <div style={{ padding: '4rem 1rem', textAlign: 'center', color: '#64748b' }}>
-            <div style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.4rem' }}>
-              Loading DronesZ Storefront Architecture...
+        {loading && filteredParents.length === 0 && (
+          <div style={{ padding: '1.5rem 1rem', textAlign: 'center', color: '#64748b' }}>
+            <div style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+              Synchronizing DronesZ verified propulsion and airframe series...
             </div>
-            <div style={{ fontSize: '13px', color: '#94a3b8' }}>Connecting to verified database catalog</div>
+            <div style={{ fontSize: '13px', color: '#94a3b8' }}>Connecting to hardware catalog</div>
           </div>
-        ) : (
-          <>
-            <div className="store-landing__series-grid">
+        )}
+
+        <div className="store-landing__series-grid">
               {/* Motors Parent Series */}
               {filteredParents
                 .filter((p) => p.name.toLowerCase().includes('motor'))
@@ -469,6 +485,55 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Standalone Agricultural Spraying Drone Card */}
+              {isAgriDroneVisible && (
+                <div
+                  className="store-landing__series-card"
+                  onClick={() => {
+                    if (navigateToAgriDrone) navigateToAgriDrone();
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="store-landing__series-thumb-area">
+                    <span className="store-landing__series-tag-badge" style={{ background: '#15803d', color: '#ffffff' }}>
+                      DGCA Type Certified
+                    </span>
+                    <img
+                      src="/agri-drone/store_card_thumb.png"
+                      alt="Agricultural Spraying Drone hexacopter platform"
+                      className="store-landing__series-thumb-img"
+                    />
+                  </div>
+                  <div className="store-landing__series-body">
+                    <h3 className="store-landing__series-title">
+                      Agricultural Spraying Drone
+                    </h3>
+                    <p className="store-landing__series-desc">
+                      Medium class hexacopter RPAS with 10L tank, 4 flat-jet nozzles, 6x 2399W heavy-lift BLDC motors, and 23-minute endurance.
+                    </p>
+                    <div className="store-landing__series-footer">
+                      <div className="store-landing__series-status">
+                        <span className="store-landing__series-status-dot" style={{ background: '#16a34a', boxShadow: '0 0 6px rgba(22, 163, 74, 0.5)' }} />
+                        <span>Type Cert. T05260000094/00</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="store-landing__series-link-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (navigateToAgriDrone) navigateToAgriDrone();
+                        }}
+                      >
+                        <span>Explore Drone</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Individual Hardware Components & Specs Section */}
@@ -560,7 +625,7 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
               </div>
             )}
 
-            {filteredParents.length === 0 && !isParachuteVisible && filteredHardware.length === 0 && (
+            {filteredParents.length === 0 && !isParachuteVisible && !isAgriDroneVisible && filteredHardware.length === 0 && !loading && (
               <div style={{
                 background: '#ffffff',
                 border: '1px solid var(--color-outline, rgba(15, 23, 42, 0.08))',
@@ -585,8 +650,6 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
                 </button>
               </div>
             )}
-          </>
-        )}
       </section>
 
       {/* ------------------------------------------------------------

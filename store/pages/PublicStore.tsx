@@ -15,8 +15,10 @@ import { StitchHeader } from '../components/StitchHeader';
 import { StitchFooter } from '../components/StitchFooter';
 import { ProductGallery } from '../components/ProductGallery';
 import { ParachutePublicPage } from '../components/ParachutePublicPage';
+import { AgriDronePublicPage } from '../components/AgriDronePublicPage';
 import { StoreLandingCatalog } from '../components/StoreLandingCatalog';
 import { loadParachuteConfig, getDefaultParachuteConfig, ParachutePageConfig } from '../services/parachuteConfig';
+import { getDefaultAgriDroneConfig, AgriDronePageConfig } from '../services/agriDroneConfig';
 
 const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({ section }) => {
   const sheetNumber = String(section.displayOrder !== undefined && section.displayOrder !== null ? section.displayOrder : 4).padStart(2, '0');
@@ -321,7 +323,7 @@ export function cacheProductDetail(id: number, product: ProductDto): void {
   cachedProductDetailMap.set(id, product);
 }
 
-export type StoreView = 'catalog' | 'category' | 'product' | 'parachute';
+export type StoreView = 'catalog' | 'category' | 'product' | 'parachute' | 'agri-drone';
 
 export interface PublicStoreProps {
   initialView?: StoreView;
@@ -342,6 +344,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname;
       if (pathname === '/store/parachute' || pathname === '/parachute') return 'parachute';
+      if (pathname === '/store/agricultural-spraying-drone' || pathname === '/store/agri-drone') return 'agri-drone';
       if (pathname.startsWith('/store/') && pathname.length > 7) return 'category';
       if (pathname.startsWith('/products/') && pathname.length > 10) return 'product';
     }
@@ -456,6 +459,10 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
   const [parachuteConfig, setParachuteConfig] = useState<ParachutePageConfig>(getDefaultParachuteConfig);
   const [isParachuteRoute, setIsParachuteRoute] = useState<boolean>(() => computeInitialView() === 'parachute');
 
+  // Agri Drone State
+  const [agriDroneConfig] = useState<AgriDronePageConfig>(getDefaultAgriDroneConfig);
+  const [isAgriDroneRoute, setIsAgriDroneRoute] = useState<boolean>(() => computeInitialView() === 'agri-drone');
+
   const navigateTo = (path: string) => {
     router.push(path);
   };
@@ -471,11 +478,19 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
 
     if (targetView === 'parachute') {
       setIsParachuteRoute(true);
+      setIsAgriDroneRoute(false);
+      setActiveParent(null);
+      setActiveProductDetail(null);
+      setError(null);
+    } else if (targetView === 'agri-drone') {
+      setIsAgriDroneRoute(true);
+      setIsParachuteRoute(false);
       setActiveParent(null);
       setActiveProductDetail(null);
       setError(null);
     } else if (targetView === 'category') {
       setIsParachuteRoute(false);
+      setIsAgriDroneRoute(false);
       setActiveProductDetail(null);
       const slug = initialSlug || computeInitialSlug();
       if (slug) {
@@ -483,6 +498,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
       }
     } else if (targetView === 'product') {
       setIsParachuteRoute(false);
+      setIsAgriDroneRoute(false);
       setActiveParent(null);
       const pId = initialProductId !== undefined ? String(initialProductId) : computeInitialProductId();
       if (pId) {
@@ -490,6 +506,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
       }
     } else {
       setIsParachuteRoute(false);
+      setIsAgriDroneRoute(false);
       setActiveParent(null);
       setActiveProductDetail(null);
       loadMainCatalog();
@@ -524,24 +541,35 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
     if (pathname === '/store/parachute' || pathname === '/parachute') {
       setView('parachute');
       setIsParachuteRoute(true);
+      setIsAgriDroneRoute(false);
+      setActiveProductDetail(null);
+      setActiveParent(null);
+      setError(null);
+    } else if (pathname === '/store/agricultural-spraying-drone' || pathname === '/store/agri-drone') {
+      setView('agri-drone');
+      setIsAgriDroneRoute(true);
+      setIsParachuteRoute(false);
       setActiveProductDetail(null);
       setActiveParent(null);
       setError(null);
     } else if (pathname.startsWith('/store/') && pathname.length > 7) {
       setView('category');
       setIsParachuteRoute(false);
+      setIsAgriDroneRoute(false);
       const param = pathname.substring(7);
       setActiveProductDetail(null);
       await loadParentSeriesPage(param);
     } else if (pathname.startsWith('/products/') && pathname.length > 10) {
       setView('product');
       setIsParachuteRoute(false);
+      setIsAgriDroneRoute(false);
       const param = pathname.substring(10);
       setActiveParent(null);
       await loadProductDetailPage(param);
     } else {
       setView('catalog');
       setIsParachuteRoute(false);
+      setIsAgriDroneRoute(false);
       setActiveParent(null);
       setActiveProductDetail(null);
       await loadMainCatalog();
@@ -684,6 +712,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
 
   const navigateToMainStore = () => {
     setIsParachuteRoute(false);
+    setIsAgriDroneRoute(false);
     setActiveParent(null);
     setActiveProductDetail(null);
     setSearch('');
@@ -692,15 +721,24 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
 
   const navigateToParentSeries = (parentProduct: ProductDto) => {
     setIsParachuteRoute(false);
+    setIsAgriDroneRoute(false);
     cacheParent(parentProduct);
     const slug = slugify(parentProduct.name);
     navigateTo(`/store/${slug}`);
   };
 
   const navigateToParachute = () => {
+    setIsAgriDroneRoute(false);
     setActiveParent(null);
     setActiveProductDetail(null);
     navigateTo('/store/parachute');
+  };
+
+  const navigateToAgriDrone = () => {
+    setIsParachuteRoute(false);
+    setActiveParent(null);
+    setActiveProductDetail(null);
+    navigateTo('/store/agricultural-spraying-drone');
   };
 
   const handleAddToCart = async (product: ProductDto, quantity: number = 1) => {
@@ -794,10 +832,10 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
       {/* Main Container */}
       <main style={{
         flex: 1,
-        maxWidth: isParachuteRoute ? '100%' : 'var(--max-width)',
+        maxWidth: (isParachuteRoute || isAgriDroneRoute) ? '100%' : 'var(--max-width)',
         width: '100%',
         margin: '0 auto',
-        padding: isParachuteRoute ? '0' : 'clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 5vw, 5rem)'
+        padding: (isParachuteRoute || isAgriDroneRoute) ? '0' : 'clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 5vw, 5rem)'
       }}>
         {error && (
           <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.375rem', marginBottom: '2rem' }}>
@@ -805,8 +843,10 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
           </div>
         )}
 
-        {/* VIEW 4: PARACHUTE RECOVERY SYSTEMS WEBPAGE (/store/parachute) */}
-        {(view === 'parachute' || isParachuteRoute) ? (
+        {/* VIEW 5: AGRICULTURAL SPRAYING DRONE WEBPAGE (/store/agricultural-spraying-drone) */}
+        {(view === 'agri-drone' || isAgriDroneRoute) ? (
+          <AgriDronePublicPage config={agriDroneConfig} />
+        ) : (view === 'parachute' || isParachuteRoute) ? (
           parachuteConfig && parachuteConfig.isEnabled ? (
             <ParachutePublicPage config={parachuteConfig} />
           ) : (
@@ -1380,6 +1420,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
             parachuteConfig={parachuteConfig}
             navigateToParentSeries={navigateToParentSeries}
             navigateToParachute={navigateToParachute}
+            navigateToAgriDrone={navigateToAgriDrone}
             navigateToProductDetail={navigateToProductDetail}
           />
         )}

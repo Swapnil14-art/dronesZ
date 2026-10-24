@@ -9,10 +9,17 @@ export default function StoreSlugPage() {
   const rawSlug = params?.slug;
   const slug = typeof rawSlug === "string" ? rawSlug : Array.isArray(rawSlug) ? rawSlug[0] : "";
   const isParachute = slug === "parachute";
+  const isAgriDrone = slug === "agricultural-spraying-drone" || slug === "agri-drone";
+
+  const initialView = isParachute
+    ? "parachute"
+    : isAgriDrone
+    ? "agri-drone"
+    : "category";
 
   return (
     <PublicStore
-      initialView={isParachute ? "parachute" : "category"}
+      initialView={initialView}
       initialSlug={slug}
     />
   );

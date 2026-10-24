@@ -1,0 +1,702 @@
+/* ============================================================
+   Agricultural Spraying Drone Public Page — Scoped Styles
+   All rules prefixed with .agri-drone-page to prevent style leaking.
+   Inspired by parachute-page.css with precision agro-aerospace design.
+   ============================================================ */
+
+.agri-drone-page {
+  --agri-ink: #0f172a;
+  --agri-ink-muted: #475569;
+  --agri-paper: #f8fafc;
+  --agri-paper-alt: #f1f5f9;
+  --agri-card-bg: #ffffff;
+  --agri-line: #e2e8f0;
+  --agri-line-dark: #cbd5e1;
+
+  --agri-green: #15803d;
+  --agri-green-dark: #166534;
+  --agri-green-light: #dcfce7;
+  --agri-saffron: #f97316;
+  --agri-blue: #0284c7;
+  --agri-gold: #b45309;
+
+  --agri-font-display: var(--font-display, 'Space Grotesk', system-ui, sans-serif);
+  --agri-font-body: var(--font-sans, var(--font-inter, 'Inter', system-ui, sans-serif));
+  --agri-font-mono: var(--font-mono, 'IBM Plex Mono', monospace);
+  --agri-wrap: 1200px;
+
+  font-family: var(--agri-font-body);
+  color: var(--agri-ink);
+  line-height: 1.6;
+  background-color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+}
+
+.agri-drone-page *,
+.agri-drone-page *::before,
+.agri-drone-page *::after {
+  box-sizing: border-box;
+}
+
+.agri-drone-page img,
+.agri-drone-page svg {
+  display: block;
+}
+
+.agri-drone-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.agri-drone-page .agri-wrap {
+  max-width: var(--agri-wrap);
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 36px);
+}
+
+/* ---------- Tricolor thread ---------- */
+.agri-drone-page .agri-thread {
+  height: 3px;
+  display: flex;
+  width: 72px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+.agri-drone-page .agri-thread span {
+  flex: 1;
+}
+.agri-drone-page .agri-thread .t-saffron {
+  background: #ff9933;
+}
+.agri-drone-page .agri-thread .t-white {
+  background: #ffffff;
+  border-top: 1px solid var(--agri-line);
+  border-bottom: 1px solid var(--agri-line);
+}
+.agri-drone-page .agri-thread .t-green {
+  background: #138808;
+}
+
+/* ---------- Buttons ---------- */
+.agri-drone-page .agri-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--agri-font-body);
+  font-weight: 600;
+  font-size: 0.94rem;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.agri-drone-page .agri-btn-primary {
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
+}
+.agri-drone-page .agri-btn-primary:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.agri-drone-page .agri-btn-green {
+  background: var(--agri-green);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(21, 128, 61, 0.2);
+}
+.agri-drone-page .agri-btn-green:hover {
+  background: var(--agri-green-dark);
+  transform: translateY(-1px);
+}
+
+.agri-drone-page .agri-btn-ghost {
+  border-color: var(--agri-line-dark);
+  color: var(--agri-ink);
+  background: #ffffff;
+}
+.agri-drone-page .agri-btn-ghost:hover {
+  border-color: var(--agri-ink);
+  background: var(--agri-paper);
+}
+
+/* ---------- Section Standard ---------- */
+.agri-drone-page .agri-section {
+  padding: clamp(48px, 6vw, 84px) 0;
+  border-bottom: 1px solid var(--agri-line);
+}
+.agri-drone-page .agri-section-alt {
+  background-color: var(--agri-paper);
+}
+
+.agri-drone-page .agri-sec-head {
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+.agri-drone-page .agri-sec-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--agri-font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--agri-green);
+  margin-bottom: 0.5rem;
+}
+.agri-drone-page .agri-sec-title {
+  font-family: var(--agri-font-display);
+  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  font-weight: 700;
+  color: var(--agri-ink);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 0.75rem 0;
+}
+.agri-drone-page .agri-sec-subtitle {
+  font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+  color: var(--agri-ink-muted);
+  max-width: 720px;
+  margin: 0;
+}
+
+/* ---------- 1. HERO SECTION ---------- */
+.agri-drone-page .agri-hero {
+  padding: clamp(32px, 5vw, 64px) 0 clamp(48px, 6vw, 72px);
+  background: linear-gradient(180deg, #ffffff 0%, var(--agri-paper) 100%);
+  border-bottom: 1px solid var(--agri-line);
+}
+
+.agri-drone-page .agri-hero-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: clamp(28px, 4vw, 56px);
+  align-items: center;
+}
+
+.agri-drone-page .agri-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--agri-green-light);
+  color: var(--agri-green-dark);
+  border: 1px solid rgba(21, 128, 61, 0.2);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+.agri-drone-page .agri-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--agri-green);
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.2);
+}
+
+.agri-drone-page .agri-hero-title {
+  font-family: var(--agri-font-display);
+  font-size: clamp(2.25rem, 4.5vw, 3.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: var(--agri-ink);
+  margin: 0 0 0.5rem 0;
+}
+
+.agri-drone-page .agri-hero-tagline {
+  font-family: var(--agri-font-mono);
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  font-weight: 700;
+  color: var(--agri-green);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0 0 1.25rem 0;
+}
+
+.agri-drone-page .agri-hero-sub {
+  font-size: clamp(0.98rem, 1.6vw, 1.12rem);
+  color: var(--agri-ink-muted);
+  line-height: 1.65;
+  margin: 0 0 2rem 0;
+  max-width: 600px;
+}
+
+.agri-drone-page .agri-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 2.25rem;
+}
+
+.agri-drone-page .agri-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--agri-line);
+  font-size: 0.85rem;
+  color: var(--agri-ink-muted);
+}
+.agri-drone-page .agri-hero-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.agri-drone-page .agri-hero-meta-item svg {
+  color: var(--agri-green);
+}
+
+.agri-drone-page .agri-hero-media {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px -10px rgba(15, 23, 42, 0.18);
+  border: 1px solid var(--agri-line);
+  background: #ffffff;
+}
+
+.agri-drone-page .agri-hero-img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  display: block;
+}
+
+.agri-drone-page .agri-hero-overlay-tag {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-family: var(--agri-font-mono);
+}
+
+/* ---------- 2. METRICS STRIP ---------- */
+.agri-drone-page .agri-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+.agri-drone-page .agri-metric-card {
+  background: var(--agri-card-bg);
+  border: 1px solid var(--agri-line);
+  border-radius: 10px;
+  padding: clamp(16px, 2.5vw, 24px) 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+.agri-drone-page .agri-metric-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--agri-line-dark);
+  box-shadow: 0 8px 20px -8px rgba(15, 23, 42, 0.08);
+}
+
+.agri-drone-page .agri-metric-val {
+  font-family: var(--agri-font-display);
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  font-weight: 800;
+  color: var(--agri-green);
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 0.5rem;
+}
+.agri-drone-page .agri-metric-val small {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--agri-ink-muted);
+}
+.agri-drone-page .agri-metric-label {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--agri-ink);
+  margin-bottom: 0.35rem;
+}
+.agri-drone-page .agri-metric-desc {
+  font-size: 0.78rem;
+  color: var(--agri-ink-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ---------- 3. DGCA CERTIFICATION BANNER ---------- */
+.agri-drone-page .agri-cert-banner {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  border-radius: 16px;
+  padding: clamp(28px, 4vw, 48px);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: center;
+  box-shadow: 0 16px 32px -12px rgba(15, 23, 42, 0.35);
+  margin: 0 0 2rem 0;
+}
+
+.agri-drone-page .agri-cert-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  color: #fb923c;
+  font-family: var(--agri-font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.agri-drone-page .agri-cert-title {
+  font-family: var(--agri-font-display);
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+.agri-drone-page .agri-cert-info {
+  font-size: 1rem;
+  color: #cbd5e1;
+  margin: 0 0 1.25rem 0;
+  max-width: 650px;
+}
+
+.agri-drone-page .agri-cert-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.agri-drone-page .agri-cert-meta-box {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+.agri-drone-page .agri-cert-meta-box .k {
+  font-family: var(--agri-font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+.agri-drone-page .agri-cert-meta-box .v {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.agri-drone-page .agri-cert-seal-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.agri-drone-page .agri-cert-seal-img {
+  max-width: 200px;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #ffffff;
+}
+
+/* ---------- 4. FEATURE HIGHLIGHTS GRID ---------- */
+.agri-drone-page .agri-features-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(20px, 3vw, 32px);
+}
+
+.agri-drone-page .agri-feature-card {
+  background: var(--agri-card-bg);
+  border: 1px solid var(--agri-line);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+}
+.agri-drone-page .agri-feature-card:hover {
+  border-color: var(--agri-line-dark);
+  box-shadow: 0 10px 28px -10px rgba(15, 23, 42, 0.12);
+}
+
+.agri-drone-page .agri-feature-img-box {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  background: #0f172a;
+  overflow: hidden;
+}
+.agri-drone-page .agri-feature-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.agri-drone-page .agri-feature-card:hover .agri-feature-img {
+  transform: scale(1.03);
+}
+
+.agri-drone-page .agri-feature-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-family: var(--agri-font-mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.agri-drone-page .agri-feature-body {
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.agri-drone-page .agri-feature-title {
+  font-family: var(--agri-font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--agri-ink);
+  margin: 0 0 0.5rem 0;
+}
+.agri-drone-page .agri-feature-desc {
+  font-size: 0.94rem;
+  color: var(--agri-ink-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---------- 5. TECHNICAL SPECIFICATIONS TABLE ---------- */
+.agri-drone-page .agri-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(20px, 3vw, 32px);
+}
+
+.agri-drone-page .agri-spec-category {
+  background: #ffffff;
+  border: 1px solid var(--agri-line);
+  border-radius: 10px;
+  padding: 24px;
+}
+
+.agri-drone-page .agri-spec-cat-title {
+  font-family: var(--agri-font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--agri-green);
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--agri-green-light);
+  margin: 0 0 16px 0;
+}
+
+.agri-drone-page .agri-spec-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.agri-drone-page .agri-spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--agri-line);
+  font-size: 0.92rem;
+}
+.agri-drone-page .agri-spec-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.agri-drone-page .agri-spec-label {
+  color: var(--agri-ink-muted);
+  font-weight: 500;
+}
+.agri-drone-page .agri-spec-value {
+  color: var(--agri-ink);
+  font-weight: 700;
+  text-align: right;
+}
+
+/* ---------- 6. FLIGHT SAFETY ARCHITECTURE ---------- */
+.agri-drone-page .agri-safety-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.agri-drone-page .agri-safety-card {
+  background: #ffffff;
+  border: 1px solid var(--agri-line);
+  border-radius: 10px;
+  padding: 24px;
+  transition: all 0.2s ease;
+}
+.agri-drone-page .agri-safety-card:hover {
+  border-color: var(--agri-green);
+  transform: translateY(-2px);
+}
+
+.agri-drone-page .agri-safety-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--agri-green-light);
+  color: var(--agri-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.agri-drone-page .agri-safety-card h4 {
+  font-family: var(--agri-font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--agri-ink);
+  margin: 0 0 0.5rem 0;
+}
+.agri-drone-page .agri-safety-card p {
+  font-size: 0.88rem;
+  color: var(--agri-ink-muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ---------- 7. CTA BAND ---------- */
+.agri-drone-page .agri-cta-band {
+  padding: clamp(56px, 7vw, 96px) 0;
+  background: linear-gradient(135deg, #050810 0%, #0f172a 100%);
+  color: #ffffff;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.agri-drone-page .agri-cta-band::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff9933 0%, #ffffff 50%, #138808 100%);
+}
+
+.agri-drone-page .agri-cta-content {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.agri-drone-page .agri-cta-title {
+  font-family: var(--agri-font-display);
+  font-size: clamp(2rem, 3.8vw, 3rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem 0;
+  color: #ffffff;
+}
+
+.agri-drone-page .agri-cta-sub {
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  color: #94a3b8;
+  line-height: 1.65;
+  margin: 0 0 2rem 0;
+}
+
+.agri-drone-page .agri-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.agri-drone-page .agri-cta-email-tag {
+  font-family: var(--agri-font-mono);
+  font-size: 0.85rem;
+  color: #64748b;
+}
+.agri-drone-page .agri-cta-email-tag a {
+  color: #38bdf8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS
+   ============================================================ */
+@media (max-width: 1024px) {
+  .agri-drone-page .agri-metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .agri-drone-page .agri-safety-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .agri-drone-page .agri-cert-banner {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+  .agri-drone-page .agri-cert-seal-wrap {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .agri-drone-page .agri-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .agri-drone-page .agri-features-grid,
+  .agri-drone-page .agri-specs-grid {
+    grid-template-columns: 1fr;
+  }
+  .agri-drone-page .agri-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .agri-drone-page .agri-metrics-grid,
+  .agri-drone-page .agri-safety-grid {
+    grid-template-columns: 1fr;
+  }
+  .agri-drone-page .agri-hero-cta,
+  .agri-drone-page .agri-cta-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .agri-drone-page .agri-btn {
+    width: 100%;
+  }
+}
