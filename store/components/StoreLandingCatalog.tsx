@@ -136,6 +136,54 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
     (activeCategoryFilter === 'all' || activeCategoryFilter === 'agri') &&
     (!search.trim() ||
       'agricultural spraying drone hexacopter rpas 10l precision spraying'.includes(search.toLowerCase()));
+  const resolveProductImage = (
+    item?: ProductDto | null,
+    fallbackUrl: string = '/manufacturing/stage-2-hd.jpg'
+  ): string => {
+    if (!item) return fallbackUrl;
+
+    // 1. Direct image property uploaded in admin parent/child class
+    if (item.image && typeof item.image === 'string' && item.image.trim()) {
+      const resolved = getProductImageUrl(item.image.trim());
+      if (resolved) return resolved;
+    }
+
+    // 2. primaryImage object
+    if (item.primaryImage?.url && item.primaryImage.url.trim()) {
+      const resolved = getProductImageUrl(item.primaryImage.url.trim());
+      if (resolved) return resolved;
+    }
+
+    // 3. images array
+    if (item.images && item.images.length > 0) {
+      const primary = item.images.find((img) => img.isPrimary) || item.images[0];
+      if (primary?.url && primary.url.trim()) {
+        const resolved = getProductImageUrl(primary.url.trim());
+        if (resolved) return resolved;
+      }
+    }
+
+    // 4. If this is a parent series without an image, check children
+    if (item.id && childProductsMap[item.id] && childProductsMap[item.id].length > 0) {
+      for (const child of childProductsMap[item.id]) {
+        if (child.image && typeof child.image === 'string' && child.image.trim()) {
+          const resolved = getProductImageUrl(child.image.trim());
+          if (resolved) return resolved;
+        }
+        if (child.primaryImage?.url && child.primaryImage.url.trim()) {
+          const resolved = getProductImageUrl(child.primaryImage.url.trim());
+          if (resolved) return resolved;
+        }
+        if (child.images && child.images.length > 0 && child.images[0]?.url?.trim()) {
+          const resolved = getProductImageUrl(child.images[0].url.trim());
+          if (resolved) return resolved;
+        }
+      }
+    }
+
+    return fallbackUrl;
+  };
+
   const scrollToCatalog = () => {
     const el = document.getElementById('store-catalogue');
     if (el) {
@@ -356,13 +404,17 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
                 <div className="store-landing__series-thumb-area">
                   <span className="store-landing__series-tag-badge">12S HV Propulsion</span>
                   <img
-                    src={
+                    src={resolveProductImage(
+                      parent,
                       featuredMotor?.image
                         ? getProductImageUrl(featuredMotor.image) || '/manufacturing/stage-2-hd.jpg'
                         : '/manufacturing/stage-2-hd.jpg'
-                    }
+                    )}
                     alt={parent.name}
                     className="store-landing__series-thumb-img"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/manufacturing/stage-2-hd.jpg';
+                    }}
                   />
                 </div>
                 <div className="store-landing__series-body">
@@ -406,9 +458,12 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
                 <div className="store-landing__series-thumb-area">
                   <span className="store-landing__series-tag-badge">CNC 3K Carbon Fiber</span>
                   <img
-                    src="/frames/7.webp"
+                    src={resolveProductImage(parent, '/frames/7.webp')}
                     alt={parent.name}
                     className="store-landing__series-thumb-img"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/frames/7.webp';
+                    }}
                   />
                 </div>
                 <div className="store-landing__series-body">
@@ -421,6 +476,57 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
                     <div className="store-landing__series-status">
                       <span className="store-landing__series-status-dot" />
                       <span>Active Series ({childProductsMap[parent.id]?.length || 4} Geometries)</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="store-landing__series-link-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigateToParentSeries(parent);
+                      }}
+                    >
+                      <span>Explore Series</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+          {/* Other Parent Categories uploaded via Admin */}
+          {filteredParents
+            .filter((p) => !p.name.toLowerCase().includes('motor') && !p.name.toLowerCase().includes('frame'))
+            .map((parent) => (
+              <div
+                key={parent.id}
+                className="store-landing__series-card"
+                onClick={() => navigateToParentSeries(parent)}
+              >
+                <div className="store-landing__series-thumb-area">
+                  <span className="store-landing__series-tag-badge">
+                    {parent.categoryName || 'Aerospace System'}
+                  </span>
+                  <img
+                    src={resolveProductImage(parent, '/manufacturing/stage-1-hd.jpg')}
+                    alt={parent.name}
+                    className="store-landing__series-thumb-img"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/manufacturing/stage-1-hd.jpg';
+                    }}
+                  />
+                </div>
+                <div className="store-landing__series-body">
+                  <h3 className="store-landing__series-title">{parent.name}</h3>
+                  <p className="store-landing__series-desc">
+                    {parent.description ||
+                      'Precision-engineered aerospace subsystem components built for high-reliability flight operations.'}
+                  </p>
+                  <div className="store-landing__series-footer">
+                    <div className="store-landing__series-status">
+                      <span className="store-landing__series-status-dot" />
+                      <span>Active Series ({childProductsMap[parent.id]?.length || 0} Variants)</span>
                     </div>
                     <button
                       type="button"
@@ -566,22 +672,24 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
                   >
                     <div className="store-landing__hw-media">
                       <img
-                        src={
-                          product.image
-                            ? getProductImageUrl(product.image) || '/frames/5.webp'
-                            : product.name.includes('5')
-                              ? '/frames/5.webp'
-                              : product.name.includes('7')
-                                ? '/frames/7.webp'
-                                : product.name.includes('10')
-                                  ? '/frames/10.webp'
-                                  : product.name.includes('13')
-                                    ? '/frames/13.webp'
-                                    : '/manufacturing/stage-2-hd.jpg'
-                        }
+                        src={resolveProductImage(
+                          product,
+                          product.name.includes('5')
+                            ? '/frames/5.webp'
+                            : product.name.includes('7')
+                              ? '/frames/7.webp'
+                              : product.name.includes('10')
+                                ? '/frames/10.webp'
+                                : product.name.includes('13')
+                                  ? '/frames/13.webp'
+                                  : '/manufacturing/stage-2-hd.jpg'
+                        )}
                         alt={product.name}
                         className="store-landing__hw-img"
                         loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = '/manufacturing/stage-2-hd.jpg';
+                        }}
                       />
                     </div>
 
