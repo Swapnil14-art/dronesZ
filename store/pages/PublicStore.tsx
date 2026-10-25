@@ -832,10 +832,10 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
       {/* Main Container */}
       <main style={{
         flex: 1,
-        maxWidth: (isParachuteRoute || isAgriDroneRoute) ? '100%' : 'var(--max-width)',
+        maxWidth: (isParachuteRoute || isAgriDroneRoute || view === 'catalog') ? '100%' : 'var(--max-width)',
         width: '100%',
         margin: '0 auto',
-        padding: (isParachuteRoute || isAgriDroneRoute) ? '0' : 'clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 5vw, 5rem)'
+        padding: (isParachuteRoute || isAgriDroneRoute || view === 'catalog') ? '0' : 'clamp(1.5rem, 3vw, 3rem) clamp(1rem, 3vw, 2rem) clamp(3rem, 5vw, 5rem)'
       }}>
         {error && (
           <div style={{ background: '#fee2e2', border: '1px solid #f87171', color: '#991b1b', padding: '1rem', borderRadius: '0.375rem', marginBottom: '2rem' }}>

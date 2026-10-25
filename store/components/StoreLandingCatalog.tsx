@@ -193,10 +193,9 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
 
   return (
     <div className="store-landing">
-      <br></br>
       {/* ------------------------------------------------------------
           1. HERO SECTION — MADE IN BHARAT · INDIGENOUS TECHNOLOGY
-          Aerospace HUD / Mission Control aesthetic
+          Aerospace HUD / Mission Control aesthetic (Full-Bleed Landscape)
           ------------------------------------------------------------ */}
       <section className="store-landing__hero" aria-label="Made In Bharat — Indigenous Technology">
         {/* Layered background effects */}
@@ -253,49 +252,88 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
         <div className="store-landing__hero-tricolor" aria-hidden="true" />
 
         {/* HUD corner coordinates */}
-        <span className="store-landing__hud-coord store-landing__hud-coord--tl" aria-hidden="true">22.7196° N</span>
-        <span className="store-landing__hud-coord store-landing__hud-coord--tr" aria-hidden="true">75.8577° E</span>
-        <span className="store-landing__hud-coord store-landing__hud-coord--bl" aria-hidden="true">ALT 553m</span>
-        <span className="store-landing__hud-coord store-landing__hud-coord--br" aria-hidden="true">DZ–MFG–01</span>
+        <span className="store-landing__hud-coord store-landing__hud-coord--tl" aria-hidden="true">22.7196° N · LAB-01</span>
+        <span className="store-landing__hud-coord store-landing__hud-coord--tr" aria-hidden="true">75.8577° E · INDORE</span>
+        <span className="store-landing__hud-coord store-landing__hud-coord--bl" aria-hidden="true">ALT 553m · AS9100D</span>
+        <span className="store-landing__hud-coord store-landing__hud-coord--br" aria-hidden="true">SYS-OK · DZ–MFG–01</span>
 
-        {/* Main content layer */}
+        {/* Main content layer — 3-zone widescreen landscape layout */}
         <div className="store-landing__hero-content">
-          {/* Facility badge */}
-          <div className="store-landing__hero-badge">
-            <span className="store-landing__badge-pulse" aria-hidden="true" />
-            <svg
-              width="16"
-              height="11"
-              viewBox="0 0 24 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="store-landing__flag-svg"
-              aria-hidden="true"
-            >
-              <rect width="24" height="5.33" fill="#FF9933" rx="1" />
-              <rect y="5.33" width="24" height="5.33" fill="#FFFFFF" />
-              <rect y="10.66" width="24" height="5.33" fill="#138808" rx="1" />
-              <circle cx="12" cy="8" r="2" stroke="#000080" strokeWidth="0.5" fill="none" />
-              <circle cx="12" cy="8" r="0.5" fill="#000080" />
-            </svg>
-            <span>Indore Manufacturing Facility</span>
+          {/* Left Flank: Indigenous R&D punchlines */}
+          <div className="store-landing__hero-flank store-landing__hero-flank--left">
+            <div className="store-landing__flank-tag">
+              <span className="store-landing__flank-pulse store-landing__flank-pulse--saffron" aria-hidden="true" />
+              <span>// INDIGENOUS UAV PLATFORMS</span>
+            </div>
+            <div className="store-landing__flank-headline">
+              Zero Import Dependency
+            </div>
+            <div className="store-landing__flank-sub">
+              100% In-House R&amp;D · Stators, ESCs &amp; Airframes
+            </div>
+            <div className="store-landing__flank-chips">
+              <span className="store-landing__flank-chip">12S HV Propulsion</span>
+              <span className="store-landing__flank-chip">CNC 3K Carbon</span>
+            </div>
           </div>
 
-          {/* Main display — stacked typographic lockup */}
-          <h1 className="store-landing__hero-display" aria-label="Made In Bharat">
-            <span className="store-landing__hero-line-top">Made In</span>
-            <span className="store-landing__hero-line-bottom">Bharat</span>
-          </h1>
+          {/* Center Stage: Core Made In Bharat display */}
+          <div className="store-landing__hero-center">
+            {/* Facility & performance badge */}
+            <div className="store-landing__hero-badge">
+              <span className="store-landing__badge-pulse" aria-hidden="true" />
+              <svg
+                width="16"
+                height="11"
+                viewBox="0 0 24 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="store-landing__flag-svg"
+                aria-hidden="true"
+              >
+                <rect width="24" height="5.33" fill="#FF9933" rx="1" />
+                <rect y="5.33" width="24" height="5.33" fill="#FFFFFF" />
+                <rect y="10.66" width="24" height="5.33" fill="#138808" rx="1" />
+                <circle cx="12" cy="8" r="2" stroke="#000080" strokeWidth="0.5" fill="none" />
+                <circle cx="12" cy="8" r="0.5" fill="#000080" />
+              </svg>
+              <span>Precision Under Extreme Conditions</span>
+            </div>
 
-          {/* Divider rule with tricolor gradient */}
-          <div className="store-landing__hero-rule" aria-hidden="true" />
+            {/* Main display — stacked typographic lockup */}
+            <h1 className="store-landing__hero-display" aria-label="Made In Bharat">
+              <span className="store-landing__hero-line-top">Made In</span>
+              <span className="store-landing__hero-line-bottom">Bharat</span>
+            </h1>
 
-          {/* Sub-tagline */}
-          <p className="store-landing__hero-tagline">
-            <span className="store-landing__tagline-label">Indigenous Technology</span>
-            <span className="store-landing__tagline-sep" aria-hidden="true" />
-            <span className="store-landing__tagline-detail">Precision UAV Engineering · Indore, MP</span>
-          </p>
+            {/* Divider rule with tricolor gradient */}
+            <div className="store-landing__hero-rule" aria-hidden="true" />
+
+            {/* Sub-tagline */}
+            <p className="store-landing__hero-tagline">
+              <span className="store-landing__tagline-label">Indigenous Technology</span>
+              <span className="store-landing__tagline-sep" aria-hidden="true" />
+              <span className="store-landing__tagline-detail">Precision UAV Engineering · Indore, MP</span>
+            </p>
+          </div>
+
+          {/* Right Flank: Operational & Certification punchlines */}
+          <div className="store-landing__hero-flank store-landing__hero-flank--right">
+            <div className="store-landing__flank-tag">
+              <span className="store-landing__flank-pulse store-landing__flank-pulse--green" aria-hidden="true" />
+              <span>// OPERATIONAL ENDURANCE</span>
+            </div>
+            <div className="store-landing__flank-headline">
+              Built For Extreme Missions
+            </div>
+            <div className="store-landing__flank-sub">
+              High Altitude, Severe Thermals &amp; Heavy Payloads
+            </div>
+            <div className="store-landing__flank-chips">
+              <span className="store-landing__flank-chip">DGCA Certified Platform</span>
+              <span className="store-landing__flank-chip">Ballistic Safety</span>
+            </div>
+          </div>
         </div>
       </section>
       {/* ------------------------------------------------------------

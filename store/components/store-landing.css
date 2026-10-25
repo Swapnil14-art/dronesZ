@@ -6,9 +6,17 @@
 
 .store-landing {
   width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 0 4rem;
+  box-sizing: border-box;
+}
+
+.store-landing__catalogue-section {
+  width: 100%;
   max-width: var(--max-width, 1280px);
   margin: 0 auto;
-  padding: 0 1rem 4rem;
+  padding: 0 clamp(1rem, 3vw, 2rem);
   box-sizing: border-box;
 }
 
@@ -60,13 +68,16 @@
   height: 25vh;
   min-height: 190px;
   max-height: 240px;
-  margin-top: 0.5rem;
+  margin-top: 0;
   margin-bottom: 2.5rem;
-  padding: 1rem clamp(1rem, 3.5vw, 2.5rem);
+  padding: 0.75rem clamp(1rem, 3.5vw, 2.5rem);
   box-sizing: border-box;
   background: radial-gradient(ellipse 120% 100% at 50% 110%, #0d1525 0%, #060a14 70%);
-  border-radius: var(--radius-md, 0.75rem);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
     0 1px 0 inset rgba(255,255,255,0.08),
     0 20px 50px -16px rgba(0,0,0,0.7);
@@ -202,18 +213,116 @@
 .store-landing__hud-coord--bl { bottom: 10px; left: 14px; }
 .store-landing__hud-coord--br { bottom: 10px; right: 14px; }
 
-/* ---- Content layer ---- */
+/* ---- Content layer (Widescreen Landscape) ---- */
 .store-landing__hero-content {
   position: relative;
   z-index: 4;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1540px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 clamp(0.5rem, 2vw, 2.5rem);
+  box-sizing: border-box;
+  gap: clamp(1rem, 2.5vw, 2.5rem);
+}
+
+/* ---- Center Stage ---- */
+.store-landing__hero-center {
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
-  width: 100%;
-  max-width: 720px;
   text-align: center;
+  flex: 0 1 auto;
+  min-width: 0;
+  gap: 0.25rem;
+}
+
+/* ---- Aerospace Flanks (Left & Right) ---- */
+.store-landing__hero-flank {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 0 1 320px;
+  min-width: 0;
+}
+.store-landing__hero-flank--left {
+  align-items: flex-start;
+  text-align: left;
+}
+.store-landing__hero-flank--right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.store-landing__flank-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+}
+
+.store-landing__flank-pulse {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.store-landing__flank-pulse--saffron {
+  background: #FF9933;
+  box-shadow: 0 0 6px rgba(255, 153, 51, 0.6);
+}
+.store-landing__flank-pulse--green {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.store-landing__flank-headline {
+  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: clamp(0.88rem, 0.78rem + 0.35vw, 1.15rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  line-height: 1.15;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.store-landing__flank-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+}
+
+.store-landing__flank-chips {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+.store-landing__hero-flank--right .store-landing__flank-chips {
+  justify-content: flex-end;
+}
+
+.store-landing__flank-chip {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
 }
 
 /* ---- Facility badge ---- */
@@ -331,6 +440,24 @@
 }
 
 /* ---- Responsive & reduced-motion ---- */
+@media (max-width: 1100px) {
+  .store-landing__flank-sub {
+    display: none;
+  }
+  .store-landing__flank-headline {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 860px) {
+  .store-landing__hero-flank {
+    display: none;
+  }
+  .store-landing__hero-content {
+    justify-content: center;
+  }
+}
+
 @media (max-width: 600px) {
   .store-landing__hud-coord { display: none; }
   .store-landing__hero-aura { width: 140px; height: 140px; }
