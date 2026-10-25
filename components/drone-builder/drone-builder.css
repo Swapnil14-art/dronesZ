@@ -1,844 +1,971 @@
 /* ============================================================
-   DronesZ Build Your Own Drone — Dedicated Stylesheet
-   Matches existing DronesZ aerospace dark/light aesthetic
+   Build Your Own Drone Page — Scoped Styles
+   Primary inspiration: /store/parachute (Parachute Recovery Page)
+   Scoped entirely to .byod-page
    ============================================================ */
 
-.drone-builder {
-  width: 100%;
+.byod-page {
+  --byod-ink: #15140F;
+  --byod-paper: #FBFAF7;
+  --byod-paper-2: #F2EFE7;
+  --byod-red: #D8321F;
+  --byod-red-deep: #A31F10;
+  --byod-slate: #5B5D57;
+  --byod-line: #E2DED2;
+  --byod-saffron: #FF9933;
+  --byod-green: #0E7A1F;
+  --byod-white: #FFFFFF;
+
+  --byod-display: var(--font-display, 'Space Grotesk', sans-serif);
+  --byod-body: var(--font-sans, var(--font-inter, 'Inter', system-ui, -apple-system, sans-serif));
+  --byod-mono: var(--font-mono, 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  --byod-wrap: 1180px;
+
+  font-family: var(--byod-body);
+  color: var(--byod-ink);
+  background: var(--byod-paper);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  background: #f8fafc;
-  color: #0f172a;
-  padding-bottom: 5rem;
 }
 
-/* ------------------------------------------------------------
-   1. HERO BANNER
-   ------------------------------------------------------------ */
-.drone-builder__hero {
-  position: relative;
-  width: 100%;
-  padding: clamp(3rem, 6vw, 5rem) clamp(1.5rem, 4vw, 4rem) clamp(2.5rem, 5vw, 4rem);
-  background: radial-gradient(ellipse 120% 100% at 50% 110%, #0d1525 0%, #060a14 70%);
-  color: #ffffff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-}
-
-.drone-builder__hero-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 30px 30px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 85%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 85%);
-  pointer-events: none;
-}
-
-.drone-builder__hero-aura {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  pointer-events: none;
-  opacity: 0.25;
-}
-
-.drone-builder__hero-aura--saffron {
-  top: -40px;
-  left: 10%;
-  width: 320px;
-  height: 320px;
-  background: #FF9933;
-}
-
-.drone-builder__hero-aura--red {
-  bottom: -40px;
-  right: 10%;
-  width: 360px;
-  height: 360px;
-  background: #e52b31;
-}
-
-.drone-builder__hero-inner {
-  position: relative;
-  z-index: 2;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.drone-builder__badge-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.25rem;
-}
-
-.drone-builder__tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #FF9933;
-  backdrop-filter: blur(8px);
-}
-
-.drone-builder__tag-pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
-}
-
-.drone-builder__hero-title {
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: clamp(2rem, 1.5rem + 2.5vw, 3.6rem);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: #ffffff;
-  margin-bottom: 1rem;
-}
-
-.drone-builder__hero-title .accent {
-  color: var(--color-brand-red, #e52b31);
-}
-
-.drone-builder__hero-lead {
-  font-size: clamp(1rem, 0.95rem + 0.35vw, 1.2rem);
-  line-height: 1.6;
-  color: #94a3b8;
-  max-width: 780px;
-  margin-bottom: 1.75rem;
-}
-
-.drone-builder__hero-features {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.drone-builder__feat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #cbd5e1;
-}
-
-.drone-builder__feat-icon {
-  color: #22c55e;
-}
-
-/* ------------------------------------------------------------
-   2. PROMINENT SHIPPING ADVISORY BANNER
-   ------------------------------------------------------------ */
-.drone-builder__shipping-banner {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  border: 1px solid rgba(229, 43, 49, 0.35);
-  border-left: 5px solid #e52b31;
-  border-radius: 0.75rem;
-  padding: 1.25rem 1.75rem;
-  margin-bottom: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
-  color: #f8fafc;
-}
-
-.drone-builder__shipping-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.drone-builder__shipping-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 0.5rem;
-  background: rgba(229, 43, 49, 0.12);
-  border: 1px solid rgba(229, 43, 49, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #e52b31;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.drone-builder__shipping-title {
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: #ffffff;
-  text-transform: uppercase;
-  margin-bottom: 0.3rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.drone-builder__shipping-title .badge-highlight {
-  display: inline-block;
-  background: #e52b31;
-  color: #ffffff;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-}
-
-.drone-builder__shipping-desc {
-  font-size: 13px;
-  line-height: 1.5;
-  color: #94a3b8;
-  margin: 0;
-}
-
-.drone-builder__shipping-badge {
-  flex-shrink: 0;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 11px;
-  color: #cbd5e1;
-}
-
-.drone-builder__shipping-badge-val {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #e52b31;
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-}
-
-@media (max-width: 768px) {
-  .drone-builder__shipping-banner {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1.25rem;
-  }
-  .drone-builder__shipping-badge {
-    align-items: flex-start;
-    padding-top: 0.75rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    width: 100%;
-  }
-}
-
-/* ------------------------------------------------------------
-   3. MAIN WORKSPACE LAYOUT (FORM + LIVE SUMMARY SIDEBAR)
-   ------------------------------------------------------------ */
-.drone-builder__workspace {
-  max-width: 1240px;
-  margin: -1.5rem auto 0;
-  padding: 0 clamp(1rem, 3vw, 2rem);
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 2rem;
-  align-items: start;
-}
-
-@media (max-width: 1080px) {
-  .drone-builder__workspace {
-    grid-template-columns: 1fr;
-    margin-top: 1.5rem;
-  }
-}
-
-/* ------------------------------------------------------------
-   4. FORM CARDS & SECTIONS
-   ------------------------------------------------------------ */
-.drone-builder__form-pane {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.drone-builder__card {
-  background: #ffffff;
-  border: 1px solid var(--color-outline, rgba(15, 23, 42, 0.08));
-  border-radius: 0.75rem;
-  padding: clamp(1.5rem, 3vw, 2.25rem);
-  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.04);
-}
-
-.drone-builder__card-header {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.drone-builder__step-tag {
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #e52b31;
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.drone-builder__card-title {
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: -0.01em;
-  margin: 0 0 0.35rem 0;
-}
-
-.drone-builder__card-desc {
-  font-size: 13.5px;
-  color: #64748b;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* ---- Airframe Type Cards ---- */
-.drone-builder__type-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
-@media (max-width: 680px) {
-  .drone-builder__type-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.drone-builder__type-card {
-  position: relative;
-  background: #f8fafc;
-  border: 2px solid rgba(15, 23, 42, 0.08);
-  border-radius: 0.65rem;
-  padding: 1.25rem 1rem;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  text-align: left;
-}
-
-.drone-builder__type-card:hover {
-  background: #ffffff;
-  border-color: rgba(229, 43, 49, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px -4px rgba(15, 23, 42, 0.08);
-}
-
-.drone-builder__type-card--selected {
-  background: #ffffff;
-  border-color: #e52b31;
-  box-shadow: 0 0 0 1px #e52b31, 0 10px 20px -4px rgba(229, 43, 49, 0.15);
-}
-
-.drone-builder__type-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.drone-builder__type-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 0.5rem;
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #0f172a;
-}
-
-.drone-builder__type-card--selected .drone-builder__type-icon {
-  background: #e52b31;
-  color: #ffffff;
-  border-color: #e52b31;
-}
-
-.drone-builder__type-radio {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid #cbd5e1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.drone-builder__type-card--selected .drone-builder__type-radio {
-  border-color: #e52b31;
-}
-
-.drone-builder__type-radio-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #e52b31;
-}
-
-.drone-builder__type-name {
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 0.35rem;
-}
-
-.drone-builder__type-badge {
-  display: inline-block;
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #e52b31;
-  background: rgba(229, 43, 49, 0.08);
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  margin-bottom: 0.6rem;
-  align-self: flex-start;
-}
-
-.drone-builder__type-desc {
-  font-size: 12px;
-  line-height: 1.45;
-  color: #64748b;
-  margin: 0;
-}
-
-/* ---- Spec Input Field & Pill Groups ---- */
-.drone-builder__spec-group {
-  margin-bottom: 1.75rem;
-}
-
-.drone-builder__spec-group:last-child {
-  margin-bottom: 0;
-}
-
-.drone-builder__spec-label-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 0.6rem;
-}
-
-.drone-builder__spec-label {
-  font-weight: 700;
-  font-size: 14px;
-  color: #0f172a;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.drone-builder__spec-unit {
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
-}
-
-.drone-builder__spec-current-val {
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #e52b31;
-}
-
-.drone-builder__preset-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.drone-builder__pill {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 9999px;
-  padding: 0.35rem 0.85rem;
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.drone-builder__pill:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-
-.drone-builder__pill--active {
-  background: #0f172a;
-  border-color: #0f172a;
-  color: #ffffff;
-}
-
-.drone-builder__input-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.drone-builder__range-slider {
-  flex: 1;
-  accent-color: #e52b31;
-  height: 6px;
-  cursor: pointer;
-}
-
-.drone-builder__num-input {
-  width: 90px;
-  padding: 0.45rem 0.6rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.4rem;
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 13.5px;
-  font-weight: 600;
-  text-align: right;
-  color: #0f172a;
-}
-
-.drone-builder__num-input:focus {
-  outline: none;
-  border-color: #e52b31;
-  box-shadow: 0 0 0 3px rgba(229, 43, 49, 0.12);
-}
-
-/* ---- Transmission & Sensor Options Grid ---- */
-.drone-builder__option-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.drone-builder__option-card {
-  background: #f8fafc;
-  border: 1.5px solid rgba(15, 23, 42, 0.08);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.15s ease;
-}
-
-.drone-builder__option-card:hover {
-  background: #ffffff;
-  border-color: rgba(229, 43, 49, 0.4);
-}
-
-.drone-builder__option-card--selected {
-  background: #ffffff;
-  border-color: #e52b31;
-  box-shadow: 0 0 0 1px #e52b31, 0 4px 12px -2px rgba(229, 43, 49, 0.12);
-}
-
-.drone-builder__option-title {
-  font-weight: 700;
-  font-size: 13.5px;
-  color: #0f172a;
-  margin-bottom: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.drone-builder__option-desc {
-  font-size: 11.5px;
-  line-height: 1.45;
-  color: #64748b;
-  margin: 0;
-}
-
-/* ---- Customer Details Form Fields ---- */
-.drone-builder__input-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-}
-
-@media (max-width: 600px) {
-  .drone-builder__input-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.drone-builder__field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.drone-builder__field-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.drone-builder__field-label .req {
-  color: #e52b31;
-  margin-left: 2px;
-}
-
-.drone-builder__text-input,
-.drone-builder__textarea,
-.drone-builder__select {
-  width: 100%;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.45rem;
-  font-size: 13.5px;
-  font-family: inherit;
-  color: #0f172a;
-  background: #ffffff;
-  transition: all 0.15s ease;
+.byod-page *,
+.byod-page *::before,
+.byod-page *::after {
   box-sizing: border-box;
 }
 
-.drone-builder__text-input:focus,
-.drone-builder__textarea:focus,
-.drone-builder__select:focus {
-  outline: none;
-  border-color: #e52b31;
-  box-shadow: 0 0 0 3px rgba(229, 43, 49, 0.12);
+.byod-page img,
+.byod-page svg {
+  display: block;
 }
 
-.drone-builder__field-error {
-  font-size: 11px;
+.byod-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.byod-page ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.byod-page .byod-wrap {
+  max-width: var(--byod-wrap);
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+@media (max-width: 640px) {
+  .byod-page .byod-wrap {
+    padding: 0 18px;
+  }
+}
+
+/* ---------- Indian Tricolor Thread ---------- */
+.byod-page .byod-thread {
+  height: 3px;
+  display: flex;
+  width: 64px;
+}
+
+.byod-page .byod-thread span {
+  flex: 1;
+}
+
+.byod-page .byod-thread .s1 {
+  background: var(--byod-saffron);
+}
+
+.byod-page .byod-thread .s2 {
+  background: var(--byod-white);
+  border-top: 1px solid var(--byod-line);
+  border-bottom: 1px solid var(--byod-line);
+}
+
+.byod-page .byod-thread .s3 {
+  background: var(--byod-green);
+}
+
+/* ---------- Buttons (Parachute Reference) ---------- */
+.byod-page .byod-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--byod-body);
   font-weight: 600;
-  color: #dc2626;
+  font-size: 0.92rem;
+  padding: 12px 24px;
+  border-radius: 2px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.byod-page .byod-btn-primary {
+  background: var(--byod-red);
+  color: var(--byod-white);
+  box-shadow: 0 1px 0 var(--byod-red-deep);
+}
+
+.byod-page .byod-btn-primary:hover:not(:disabled) {
+  background: var(--byod-red-deep);
+}
+
+.byod-page .byod-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.byod-page .byod-btn-ghost {
+  border-color: var(--byod-ink);
+  color: var(--byod-ink);
+  background: transparent;
+}
+
+.byod-page .byod-btn-ghost:hover {
+  background: var(--byod-ink);
+  color: var(--byod-paper);
+}
+
+.byod-page .byod-btn-sm {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   1. HERO SECTION (Mirroring Parachute p-hero)
+   ============================================================ */
+.byod-page .byod-hero {
+  padding: 72px 0 60px;
+  border-bottom: 1px solid var(--byod-line);
+  background: var(--byod-paper);
+}
+
+.byod-page .byod-hero-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 56px;
+  align-items: end;
+}
+
+@media (max-width: 990px) {
+  .byod-page .byod-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+.byod-page .byod-eyebrow {
+  font-family: var(--byod-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--byod-red);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.byod-page h1.byod-headline {
+  font-family: var(--byod-display);
+  font-weight: 900;
+  font-size: clamp(2.4rem, 4.5vw, 4.2rem);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  color: var(--byod-ink);
+  margin: 0;
+}
+
+.byod-page h1.byod-headline .dot {
+  color: var(--byod-red);
+}
+
+.byod-page .byod-hero-sub {
+  margin-top: 22px;
+  font-size: 1.08rem;
+  color: var(--byod-slate);
+  max-width: 48ch;
+  line-height: 1.6;
+}
+
+.byod-page .byod-hero-cta {
+  margin-top: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+/* Hero Right: Flight Readiness Sequence Panel */
+.byod-page .byod-stage-panel {
+  border: 1px solid var(--byod-line);
+  background: var(--byod-white);
+  padding: 24px 22px;
+  box-shadow: 0 4px 20px -5px rgba(21, 20, 15, 0.04);
+}
+
+.byod-page .byod-stage-panel h3 {
+  font-family: var(--byod-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--byod-slate);
+  text-transform: uppercase;
+  margin: 0 0 16px 0;
+}
+
+.byod-page .byod-stage-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.byod-page .byod-stage-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--byod-line);
+}
+
+.byod-page .byod-stage-item:first-child {
+  border-top: none;
+}
+
+.byod-page .byod-stage-item .dot-marker {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--byod-line);
+  flex-shrink: 0;
+}
+
+.byod-page .byod-stage-item.active .dot-marker {
+  background: var(--byod-red);
+}
+
+.byod-page .byod-stage-item .label {
+  font-family: var(--byod-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: var(--byod-ink);
+}
+
+.byod-page .byod-stage-item .desc {
+  font-size: 0.78rem;
+  color: var(--byod-slate);
+  margin-left: auto;
+  text-align: right;
+}
+
+/* Hero Shipping Dispatch Box */
+.byod-page .byod-stage-shipping {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: #FDEDEA;
+  border-left: 3px solid var(--byod-red);
+  font-family: var(--byod-mono);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--byod-red-deep);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.byod-page .byod-stage-shipping-badge {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   2. FEATURES / ENGINEERING CAPABILITY STRIP
+   ============================================================ */
+.byod-page .byod-section {
+  padding: 72px 0;
+}
+
+.byod-page .byod-section.alt {
+  background: var(--byod-paper-2);
+}
+
+.byod-page .byod-section:not(.alt) {
+  background: var(--byod-paper);
+}
+
+.byod-page .byod-feature-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--byod-line);
+  border-left: 1px solid var(--byod-line);
+  background: var(--byod-white);
+}
+
+@media (max-width: 900px) {
+  .byod-page .byod-feature-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .byod-page .byod-feature-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+.byod-page .byod-feature {
+  border-right: 1px solid var(--byod-line);
+  border-bottom: 1px solid var(--byod-line);
+  padding: 28px 24px;
+}
+
+.byod-page .byod-feature .ico {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 16px;
+  color: var(--byod-red);
+}
+
+.byod-page .byod-feature h4 {
+  font-family: var(--byod-display);
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 6px 0;
+  color: var(--byod-ink);
+}
+
+.byod-page .byod-feature p {
+  font-size: 0.86rem;
+  color: var(--byod-slate);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ============================================================
+   3. PROMINENT SHIPPING ADVISORY BANNER
+   ============================================================ */
+.byod-page .byod-shipping-banner {
+  border: 1px solid var(--byod-line);
+  border-left: 4px solid var(--byod-red);
+  background: var(--byod-white);
+  padding: 18px 24px;
+  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 2px 12px rgba(21, 20, 15, 0.03);
+}
+
+@media (max-width: 768px) {
+  .byod-page .byod-shipping-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.byod-page .byod-shipping-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.byod-page .byod-shipping-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--byod-red);
+  flex-shrink: 0;
   margin-top: 2px;
 }
 
-/* ------------------------------------------------------------
-   5. LIVE ARCHITECTURE SUMMARY SIDEBAR
-   ------------------------------------------------------------ */
-.drone-builder__summary-card {
-  position: sticky;
-  top: 96px;
-  background: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.75rem;
-  padding: 1.75rem;
-  color: #ffffff;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
-}
-
-.drone-builder__summary-header {
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 1.25rem;
-}
-
-.drone-builder__summary-tag {
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 10.5px;
+.byod-page .byod-shipping-title {
+  font-family: var(--byod-mono);
+  font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #FF9933;
+  letter-spacing: 0.04em;
+  color: var(--byod-ink);
   text-transform: uppercase;
-  display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 4px;
 }
 
-.drone-builder__summary-title {
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: 1.25rem;
+.byod-page .byod-shipping-desc {
+  font-size: 0.85rem;
+  color: var(--byod-slate);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.byod-page .byod-shipping-badge {
+  flex-shrink: 0;
+  font-family: var(--byod-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: #FDEDEA;
+  color: var(--byod-red-deep);
+  padding: 6px 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(216, 50, 31, 0.2);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   4. CONFIGURATOR WORKSPACE LAYOUT
+   ============================================================ */
+.byod-page .byod-workspace {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 40px;
+  align-items: start;
+}
+
+@media (max-width: 1040px) {
+  .byod-page .byod-workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Section Header pattern */
+.byod-page .byod-sec-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.byod-page .byod-sec-label {
+  font-family: var(--byod-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--byod-red);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.byod-page h2.byod-sec-title {
+  font-family: var(--byod-display);
   font-weight: 800;
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
   letter-spacing: -0.01em;
-  color: #ffffff;
+  color: var(--byod-ink);
   margin: 0;
 }
 
-.drone-builder__summary-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  margin-bottom: 1.5rem;
+.byod-page .byod-sec-note {
+  font-size: 0.9rem;
+  color: var(--byod-slate);
+  max-width: 42ch;
+  line-height: 1.5;
 }
 
-.drone-builder__summary-row {
+/* Form Container Card */
+.byod-page .byod-card {
+  border: 1px solid var(--byod-line);
+  background: var(--byod-white);
+  padding: 32px 28px;
+  margin-bottom: 32px;
+}
+
+.byod-page .byod-card-title {
+  font-family: var(--byod-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--byod-ink);
+  margin: 0 0 4px 0;
+}
+
+.byod-page .byod-card-sub {
+  font-size: 0.88rem;
+  color: var(--byod-slate);
+  margin: 0 0 24px 0;
+}
+
+/* ---------- Airframe Platform Cards ---------- */
+.byod-page .byod-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 720px) {
+  .byod-page .byod-platform-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.byod-page .byod-platform-card {
+  border: 1px solid var(--byod-line);
+  background: var(--byod-paper);
+  padding: 20px 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  text-align: left;
+}
+
+.byod-page .byod-platform-card:hover {
+  border-color: var(--byod-ink);
+  background: var(--byod-white);
+}
+
+.byod-page .byod-platform-card.selected {
+  border-color: var(--byod-red);
+  background: var(--byod-white);
+  box-shadow: 0 0 0 1px var(--byod-red);
+}
+
+.byod-page .byod-platform-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.byod-page .byod-platform-ico {
+  width: 32px;
+  height: 32px;
+  color: var(--byod-ink);
+}
+
+.byod-page .byod-platform-card.selected .byod-platform-ico {
+  color: var(--byod-red);
+}
+
+.byod-page .byod-radio-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--byod-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.byod-page .byod-platform-card.selected .byod-radio-circle {
+  border-color: var(--byod-red);
+}
+
+.byod-page .byod-radio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--byod-red);
+}
+
+.byod-page .byod-platform-name {
+  font-family: var(--byod-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--byod-ink);
+  margin-bottom: 4px;
+}
+
+.byod-page .byod-platform-badge {
+  font-family: var(--byod-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--byod-red);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
+.byod-page .byod-platform-desc {
+  font-size: 0.84rem;
+  color: var(--byod-slate);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---------- Spec Row (Parachute p-range-row Inspired) ---------- */
+.byod-page .byod-spec-row {
+  border-bottom: 1px solid var(--byod-line);
+  padding: 24px 0;
+}
+
+.byod-page .byod-spec-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.byod-page .byod-spec-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.5rem;
-  font-size: 13px;
+  margin-bottom: 12px;
 }
 
-.drone-builder__summary-label {
-  color: #94a3b8;
-  font-size: 12px;
-}
-
-.drone-builder__summary-val {
+.byod-page .byod-spec-label {
+  font-family: var(--byod-display);
   font-weight: 700;
-  color: #ffffff;
-  text-align: right;
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
+  font-size: 1.02rem;
+  color: var(--byod-ink);
 }
 
-.drone-builder__summary-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.08);
-  margin: 0.25rem 0;
-}
-
-/* Shipping Notice Badge Inside Summary */
-.drone-builder__summary-dispatch-box {
-  background: rgba(229, 43, 49, 0.1);
-  border: 1px solid rgba(229, 43, 49, 0.3);
-  border-radius: 0.5rem;
-  padding: 0.75rem 0.85rem;
-  margin-bottom: 1.5rem;
-}
-
-.drone-builder__summary-dispatch-badge {
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  font-size: 10px;
+.byod-page .byod-spec-readout {
+  font-family: var(--byod-display);
   font-weight: 800;
-  color: #e52b31;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  display: block;
-  margin-bottom: 0.25rem;
+  font-size: 1.85rem;
+  color: var(--byod-ink);
+  line-height: 1;
 }
 
-.drone-builder__summary-dispatch-text {
-  font-size: 11px;
-  line-height: 1.4;
-  color: #cbd5e1;
+.byod-page .byod-spec-readout small {
+  font-family: var(--byod-mono);
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: var(--byod-slate);
+  margin-left: 3px;
+}
+
+/* Preset Pills (Clean Minimalist Paper Style) */
+.byod-page .byod-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.byod-page .byod-pill {
+  font-family: var(--byod-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+  padding: 6px 12px;
+  border: 1px solid var(--byod-line);
+  background: var(--byod-paper);
+  color: var(--byod-slate);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.byod-page .byod-pill:hover {
+  border-color: var(--byod-ink);
+  color: var(--byod-ink);
+}
+
+.byod-page .byod-pill.active {
+  background: var(--byod-ink);
+  border-color: var(--byod-ink);
+  color: var(--byod-white);
+}
+
+/* Slider + Number Input */
+.byod-page .byod-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.byod-page .byod-slider {
+  flex: 1;
+  accent-color: var(--byod-red);
+  height: 4px;
+  cursor: pointer;
+}
+
+.byod-page .byod-num-box {
+  width: 90px;
+  padding: 6px 10px;
+  border: 1px solid var(--byod-line);
+  border-radius: 2px;
+  font-family: var(--byod-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: right;
+  color: var(--byod-ink);
+  background: var(--byod-white);
+}
+
+.byod-page .byod-num-box:focus {
+  outline: none;
+  border-color: var(--byod-red);
+}
+
+.byod-page .byod-field-error {
+  font-family: var(--byod-mono);
+  font-size: 0.74rem;
+  color: var(--byod-red);
+  margin-top: 6px;
+}
+
+/* ---------- Video & Sensor Options (2-column clean grid) ---------- */
+.byod-page .byod-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.byod-page .byod-option-card {
+  border: 1px solid var(--byod-line);
+  background: var(--byod-paper);
+  padding: 16px 14px;
+  cursor: pointer;
+  border-radius: 2px;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.byod-page .byod-option-card:hover {
+  border-color: var(--byod-ink);
+  background: var(--byod-white);
+}
+
+.byod-page .byod-option-card.selected {
+  border-color: var(--byod-red);
+  background: var(--byod-white);
+  box-shadow: 0 0 0 1px var(--byod-red);
+}
+
+.byod-page .byod-option-title {
+  font-family: var(--byod-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--byod-ink);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.byod-page .byod-option-desc {
+  font-size: 0.8rem;
+  color: var(--byod-slate);
+  line-height: 1.45;
   margin: 0;
 }
 
-/* Prominent Submit Enquiry Button */
-.drone-builder__submit-btn {
-  width: 100%;
-  padding: 0.85rem 1.25rem;
-  background: #e52b31;
-  color: #ffffff;
-  border: none;
-  border-radius: 0.5rem;
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: 1rem;
-  font-weight: 700;
+/* ---------- Customer Credentials Form Fields ---------- */
+.byod-page .byod-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 600px) {
+  .byod-page .byod-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.byod-page .byod-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.byod-page .byod-input-label {
+  font-family: var(--byod-mono);
+  font-size: 0.74rem;
   letter-spacing: 0.04em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 8px 20px -4px rgba(229, 43, 49, 0.5);
+  text-transform: uppercase;
+  color: var(--byod-slate);
 }
 
-.drone-builder__submit-btn:hover:not(:disabled) {
-  background: #c81e24;
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px -4px rgba(229, 43, 49, 0.6);
+.byod-page .byod-input-label .req {
+  color: var(--byod-red);
 }
 
-.drone-builder__submit-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-  transform: none;
+.byod-page .byod-input,
+.byod-page .byod-select,
+.byod-page .byod-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--byod-line);
+  background: var(--byod-white);
+  border-radius: 2px;
+  font-family: var(--byod-body);
+  font-size: 0.92rem;
+  color: var(--byod-ink);
+  transition: border-color 0.15s ease;
 }
 
-.drone-builder__submit-note {
-  font-size: 11px;
-  color: #64748b;
-  text-align: center;
-  margin-top: 0.75rem;
-  line-height: 1.4;
+.byod-page .byod-input:focus,
+.byod-page .byod-select:focus,
+.byod-page .byod-textarea:focus {
+  outline: none;
+  border-color: var(--byod-red);
 }
 
-.drone-builder__error-banner {
-  background: rgba(220, 38, 38, 0.15);
-  border: 1px solid rgba(220, 38, 38, 0.4);
-  color: #fca5a5;
-  padding: 0.75rem;
-  border-radius: 0.4rem;
-  font-size: 12px;
-  margin-bottom: 1rem;
+/* ============================================================
+   5. STICKY ARCHITECTURE SUMMARY PANEL (RIGHT)
+   ============================================================ */
+.byod-page .byod-summary-panel {
+  position: sticky;
+  top: 96px;
+  border: 1px solid var(--byod-ink);
+  background: var(--byod-white);
+  padding: 26px 24px;
+  box-shadow: 0 4px 20px -5px rgba(21, 20, 15, 0.08);
 }
 
-/* Success State */
-.drone-builder__success-box {
-  background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 0.75rem;
-  padding: clamp(2rem, 5vw, 3.5rem);
-  text-align: center;
-  max-width: 680px;
-  margin: 2rem auto;
-  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.08);
+.byod-page .byod-summary-panel h3 {
+  font-family: var(--byod-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--byod-red);
+  text-transform: uppercase;
+  margin: 0 0 4px 0;
 }
 
-.drone-builder__success-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: #16a34a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.5rem;
-}
-
-.drone-builder__success-title {
-  font-family: var(--font-display, "Space Grotesk", sans-serif);
-  font-size: 1.75rem;
+.byod-page .byod-summary-panel .byod-summary-title {
+  font-family: var(--byod-display);
+  font-size: 1.25rem;
   font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 0.75rem;
+  color: var(--byod-ink);
+  margin: 0 0 20px 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--byod-line);
 }
 
-.drone-builder__success-desc {
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: #64748b;
-  margin-bottom: 1.75rem;
+.byod-page .byod-spec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 22px;
 }
 
-.drone-builder__success-specs {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  padding: 1.25rem;
+.byod-page .byod-summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.88rem;
+}
+
+.byod-page .byod-summary-row .label {
+  color: var(--byod-slate);
+  font-size: 0.84rem;
+}
+
+.byod-page .byod-summary-row .val {
+  font-family: var(--byod-mono);
+  font-weight: 600;
+  color: var(--byod-ink);
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.byod-page .byod-summary-shipping {
+  background: #FDEDEA;
+  border-left: 3px solid var(--byod-red);
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.byod-page .byod-summary-shipping-title {
+  font-family: var(--byod-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--byod-red-deep);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.byod-page .byod-summary-shipping-note {
+  font-size: 0.78rem;
+  color: var(--byod-slate);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.byod-page .byod-submit-btn {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  border-radius: 2px;
+}
+
+.byod-page .byod-summary-note {
+  font-size: 0.75rem;
+  color: var(--byod-slate);
+  text-align: center;
+  margin: 12px 0 0 0;
+  line-height: 1.45;
+}
+
+.byod-page .byod-error-banner {
+  background: #FEE2E2;
+  border: 1px solid #F87171;
+  color: #991B1B;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  margin-bottom: 16px;
+  border-radius: 2px;
+}
+
+/* ============================================================
+   6. SUCCESS STATE
+   ============================================================ */
+.byod-page .byod-success-wrap {
+  padding: 80px 0;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.byod-page .byod-success-box {
+  border: 1px solid var(--byod-line);
+  background: var(--byod-white);
+  padding: 48px 40px;
   text-align: left;
-  margin-bottom: 2rem;
-  font-size: 13px;
+}
+
+.byod-page .byod-success-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 2px;
+  background: #E8F5E9;
+  color: var(--byod-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.byod-page .byod-success-title {
+  font-family: var(--byod-display);
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--byod-ink);
+  margin: 0 0 12px 0;
+}
+
+.byod-page .byod-success-title .dot {
+  color: var(--byod-red);
+}
+
+.byod-page .byod-success-desc {
+  font-size: 1rem;
+  color: var(--byod-slate);
   line-height: 1.6;
-  color: #334155;
+  margin: 0 0 28px 0;
+}
+
+.byod-page .byod-success-specs {
+  border-top: 1px solid var(--byod-line);
+  border-bottom: 1px solid var(--byod-line);
+  padding: 20px 0;
+  margin-bottom: 28px;
+  font-size: 0.88rem;
+  color: var(--byod-ink);
+  line-height: 1.7;
+}
+
+.byod-page .byod-success-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
 }

@@ -20,10 +20,10 @@ const DRONE_TYPES: DroneTypeOption[] = [
   {
     id: "quad-hex",
     name: "Quad / Hexacopter",
-    badge: "Heavy Lift · Multirotor",
-    description: "Multi-rotor propulsion designed for precision stationary hovering, high payload capacity, and aggressive wind resistance.",
+    badge: "5–25 kg MTOW · Multi-Rotor",
+    description: "Multi-rotor propulsion engineered for precision stationary hovering, high payload capacity, and aggressive wind rejection in close-quarters flight.",
     iconSvg: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg className="byod-platform-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
         <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
         <circle cx="12" cy="2" r="1.5" />
@@ -36,10 +36,10 @@ const DRONE_TYPES: DroneTypeOption[] = [
   {
     id: "vtol",
     name: "VTOL Platform",
-    badge: "Hybrid Wing · Runway-Free",
-    description: "Vertical multi-rotor takeoff combined with high-speed aerodynamic fixed-wing cruise for maximum BVLOS coverage.",
+    badge: "Hybrid Airframe · Runway-Free",
+    description: "Vertical multi-rotor takeoff combined with high-speed aerodynamic fixed-wing cruise for maximum BVLOS coverage across rugged terrains.",
     iconSvg: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg className="byod-platform-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2L4 20l8-4 8 4L12 2z" />
         <path d="M12 2v14" />
       </svg>
@@ -48,10 +48,10 @@ const DRONE_TYPES: DroneTypeOption[] = [
   {
     id: "fixed-wing",
     name: "Fixed-Wing",
-    badge: "Max Loiter · Long Range",
-    description: "High-aspect-ratio carbon composite airframe optimized for prolonged surveillance loiter times and large-scale corridor mapping.",
+    badge: "Long Loiter · High Aspect Ratio",
+    description: "High-aspect-ratio carbon composite wing structure optimized for prolonged surveillance loiter times and large-scale corridor mapping.",
     iconSvg: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg className="byod-platform-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 12h20" />
         <path d="M12 2v20" />
         <path d="M7 7l5 5 5-5" />
@@ -61,18 +61,18 @@ const DRONE_TYPES: DroneTypeOption[] = [
 ];
 
 const PAYLOAD_PRESETS = [
-  { label: "0.5 kg (Micro)", value: 0.5 },
-  { label: "1.5 kg (Sensor)", value: 1.5 },
+  { label: "0.5 kg (Micro Sensor)", value: 0.5 },
+  { label: "1.5 kg (Optical Gimbal)", value: 1.5 },
   { label: "3.5 kg (Dual EO/IR)", value: 3.5 },
   { label: "5.0 kg (Heavy Lift)", value: 5.0 },
   { label: "10.0 kg (Industrial)", value: 10.0 },
-  { label: "15.0+ kg (Transport)", value: 15.0 },
+  { label: "15.0+ kg (Heavy Transport)", value: 15.0 },
 ];
 
 const RANGE_PRESETS = [
   { label: "5 km (VLOS)", value: 5 },
-  { label: "10 km (Medium)", value: 10 },
-  { label: "20 km (Extended)", value: 20 },
+  { label: "10 km (Medium Range)", value: 10 },
+  { label: "20 km (Extended Range)", value: 20 },
   { label: "35 km (BVLOS)", value: 35 },
   { label: "50+ km (Tactical Link)", value: 50 },
 ];
@@ -96,7 +96,7 @@ const VIDEO_TRANSMISSION_OPTIONS = [
   {
     id: "analog" as VideoTransmission,
     name: "Analog FPV (5.8 GHz)",
-    desc: "Zero-latency instantaneous analog feed, standard definition, maximum pilot reflex.",
+    desc: "Zero-latency instantaneous pilot feed, standard definition, rugged reliability.",
   },
   {
     id: "digital-hd" as VideoTransmission,
@@ -106,7 +106,7 @@ const VIDEO_TRANSMISSION_OPTIONS = [
   {
     id: "cofdm" as VideoTransmission,
     name: "Tactical COFDM / Dual-Link",
-    desc: "Military-grade NLOS penetration, AES-encrypted high-bandwidth video & C2 telemetry.",
+    desc: "Military-grade NLOS penetration, AES-encrypted high-bandwidth video & telemetry.",
   },
 ];
 
@@ -142,6 +142,14 @@ const APPLICATION_OPTIONS = [
   "Disaster Management & Search and Rescue (SAR)",
   "Custom Aerospace R&D & Prototype Lab",
 ];
+
+const Thread = () => (
+  <span className="byod-thread">
+    <span className="s1" />
+    <span className="s2" />
+    <span className="s3" />
+  </span>
+);
 
 export function BuildYourOwnDrone() {
   // Configuration state
@@ -210,7 +218,7 @@ export function BuildYourOwnDrone() {
     setSubmitError(null);
 
     if (!validate()) {
-      const firstErrEl = document.querySelector(".drone-builder__field-error");
+      const firstErrEl = document.querySelector(".byod-field-error");
       if (firstErrEl) {
         firstErrEl.scrollIntoView({ behavior: "smooth", block: "center" });
       }
@@ -283,55 +291,56 @@ export function BuildYourOwnDrone() {
 
   if (isSubmitted) {
     return (
-      <div className="drone-builder">
-        <div style={{ maxWidth: "800px", margin: "4rem auto 0", padding: "0 1.5rem" }}>
-          <div className="drone-builder__success-box">
-            <div className="drone-builder__success-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <div className="byod-page">
+        <div className="byod-wrap byod-success-wrap">
+          <div className="byod-success-box">
+            <div className="byod-success-icon" aria-hidden="true">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h2 className="drone-builder__success-title">UAV Architecture Enquiry Received</h2>
-            <p className="drone-builder__success-desc">
-              Thank you, <strong>{name}</strong>. Your custom drone architecture specification has been forwarded to our aerospace engineering team at the Indore UAV lab. We will review your CAD/flight envelope and reply to <strong>{email}</strong> within 24 business hours.
+            <h2 className="byod-success-title">
+              UAV Architecture Enquiry Received<span className="dot">.</span>
+            </h2>
+            <p className="byod-success-desc">
+              Thank you, <strong>{name}</strong>. Your custom drone architecture specification has been forwarded to our aerospace engineering team at the Indore UAV lab. We will review your CAD and mission requirements and reply to <strong>{email}</strong> within 24 business hours.
             </p>
 
-            <div className="drone-builder__shipping-banner" style={{ textAlign: "left", marginBottom: "1.5rem" }}>
-              <div className="drone-builder__shipping-left">
-                <div className="drone-builder__shipping-icon-box">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                </div>
+            <div className="byod-shipping-banner" style={{ margin: "0 0 24px 0" }}>
+              <div className="byod-shipping-left">
+                <svg className="byod-shipping-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
                 <div>
-                  <div className="drone-builder__shipping-title">
+                  <div className="byod-shipping-title">
                     SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS
                   </div>
-                  <p className="drone-builder__shipping-desc">
-                    Your bespoke airframe and propulsion system will undergo structural carbon validation, stator winding balance tests, and bench qualification prior to dispatch.
+                  <p className="byod-shipping-desc">
+                    Every custom UAV architecture undergoes structural carbon validation, stator balance tuning, and mandatory bench flight-testing before dispatch from our Indore facility.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="drone-builder__success-specs">
-              <div style={{ fontWeight: 700, marginBottom: "0.5rem", color: "#0f172a" }}>Submitted Specification Summary:</div>
-              <div>• <strong>Platform:</strong> {selectedTypeObj.name}</div>
+            <div className="byod-success-specs">
+              <div style={{ fontFamily: "var(--byod-mono)", fontSize: "0.76rem", color: "var(--byod-red)", textTransform: "uppercase", marginBottom: "8px" }}>
+                {"// Submitted Flight Blueprint"}
+              </div>
+              <div>• <strong>Platform:</strong> {selectedTypeObj.name} ({selectedTypeObj.badge})</div>
               <div>• <strong>Payload Capacity:</strong> {payload} kg</div>
-              <div>• <strong>Target Range:</strong> {range} km</div>
+              <div>• <strong>Operational Range:</strong> {range} km</div>
               <div>• <strong>Flight Time:</strong> {flightTime} minutes</div>
-              <div>• <strong>Ceiling:</strong> {altitude} m AGL</div>
+              <div>• <strong>Altitude Ceiling:</strong> {altitude} m AGL</div>
               <div>• <strong>Video Transmission:</strong> {selectedTxObj.name}</div>
               <div>• <strong>Sensor Package:</strong> {selectedSetupObj.name}</div>
-              <div>• <strong>Intended Mission:</strong> {application}</div>
+              <div>• <strong>Target Application:</strong> {application}</div>
             </div>
 
-            <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+            <div className="byod-success-actions">
               <button
                 type="button"
-                className="drone-builder__submit-btn"
-                style={{ width: "auto", padding: "0.75rem 1.75rem" }}
+                className="byod-btn byod-btn-primary"
                 onClick={() => {
                   setIsSubmitted(false);
                   setName("");
@@ -343,21 +352,7 @@ export function BuildYourOwnDrone() {
               >
                 Configure Another Architecture
               </button>
-              <Link
-                href="/store"
-                className="btn-secondary"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.5rem",
-                  border: "1px solid #cbd5e1",
-                  color: "#0f172a",
-                  textDecoration: "none",
-                  fontWeight: 600,
-                  fontSize: "14px",
-                }}
-              >
+              <Link href="/store" className="byod-btn byod-btn-ghost">
                 Explore Hardware Store
               </Link>
             </div>
@@ -368,641 +363,647 @@ export function BuildYourOwnDrone() {
   }
 
   return (
-    <div className="drone-builder">
-      {/* ------------------------------------------------------------
-          1. HERO HEADER
-          ------------------------------------------------------------ */}
-      <section className="drone-builder__hero">
-        <div className="drone-builder__hero-grid" aria-hidden="true" />
-        <div className="drone-builder__hero-aura drone-builder__hero-aura--saffron" aria-hidden="true" />
-        <div className="drone-builder__hero-aura drone-builder__hero-aura--red" aria-hidden="true" />
-
-        <div className="drone-builder__hero-inner">
-          <div className="drone-builder__badge-row">
-            <span className="drone-builder__tag">
-              <span className="drone-builder__tag-pulse" aria-hidden="true" />
-              <span>Bespoke UAV Engineering · Indore Lab</span>
-            </span>
-            <span className="drone-builder__tag" style={{ color: "#22c55e", borderColor: "rgba(34, 197, 94, 0.3)" }}>
-              <span>100% In-House R&amp;D</span>
-            </span>
+    <div className="byod-page">
+      {/* ── 1. HERO (Matching /store/parachute p-hero) ── */}
+      <section className="byod-hero">
+        <div className="byod-wrap byod-hero-grid">
+          <div>
+            <div className="byod-eyebrow">
+              <Thread />
+              Bespoke UAV Engineering · Indore Lab
+            </div>
+            <h1 className="byod-headline">
+              Configure your flight platform<span className="dot">.</span>
+            </h1>
+            <p className="byod-hero-sub">
+              From heavy-lift multi-rotors to long-range hybrid VTOLs — specify your mission envelope, flight duration, payload mass, and sensor suites. Engineered, fabricated, and bench flight-tested by DronesZ in Indore.
+            </p>
+            <div className="byod-hero-cta">
+              <a href="#byod-configurator" className="byod-btn byod-btn-primary">
+                Configure Architecture
+              </a>
+              <Link href="/store" className="byod-btn byod-btn-ghost">
+                Hardware Catalogue
+              </Link>
+            </div>
           </div>
 
-          <h1 className="drone-builder__hero-title">
-            Build Your Own <span className="accent">Drone</span>
-          </h1>
+          {/* Right Stage Panel (Inspired by Parachute recovery sequence) */}
+          <div className="byod-stage-panel">
+            <h3>Flight Readiness Sequence</h3>
+            <div className="byod-stage-list">
+              <div className="byod-stage-item active">
+                <span className="dot-marker" />
+                <span className="label">01 Platform Geometry</span>
+                <span className="desc">{selectedTypeObj.name}</span>
+              </div>
+              <div className="byod-stage-item active">
+                <span className="dot-marker" />
+                <span className="label">02 Flight Envelope</span>
+                <span className="desc">{payload}kg · {range}km</span>
+              </div>
+              <div className="byod-stage-item active">
+                <span className="dot-marker" />
+                <span className="label">03 Avionics &amp; Sensors</span>
+                <span className="desc">{selectedTxObj.name.split(" ")[0]} Link</span>
+              </div>
+              <div className="byod-stage-item">
+                <span className="dot-marker" />
+                <span className="label">04 Flight Qualification</span>
+                <span className="desc">Indore Lab Test</span>
+              </div>
+            </div>
 
-          <p className="drone-builder__hero-lead">
-            Configure custom multi-rotor, VTOL, or fixed-wing UAV architectures engineered for your exact operational envelope. Specify payload, range, flight endurance, and sensor payloads below.
-          </p>
-
-          <div className="drone-builder__hero-features">
-            <div className="drone-builder__feat-item">
-              <span className="drone-builder__feat-icon">✓</span>
-              <span>Zero Import Dependency</span>
-            </div>
-            <div className="drone-builder__feat-item">
-              <span className="drone-builder__feat-icon">✓</span>
-              <span>High-Torque 12S Stators</span>
-            </div>
-            <div className="drone-builder__feat-item">
-              <span className="drone-builder__feat-icon">✓</span>
-              <span>CNC 3K Carbon Airframes</span>
-            </div>
-            <div className="drone-builder__feat-item">
-              <span className="drone-builder__feat-icon">✓</span>
-              <span>Autonomous Parachute Integration</span>
+            {/* Embedded Dispatch Advisory in Hero */}
+            <div className="byod-stage-shipping">
+              <span className="byod-stage-shipping-badge">
+                ⚡ Dispatch Lead Time
+              </span>
+              <span>
+                SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ------------------------------------------------------------
-          2. WORKSPACE GRID: CONFIGURATOR + LIVE SUMMARY
-          ------------------------------------------------------------ */}
-      <div className="drone-builder__workspace">
-        <form className="drone-builder__form-pane" onSubmit={handleSubmit} noValidate>
-          {/* PROMINENT TASTEFUL SHIPPING ADVISORY NOTICE */}
-          <div className="drone-builder__shipping-banner" role="status">
-            <div className="drone-builder__shipping-left">
-              <div className="drone-builder__shipping-icon-box" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                  <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                  <line x1="12" y1="22.08" x2="12" y2="12" />
-                </svg>
-              </div>
+      {/* ── 2. ENGINEERING CAPABILITY STRIP (Matching p-feature-strip) ── */}
+      <section className="byod-section">
+        <div className="byod-wrap">
+          <div className="byod-feature-strip">
+            <div className="byod-feature">
+              <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" />
+              </svg>
+              <h4>Zero Import Dependency</h4>
+              <p>100% designed, CNC routed, and stator-wound in our Indore manufacturing lab in Madhya Pradesh.</p>
+            </div>
+
+            <div className="byod-feature">
+              <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <h4>12S HV Propulsion</h4>
+              <p>High-voltage multirotor stators engineered for low thermal load, maximum torque, and high wind rejection.</p>
+            </div>
+
+            <div className="byod-feature">
+              <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M9 3v18M15 3v18M3 9h18M3 15h18" />
+              </svg>
+              <h4>Toray 3K Carbon</h4>
+              <p>CNC milled high-modulus carbon fiber plates, arms, and custom vibration damping payload assemblies.</p>
+            </div>
+
+            <div className="byod-feature">
+              <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              <h4>Parachute Ready</h4>
+              <p>Pre-wired ballistic recovery mounting options for critical payload protection and zero-altitude rescue.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. CONFIGURATOR WORKSPACE ── */}
+      <section id="byod-configurator" className="byod-section alt">
+        <div className="byod-wrap">
+          {/* PROMINENT TASTEFUL SHIPPING NOTICE BANNER */}
+          <div className="byod-shipping-banner" role="status">
+            <div className="byod-shipping-left">
+              <svg className="byod-shipping-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+              </svg>
               <div>
-                <div className="drone-builder__shipping-title">
-                  <span>SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS</span>
-                  <span className="badge-highlight">Bench Flight Qualified</span>
+                <div className="byod-shipping-title">
+                  SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS
                 </div>
-                <p className="drone-builder__shipping-desc">
-                  Every custom UAV architecture is CNC milled, dynamically stator-balanced, and test-flown in Indore before flight-ready dispatch.
+                <p className="byod-shipping-desc">
+                  Every custom UAV architecture undergoes structural carbon validation, stator balance tuning, and mandatory bench flight-testing in Indore before final customer dispatch.
                 </p>
               </div>
             </div>
-            <div className="drone-builder__shipping-badge">
-              <span>DISPATCH WINDOW</span>
-              <span className="drone-builder__shipping-badge-val">8–9 DAYS</span>
-            </div>
+            <span className="byod-shipping-badge">
+              8–9 Days Dispatch Window
+            </span>
           </div>
 
-          {/* STEP 1: DRONE TYPE */}
-          <div className="drone-builder__card">
-            <div className="drone-builder__card-header">
-              <div>
-                <span className="drone-builder__step-tag">Step 01 / Configuration</span>
-                <h2 className="drone-builder__card-title">Airframe &amp; Platform Architecture</h2>
-                <p className="drone-builder__card-desc">
-                  Select the flight platform geometry tailored to your mission envelope.
+          <div className="byod-workspace">
+            {/* ── LEFT: INTERACTIVE CONFIGURATION FORM ── */}
+            <form onSubmit={handleSubmit} noValidate>
+              {/* SECTION 1: AIRFRAME TYPE */}
+              <div className="byod-card">
+                <div className="byod-sec-label">Section 01</div>
+                <h3 className="byod-card-title">Airframe &amp; Platform Architecture</h3>
+                <p className="byod-card-sub">
+                  Select the structural flight platform geometry engineered for your target operational theater.
                 </p>
-              </div>
-            </div>
 
-            <div className="drone-builder__type-grid">
-              {DRONE_TYPES.map((type) => {
-                const isSelected = droneType === type.id;
-                return (
-                  <div
-                    key={type.id}
-                    className={`drone-builder__type-card ${isSelected ? "drone-builder__type-card--selected" : ""}`}
-                    onClick={() => setDroneType(type.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === " " || e.key === "Enter") setDroneType(type.id);
-                    }}
-                  >
-                    <div className="drone-builder__type-top">
-                      <div className="drone-builder__type-icon" aria-hidden="true">
-                        {type.iconSvg}
+                <div className="byod-platform-grid">
+                  {DRONE_TYPES.map((type) => {
+                    const isSelected = droneType === type.id;
+                    return (
+                      <div
+                        key={type.id}
+                        className={`byod-platform-card ${isSelected ? "selected" : ""}`}
+                        onClick={() => setDroneType(type.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === " " || e.key === "Enter") setDroneType(type.id);
+                        }}
+                      >
+                        <div className="byod-platform-top">
+                          {type.iconSvg}
+                          <div className="byod-radio-circle" aria-hidden="true">
+                            {isSelected && <div className="byod-radio-dot" />}
+                          </div>
+                        </div>
+                        <div className="byod-platform-name">{type.name}</div>
+                        <span className="byod-platform-badge">{type.badge}</span>
+                        <p className="byod-platform-desc">{type.description}</p>
                       </div>
-                      <div className="drone-builder__type-radio" aria-hidden="true">
-                        {isSelected && <div className="drone-builder__type-radio-dot" />}
-                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* SECTION 2: FLIGHT SPECIFICATIONS */}
+              <div className="byod-card">
+                <div className="byod-sec-label">Section 02</div>
+                <h3 className="byod-card-title">Flight Performance &amp; Capacities</h3>
+                <p className="byod-card-sub">
+                  Tune payload mass, operational range, mission flight duration, and service ceiling.
+                </p>
+
+                {/* Payload Capacity */}
+                <div className="byod-spec-row">
+                  <div className="byod-spec-head">
+                    <span className="byod-spec-label">Payload Capacity</span>
+                    <div className="byod-spec-readout">
+                      {payload.toFixed(1)}<small>kg</small>
                     </div>
-                    <div className="drone-builder__type-name">{type.name}</div>
-                    <span className="drone-builder__type-badge">{type.badge}</span>
-                    <p className="drone-builder__type-desc">{type.description}</p>
                   </div>
-                );
-              })}
-            </div>
-          </div>
 
-          {/* STEP 2: FLIGHT PERFORMANCE SPECS */}
-          <div className="drone-builder__card">
-            <div className="drone-builder__card-header">
-              <div>
-                <span className="drone-builder__step-tag">Step 02 / Flight Specifications</span>
-                <h2 className="drone-builder__card-title">Payload, Range &amp; Endurance</h2>
-                <p className="drone-builder__card-desc">
-                  Tune target payload capacity, flight endurance, and communications range.
-                </p>
-              </div>
-            </div>
+                  <div className="byod-pills">
+                    {PAYLOAD_PRESETS.map((p) => (
+                      <button
+                        key={p.value}
+                        type="button"
+                        className={`byod-pill ${payload === p.value ? "active" : ""}`}
+                        onClick={() => setPayload(p.value)}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
 
-            {/* Payload Capacity */}
-            <div className="drone-builder__spec-group">
-              <div className="drone-builder__spec-label-row">
-                <label htmlFor="payload-input" className="drone-builder__spec-label">
-                  Payload Capacity
-                  <span className="drone-builder__spec-unit">(kg)</span>
-                </label>
-                <div className="drone-builder__spec-current-val">{payload.toFixed(1)} kg</div>
-              </div>
+                  <div className="byod-slider-wrap">
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="25.0"
+                      step="0.5"
+                      value={payload}
+                      onChange={(e) => setPayload(parseFloat(e.target.value) || 0.5)}
+                      className="byod-slider"
+                      aria-label="Payload capacity slider"
+                    />
+                    <input
+                      type="number"
+                      min="0.1"
+                      max="50.0"
+                      step="0.1"
+                      value={payload}
+                      onChange={(e) => setPayload(parseFloat(e.target.value) || 0.5)}
+                      className="byod-num-box"
+                      aria-label="Payload numeric input"
+                    />
+                  </div>
+                  {fieldErrors.payload && <div className="byod-field-error">{fieldErrors.payload}</div>}
+                </div>
 
-              <div className="drone-builder__preset-pills">
-                {PAYLOAD_PRESETS.map((p) => (
-                  <button
-                    key={p.value}
-                    type="button"
-                    className={`drone-builder__pill ${payload === p.value ? "drone-builder__pill--active" : ""}`}
-                    onClick={() => setPayload(p.value)}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
+                {/* Operational Range */}
+                <div className="byod-spec-row">
+                  <div className="byod-spec-head">
+                    <span className="byod-spec-label">Required Operational Range</span>
+                    <div className="byod-spec-readout">
+                      {range}<small>km</small>
+                    </div>
+                  </div>
 
-              <div className="drone-builder__input-row">
-                <input
-                  id="payload-range"
-                  type="range"
-                  min="0.5"
-                  max="25.0"
-                  step="0.5"
-                  value={payload}
-                  onChange={(e) => setPayload(parseFloat(e.target.value) || 0.5)}
-                  className="drone-builder__range-slider"
-                  aria-label="Payload capacity slider"
-                />
-                <input
-                  id="payload-input"
-                  type="number"
-                  min="0.1"
-                  max="50.0"
-                  step="0.1"
-                  value={payload}
-                  onChange={(e) => setPayload(parseFloat(e.target.value) || 0.5)}
-                  className="drone-builder__num-input"
-                />
-              </div>
-              {fieldErrors.payload && <div className="drone-builder__field-error">{fieldErrors.payload}</div>}
-            </div>
+                  <div className="byod-pills">
+                    {RANGE_PRESETS.map((r) => (
+                      <button
+                        key={r.value}
+                        type="button"
+                        className={`byod-pill ${range === r.value ? "active" : ""}`}
+                        onClick={() => setRange(r.value)}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
 
-            {/* Required Range */}
-            <div className="drone-builder__spec-group">
-              <div className="drone-builder__spec-label-row">
-                <label htmlFor="range-input" className="drone-builder__spec-label">
-                  Required Operational Range
-                  <span className="drone-builder__spec-unit">(km)</span>
-                </label>
-                <div className="drone-builder__spec-current-val">{range} km</div>
-              </div>
+                  <div className="byod-slider-wrap">
+                    <input
+                      type="range"
+                      min="2"
+                      max="80"
+                      step="1"
+                      value={range}
+                      onChange={(e) => setRange(parseInt(e.target.value, 10) || 5)}
+                      className="byod-slider"
+                      aria-label="Operational range slider"
+                    />
+                    <input
+                      type="number"
+                      min="1"
+                      max="150"
+                      value={range}
+                      onChange={(e) => setRange(parseInt(e.target.value, 10) || 5)}
+                      className="byod-num-box"
+                      aria-label="Range numeric input"
+                    />
+                  </div>
+                  {fieldErrors.range && <div className="byod-field-error">{fieldErrors.range}</div>}
+                </div>
 
-              <div className="drone-builder__preset-pills">
-                {RANGE_PRESETS.map((r) => (
-                  <button
-                    key={r.value}
-                    type="button"
-                    className={`drone-builder__pill ${range === r.value ? "drone-builder__pill--active" : ""}`}
-                    onClick={() => setRange(r.value)}
-                  >
-                    {r.label}
-                  </button>
-                ))}
-              </div>
+                {/* Flight Time */}
+                <div className="byod-spec-row">
+                  <div className="byod-spec-head">
+                    <span className="byod-spec-label">Target Flight Time / Endurance</span>
+                    <div className="byod-spec-readout">
+                      {flightTime}<small>mins</small>
+                    </div>
+                  </div>
 
-              <div className="drone-builder__input-row">
-                <input
-                  id="range-slider"
-                  type="range"
-                  min="2"
-                  max="80"
-                  step="1"
-                  value={range}
-                  onChange={(e) => setRange(parseInt(e.target.value, 10) || 5)}
-                  className="drone-builder__range-slider"
-                  aria-label="Operational range slider"
-                />
-                <input
-                  id="range-input"
-                  type="number"
-                  min="1"
-                  max="150"
-                  value={range}
-                  onChange={(e) => setRange(parseInt(e.target.value, 10) || 5)}
-                  className="drone-builder__num-input"
-                />
-              </div>
-              {fieldErrors.range && <div className="drone-builder__field-error">{fieldErrors.range}</div>}
-            </div>
+                  <div className="byod-pills">
+                    {FLIGHT_TIME_PRESETS.map((t) => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        className={`byod-pill ${flightTime === t.value ? "active" : ""}`}
+                        onClick={() => setFlightTime(t.value)}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
 
-            {/* Flight Time */}
-            <div className="drone-builder__spec-group">
-              <div className="drone-builder__spec-label-row">
-                <label htmlFor="time-input" className="drone-builder__spec-label">
-                  Target Flight Time / Endurance
-                  <span className="drone-builder__spec-unit">(minutes)</span>
-                </label>
-                <div className="drone-builder__spec-current-val">{flightTime} mins</div>
-              </div>
+                  <div className="byod-slider-wrap">
+                    <input
+                      type="range"
+                      min="15"
+                      max="120"
+                      step="5"
+                      value={flightTime}
+                      onChange={(e) => setFlightTime(parseInt(e.target.value, 10) || 20)}
+                      className="byod-slider"
+                      aria-label="Flight endurance slider"
+                    />
+                    <input
+                      type="number"
+                      min="10"
+                      max="240"
+                      value={flightTime}
+                      onChange={(e) => setFlightTime(parseInt(e.target.value, 10) || 20)}
+                      className="byod-num-box"
+                      aria-label="Flight endurance numeric input"
+                    />
+                  </div>
+                  {fieldErrors.flightTime && <div className="byod-field-error">{fieldErrors.flightTime}</div>}
+                </div>
 
-              <div className="drone-builder__preset-pills">
-                {FLIGHT_TIME_PRESETS.map((t) => (
-                  <button
-                    key={t.value}
-                    type="button"
-                    className={`drone-builder__pill ${flightTime === t.value ? "drone-builder__pill--active" : ""}`}
-                    onClick={() => setFlightTime(t.value)}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
+                {/* Altitude Ceiling */}
+                <div className="byod-spec-row">
+                  <div className="byod-spec-head">
+                    <span className="byod-spec-label">Operating Altitude Ceiling</span>
+                    <div className="byod-spec-readout">
+                      {altitude.toLocaleString()}<small>m AGL</small>
+                    </div>
+                  </div>
 
-              <div className="drone-builder__input-row">
-                <input
-                  id="time-slider"
-                  type="range"
-                  min="15"
-                  max="120"
-                  step="5"
-                  value={flightTime}
-                  onChange={(e) => setFlightTime(parseInt(e.target.value, 10) || 20)}
-                  className="drone-builder__range-slider"
-                  aria-label="Flight time slider"
-                />
-                <input
-                  id="time-input"
-                  type="number"
-                  min="10"
-                  max="240"
-                  value={flightTime}
-                  onChange={(e) => setFlightTime(parseInt(e.target.value, 10) || 20)}
-                  className="drone-builder__num-input"
-                />
-              </div>
-              {fieldErrors.flightTime && <div className="drone-builder__field-error">{fieldErrors.flightTime}</div>}
-            </div>
+                  <div className="byod-pills">
+                    {ALTITUDE_PRESETS.map((a) => (
+                      <button
+                        key={a.value}
+                        type="button"
+                        className={`byod-pill ${altitude === a.value ? "active" : ""}`}
+                        onClick={() => setAltitude(a.value)}
+                      >
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
 
-            {/* Flying Altitude Ceiling */}
-            <div className="drone-builder__spec-group">
-              <div className="drone-builder__spec-label-row">
-                <label htmlFor="alt-input" className="drone-builder__spec-label">
-                  Flying Altitude Ceiling
-                  <span className="drone-builder__spec-unit">(m AGL / AMSL)</span>
-                </label>
-                <div className="drone-builder__spec-current-val">{altitude} m</div>
-              </div>
-
-              <div className="drone-builder__preset-pills">
-                {ALTITUDE_PRESETS.map((a) => (
-                  <button
-                    key={a.value}
-                    type="button"
-                    className={`drone-builder__pill ${altitude === a.value ? "drone-builder__pill--active" : ""}`}
-                    onClick={() => setAltitude(a.value)}
-                  >
-                    {a.label}
-                  </button>
-                ))}
+                  <div className="byod-slider-wrap">
+                    <input
+                      type="range"
+                      min="200"
+                      max="6000"
+                      step="100"
+                      value={altitude}
+                      onChange={(e) => setAltitude(parseInt(e.target.value, 10) || 500)}
+                      className="byod-slider"
+                      aria-label="Altitude ceiling slider"
+                    />
+                    <input
+                      type="number"
+                      min="100"
+                      max="8000"
+                      value={altitude}
+                      onChange={(e) => setAltitude(parseInt(e.target.value, 10) || 500)}
+                      className="byod-num-box"
+                      aria-label="Altitude ceiling numeric input"
+                    />
+                  </div>
+                  {fieldErrors.altitude && <div className="byod-field-error">{fieldErrors.altitude}</div>}
+                </div>
               </div>
 
-              <div className="drone-builder__input-row">
-                <input
-                  id="alt-slider"
-                  type="range"
-                  min="200"
-                  max="6000"
-                  step="100"
-                  value={altitude}
-                  onChange={(e) => setAltitude(parseInt(e.target.value, 10) || 500)}
-                  className="drone-builder__range-slider"
-                  aria-label="Altitude ceiling slider"
-                />
-                <input
-                  id="alt-input"
-                  type="number"
-                  min="100"
-                  max="8000"
-                  value={altitude}
-                  onChange={(e) => setAltitude(parseInt(e.target.value, 10) || 500)}
-                  className="drone-builder__num-input"
-                />
-              </div>
-              {fieldErrors.altitude && <div className="drone-builder__field-error">{fieldErrors.altitude}</div>}
-            </div>
-          </div>
-
-          {/* STEP 3: VIDEO TRANSMISSION & SENSORS */}
-          <div className="drone-builder__card">
-            <div className="drone-builder__card-header">
-              <div>
-                <span className="drone-builder__step-tag">Step 03 / Avionics &amp; Payloads</span>
-                <h2 className="drone-builder__card-title">Video Link &amp; Sensor Package</h2>
-                <p className="drone-builder__card-desc">
+              {/* SECTION 3: AVIONICS & SENSORS */}
+              <div className="byod-card">
+                <div className="byod-sec-label">Section 03</div>
+                <h3 className="byod-card-title">Avionics, Downlink &amp; Vision</h3>
+                <p className="byod-card-sub">
                   Select your telemetry downlink protocol and optical/thermal sensor suite.
                 </p>
-              </div>
-            </div>
 
-            {/* Video Transmission */}
-            <div className="drone-builder__spec-group">
-              <label className="drone-builder__spec-label" style={{ marginBottom: "0.5rem" }}>
-                Video Transmission Protocol
-              </label>
-              <div className="drone-builder__option-grid">
-                {VIDEO_TRANSMISSION_OPTIONS.map((opt) => (
-                  <div
-                    key={opt.id}
-                    className={`drone-builder__option-card ${videoTransmission === opt.id ? "drone-builder__option-card--selected" : ""}`}
-                    onClick={() => setVideoTransmission(opt.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === " " || e.key === "Enter") setVideoTransmission(opt.id);
-                    }}
-                  >
-                    <div className="drone-builder__option-title">
-                      <span>{opt.name}</span>
-                      {videoTransmission === opt.id && (
-                        <span style={{ color: "#e52b31", fontSize: "14px" }}>●</span>
-                      )}
-                    </div>
-                    <p className="drone-builder__option-desc">{opt.desc}</p>
+                {/* Video Transmission */}
+                <div style={{ marginBottom: "24px" }}>
+                  <div style={{ fontFamily: "var(--byod-mono)", fontSize: "0.76rem", textTransform: "uppercase", color: "var(--byod-slate)", marginBottom: "8px" }}>
+                    Video Transmission Protocol
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Video Setup */}
-            <div className="drone-builder__spec-group">
-              <label className="drone-builder__spec-label" style={{ marginBottom: "0.5rem" }}>
-                Camera &amp; Vision Setup
-              </label>
-              <div className="drone-builder__option-grid">
-                {VIDEO_SETUP_OPTIONS.map((setup) => (
-                  <div
-                    key={setup.id}
-                    className={`drone-builder__option-card ${videoSetup === setup.id ? "drone-builder__option-card--selected" : ""}`}
-                    onClick={() => setVideoSetup(setup.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === " " || e.key === "Enter") setVideoSetup(setup.id);
-                    }}
-                  >
-                    <div className="drone-builder__option-title">
-                      <span>{setup.name}</span>
-                      {videoSetup === setup.id && (
-                        <span style={{ color: "#e52b31", fontSize: "14px" }}>●</span>
-                      )}
-                    </div>
-                    <p className="drone-builder__option-desc">{setup.desc}</p>
+                  <div className="byod-options-grid">
+                    {VIDEO_TRANSMISSION_OPTIONS.map((opt) => (
+                      <div
+                        key={opt.id}
+                        className={`byod-option-card ${videoTransmission === opt.id ? "selected" : ""}`}
+                        onClick={() => setVideoTransmission(opt.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === " " || e.key === "Enter") setVideoTransmission(opt.id);
+                        }}
+                      >
+                        <div className="byod-option-title">
+                          <span>{opt.name}</span>
+                          {videoTransmission === opt.id && (
+                            <span style={{ color: "var(--byod-red)", fontSize: "13px" }}>●</span>
+                          )}
+                        </div>
+                        <p className="byod-option-desc">{opt.desc}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
+                </div>
 
-          {/* STEP 4: USE CASE & MISSION SCOPE */}
-          <div className="drone-builder__card">
-            <div className="drone-builder__card-header">
-              <div>
-                <span className="drone-builder__step-tag">Step 04 / Mission Scope</span>
-                <h2 className="drone-builder__card-title">Operational Use Case &amp; Notes</h2>
-                <p className="drone-builder__card-desc">
-                  Select your primary application to help our engineers optimize flight controller firmware and motor kv.
+                {/* Camera / Sensor Setup */}
+                <div>
+                  <div style={{ fontFamily: "var(--byod-mono)", fontSize: "0.76rem", textTransform: "uppercase", color: "var(--byod-slate)", marginBottom: "8px" }}>
+                    Camera &amp; Vision Payload Setup
+                  </div>
+                  <div className="byod-options-grid">
+                    {VIDEO_SETUP_OPTIONS.map((setup) => (
+                      <div
+                        key={setup.id}
+                        className={`byod-option-card ${videoSetup === setup.id ? "selected" : ""}`}
+                        onClick={() => setVideoSetup(setup.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === " " || e.key === "Enter") setVideoSetup(setup.id);
+                        }}
+                      >
+                        <div className="byod-option-title">
+                          <span>{setup.name}</span>
+                          {videoSetup === setup.id && (
+                            <span style={{ color: "var(--byod-red)", fontSize: "13px" }}>●</span>
+                          )}
+                        </div>
+                        <p className="byod-option-desc">{setup.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 4: MISSION APPLICATION & NOTES */}
+              <div className="byod-card">
+                <div className="byod-sec-label">Section 04</div>
+                <h3 className="byod-card-title">Operational Mission Scope</h3>
+                <p className="byod-card-sub">
+                  Provide your primary mission requirements so our engineering lab can optimize stator windings and aerodynamic trim.
+                </p>
+
+                <div className="byod-input-group" style={{ marginBottom: "20px" }}>
+                  <label htmlFor="byod-app-select" className="byod-input-label">
+                    Intended Application / Sector
+                  </label>
+                  <select
+                    id="byod-app-select"
+                    value={application}
+                    onChange={(e) => setApplication(e.target.value)}
+                    className="byod-select"
+                  >
+                    {APPLICATION_OPTIONS.map((app) => (
+                      <option key={app} value={app}>
+                        {app}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="byod-input-group">
+                  <label htmlFor="byod-notes" className="byod-input-label">
+                    Specific Mission Requirements &amp; Notes <span style={{ color: "var(--byod-slate)", textTransform: "none" }}>(Optional)</span>
+                  </label>
+                  <textarea
+                    id="byod-notes"
+                    rows={4}
+                    value={customNotes}
+                    onChange={(e) => setCustomNotes(e.target.value)}
+                    placeholder="Provide details such as target wind tolerance, ambient temperature envelope (-20°C to +55°C), battery chemistry preference, parachute triggers, or specific sensor models..."
+                    className="byod-textarea"
+                  />
+                </div>
+              </div>
+
+              {/* SECTION 5: CUSTOMER CREDENTIALS */}
+              <div className="byod-card">
+                <div className="byod-sec-label">Section 05</div>
+                <h3 className="byod-card-title">Client Credentials &amp; Delivery Target</h3>
+                <p className="byod-card-sub">
+                  Provide your direct contacts so our engineering team can send the feasibility report and quote.
+                </p>
+
+                {/* Honeypot field for bot suppression */}
+                <input
+                  type="text"
+                  name="_hp"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  style={{ display: "none" }}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+
+                <div className="byod-form-grid">
+                  <div className="byod-input-group">
+                    <label htmlFor="byod-name" className="byod-input-label">
+                      Full Name <span className="req">*</span>
+                    </label>
+                    <input
+                      id="byod-name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Vikram Sharma"
+                      className="byod-input"
+                      required
+                    />
+                    {fieldErrors.name && <div className="byod-field-error">{fieldErrors.name}</div>}
+                  </div>
+
+                  <div className="byod-input-group">
+                    <label htmlFor="byod-email" className="byod-input-label">
+                      Official Email <span className="req">*</span>
+                    </label>
+                    <input
+                      id="byod-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="name@company.com"
+                      className="byod-input"
+                      required
+                    />
+                    {fieldErrors.email && <div className="byod-field-error">{fieldErrors.email}</div>}
+                  </div>
+
+                  <div className="byod-input-group">
+                    <label htmlFor="byod-phone" className="byod-input-label">
+                      Contact Number <span className="req">*</span>
+                    </label>
+                    <input
+                      id="byod-phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+91 98273 44411"
+                      className="byod-input"
+                      required
+                    />
+                    {fieldErrors.phone && <div className="byod-field-error">{fieldErrors.phone}</div>}
+                  </div>
+
+                  <div className="byod-input-group">
+                    <label htmlFor="byod-org" className="byod-input-label">
+                      Organization / Agency <span style={{ color: "var(--byod-slate)", textTransform: "none" }}>(Optional)</span>
+                    </label>
+                    <input
+                      id="byod-org"
+                      type="text"
+                      value={organization}
+                      onChange={(e) => setOrganization(e.target.value)}
+                      placeholder="e.g. AeroDynamics Pvt Ltd"
+                      className="byod-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="byod-input-group" style={{ marginTop: "20px" }}>
+                  <label htmlFor="byod-city" className="byod-input-label">
+                    Deployment City / State <span style={{ color: "var(--byod-slate)", textTransform: "none" }}>(Optional)</span>
+                  </label>
+                  <input
+                    id="byod-city"
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="e.g. Indore, Madhya Pradesh"
+                    className="byod-input"
+                  />
+                </div>
+              </div>
+
+              {submitError && (
+                <div className="byod-error-banner" role="alert">
+                  <strong>Submission Error:</strong> {submitError}
+                </div>
+              )}
+            </form>
+
+            {/* ── RIGHT: STICKY LIVE ARCHITECTURE BLUEPRINT ── */}
+            <aside className="byod-summary-panel">
+              <h3>{"// Live Architecture Blueprint"}</h3>
+              <div className="byod-summary-title">Bespoke UAV Specification</div>
+
+              <div className="byod-spec-list">
+                <div className="byod-summary-row">
+                  <span className="label">Platform Class</span>
+                  <span className="val">{selectedTypeObj.name}</span>
+                </div>
+                <div className="byod-summary-row">
+                  <span className="label">Target Payload</span>
+                  <span className="val">{payload.toFixed(1)} kg</span>
+                </div>
+                <div className="byod-summary-row">
+                  <span className="label">Operational Range</span>
+                  <span className="val">{range} km</span>
+                </div>
+                <div className="byod-summary-row">
+                  <span className="label">Flight Duration</span>
+                  <span className="val">{flightTime} mins</span>
+                </div>
+                <div className="byod-summary-row">
+                  <span className="label">Service Ceiling</span>
+                  <span className="val">{altitude.toLocaleString()} m AGL</span>
+                </div>
+                <div className="byod-summary-row">
+                  <span className="label">Video Protocol</span>
+                  <span className="val" style={{ maxWidth: "160px" }}>{selectedTxObj.name.split(" ")[0]} Link</span>
+                </div>
+                <div className="byod-summary-row">
+                  <span className="label">Sensor Package</span>
+                  <span className="val" style={{ maxWidth: "160px" }}>{selectedSetupObj.name.split("(")[0]}</span>
+                </div>
+              </div>
+
+              {/* Prominent Shipping Notice in Summary */}
+              <div className="byod-summary-shipping">
+                <div className="byod-summary-shipping-title">
+                  Production &amp; Dispatch Window
+                </div>
+                <p className="byod-summary-shipping-note">
+                  <strong>SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS</strong> following aerodynamic qualification and motor balance tuning in Indore.
                 </p>
               </div>
-            </div>
 
-            <div className="drone-builder__field" style={{ marginBottom: "1.25rem" }}>
-              <label htmlFor="application-select" className="drone-builder__field-label">
-                Intended Application / Industry
-              </label>
-              <select
-                id="application-select"
-                value={application}
-                onChange={(e) => setApplication(e.target.value)}
-                className="drone-builder__select"
+              {/* Submit CTA */}
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="byod-btn byod-btn-primary byod-submit-btn"
               >
-                {APPLICATION_OPTIONS.map((app) => (
-                  <option key={app} value={app}>
-                    {app}
-                  </option>
-                ))}
-              </select>
-            </div>
+                {isSubmitting ? "Submitting Configuration..." : "Submit Enquiry →"}
+              </button>
 
-            <div className="drone-builder__field">
-              <label htmlFor="notes-textarea" className="drone-builder__field-label">
-                Custom Requirements &amp; Mission Notes <span style={{ fontWeight: 400, color: "#64748b" }}>(Optional)</span>
-              </label>
-              <textarea
-                id="notes-textarea"
-                rows={4}
-                value={customNotes}
-                onChange={(e) => setCustomNotes(e.target.value)}
-                placeholder="Specify target wind speed tolerances, operating temperature (-20°C to +55°C), battery chemistry preferences, parachute triggers, or specific gimbal models..."
-                className="drone-builder__textarea"
-              />
-            </div>
+              <p className="byod-summary-note">
+                Directly forwarded to the DronesZ engineering desk. Response guaranteed within 24 business hours.
+              </p>
+            </aside>
           </div>
-
-          {/* STEP 5: CUSTOMER INFORMATION */}
-          <div className="drone-builder__card">
-            <div className="drone-builder__card-header">
-              <div>
-                <span className="drone-builder__step-tag">Step 05 / Contact Details</span>
-                <h2 className="drone-builder__card-title">Customer Credentials</h2>
-                <p className="drone-builder__card-desc">
-                  Provide your direct contact details so our Indore lab engineers can send the CAD blueprint and feasibility report.
-                </p>
-              </div>
-            </div>
-
-            {/* Honeypot field for bot suppression */}
-            <input
-              type="text"
-              name="_hp"
-              value={honeypot}
-              onChange={(e) => setHoneypot(e.target.value)}
-              style={{ display: "none" }}
-              tabIndex={-1}
-              autoComplete="off"
-            />
-
-            <div className="drone-builder__input-grid">
-              <div className="drone-builder__field">
-                <label htmlFor="cust-name" className="drone-builder__field-label">
-                  Full Name <span className="req">*</span>
-                </label>
-                <input
-                  id="cust-name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Vikram Sharma"
-                  className="drone-builder__text-input"
-                  required
-                />
-                {fieldErrors.name && <div className="drone-builder__field-error">{fieldErrors.name}</div>}
-              </div>
-
-              <div className="drone-builder__field">
-                <label htmlFor="cust-email" className="drone-builder__field-label">
-                  Business / Official Email <span className="req">*</span>
-                </label>
-                <input
-                  id="cust-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  className="drone-builder__text-input"
-                  required
-                />
-                {fieldErrors.email && <div className="drone-builder__field-error">{fieldErrors.email}</div>}
-              </div>
-
-              <div className="drone-builder__field">
-                <label htmlFor="cust-phone" className="drone-builder__field-label">
-                  Contact Number <span className="req">*</span>
-                </label>
-                <input
-                  id="cust-phone"
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98273 44411"
-                  className="drone-builder__text-input"
-                  required
-                />
-                {fieldErrors.phone && <div className="drone-builder__field-error">{fieldErrors.phone}</div>}
-              </div>
-
-              <div className="drone-builder__field">
-                <label htmlFor="cust-org" className="drone-builder__field-label">
-                  Company / Agency <span style={{ fontWeight: 400, color: "#64748b" }}>(Optional)</span>
-                </label>
-                <input
-                  id="cust-org"
-                  type="text"
-                  value={organization}
-                  onChange={(e) => setOrganization(e.target.value)}
-                  placeholder="e.g. AeroDynamics Pvt Ltd"
-                  className="drone-builder__text-input"
-                />
-              </div>
-            </div>
-
-            <div className="drone-builder__field" style={{ marginTop: "1.25rem" }}>
-              <label htmlFor="cust-city" className="drone-builder__field-label">
-                Target Operation City / State <span style={{ fontWeight: 400, color: "#64748b" }}>(Optional)</span>
-              </label>
-              <input
-                id="cust-city"
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="e.g. Indore, Madhya Pradesh"
-                className="drone-builder__text-input"
-              />
-            </div>
-          </div>
-
-          {submitError && (
-            <div className="drone-builder__error-banner" role="alert">
-              <strong>Submission Error:</strong> {submitError}
-            </div>
-          )}
-        </form>
-
-        {/* ------------------------------------------------------------
-            5. STICKY LIVE ARCHITECTURE SUMMARY
-            ------------------------------------------------------------ */}
-        <aside className="drone-builder__summary-card">
-          <div className="drone-builder__summary-header">
-            <span className="drone-builder__summary-tag">Live Architecture Spec</span>
-            <h3 className="drone-builder__summary-title">Bespoke UAV Blueprint</h3>
-          </div>
-
-          <div className="drone-builder__summary-list">
-            <div className="drone-builder__summary-row">
-              <span className="drone-builder__summary-label">Airframe Geometry</span>
-              <span className="drone-builder__summary-val">{selectedTypeObj.name}</span>
-            </div>
-            <div className="drone-builder__summary-row">
-              <span className="drone-builder__summary-label">Target Payload</span>
-              <span className="drone-builder__summary-val">{payload.toFixed(1)} kg</span>
-            </div>
-            <div className="drone-builder__summary-row">
-              <span className="drone-builder__summary-label">Operational Range</span>
-              <span className="drone-builder__summary-val">{range} km</span>
-            </div>
-            <div className="drone-builder__summary-row">
-              <span className="drone-builder__summary-label">Flight Endurance</span>
-              <span className="drone-builder__summary-val">{flightTime} mins</span>
-            </div>
-            <div className="drone-builder__summary-row">
-              <span className="drone-builder__summary-label">Ceiling / AGL</span>
-              <span className="drone-builder__summary-val">{altitude} m</span>
-            </div>
-
-            <div className="drone-builder__summary-divider" />
-
-            <div className="drone-builder__summary-row">
-              <span className="drone-builder__summary-label">Video Telemetry</span>
-              <span className="drone-builder__summary-val" style={{ fontSize: "11px", maxWidth: "180px" }}>
-                {selectedTxObj.name}
-              </span>
-            </div>
-            <div className="drone-builder__summary-row">
-              <span className="drone-builder__summary-label">Vision Package</span>
-              <span className="drone-builder__summary-val" style={{ fontSize: "11px", maxWidth: "180px" }}>
-                {selectedSetupObj.name}
-              </span>
-            </div>
-          </div>
-
-          {/* PROMINENT TASTEFUL SHIPPING NOTICE REITERATED */}
-          <div className="drone-builder__summary-dispatch-box">
-            <span className="drone-builder__summary-dispatch-badge">
-              ⚡ Production &amp; Flight Test Notice
-            </span>
-            <p className="drone-builder__summary-dispatch-text">
-              <strong>SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS</strong> following aerodynamic qualification and motor balance tuning in Indore.
-            </p>
-          </div>
-
-          {/* Submit Enquiry Button */}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="drone-builder__submit-btn"
-          >
-            {isSubmitting ? (
-              <span>Submitting Enquiry...</span>
-            ) : (
-              <>
-                <span>Submit Enquiry</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </>
-            )}
-          </button>
-
-          <p className="drone-builder__submit-note">
-            Directly routed to the DronesZ engineering desk. Guaranteed response within 24 business hours.
-          </p>
-        </aside>
-      </div>
+        </div>
+      </section>
     </div>
   );
 }
