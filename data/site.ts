@@ -19,6 +19,7 @@ export const NAV: NavItem[] = [
   { label: "Products", href: "/store" },
   { label: "Bulk Order", href: "/contact" },
   { label: "Custom", href: "#custom-airframes" },
+  { label: "Build Your Own Drone", href: "/build-your-own-drone" },
   { label: "Contact", href: "/contact" },
 ];
 

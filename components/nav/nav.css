@@ -66,7 +66,7 @@
 .nav__links {
   display: flex;
   align-items: center;
-  gap: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
+  gap: clamp(0.75rem, 0.4rem + 1vw, 2rem);
   list-style: none;
 }
 
@@ -81,6 +81,7 @@
   cursor: pointer;
   font-family: var(--font-sans);
   transition: color var(--duration-fast) var(--ease-out-expo);
+  white-space: nowrap;
 }
 .nav__link:hover {
   color: var(--color-white);
@@ -528,7 +529,7 @@
   padding-left: 0.75rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 980px) {
   .nav__desktop {
     display: none;
   }
