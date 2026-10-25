@@ -426,49 +426,6 @@ export function BuildYourOwnDrone() {
           </div>
         </div>
       </section>
-
-      {/* ── 2. ENGINEERING CAPABILITY STRIP (Matching p-feature-strip) ── */}
-      <section className="byod-section">
-        <div className="byod-wrap">
-          <div className="byod-feature-strip">
-            <div className="byod-feature">
-              <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" />
-              </svg>
-              <h4>Zero Import Dependency</h4>
-              <p>100% designed, CNC routed, and stator-wound in our Indore manufacturing lab in Madhya Pradesh.</p>
-            </div>
-
-            <div className="byod-feature">
-              <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-              <h4>12S HV Propulsion</h4>
-              <p>High-voltage multirotor stators engineered for low thermal load, maximum torque, and high wind rejection.</p>
-            </div>
-
-            <div className="byod-feature">
-              <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M9 3v18M15 3v18M3 9h18M3 15h18" />
-              </svg>
-              <h4>Toray 3K Carbon</h4>
-              <p>CNC milled high-modulus carbon fiber plates, arms, and custom vibration damping payload assemblies.</p>
-            </div>
-
-            <div className="byod-feature">
-              <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-              <h4>Parachute Ready</h4>
-              <p>Pre-wired ballistic recovery mounting options for critical payload protection and zero-altitude rescue.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ── 3. CONFIGURATOR WORKSPACE ── */}
       <section id="byod-configurator" className="byod-section alt">
         <div className="byod-wrap">
