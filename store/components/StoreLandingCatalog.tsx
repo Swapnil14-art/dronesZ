@@ -11,8 +11,60 @@ import {
 import { ParachutePageConfig } from '../services/parachuteConfig';
 import { getDefaultAgriDroneConfig, AgriDronePageConfig } from '../services/agriDroneConfig';
 import { getProductTaxLabel } from '../services/productTax';
-import { LayoutGrid, Cog, Frame, Drone } from 'lucide-react';
+import {
+  DynamicCategoryTab,
+  buildDynamicTabs,
+  buildAllIndividualProducts,
+  filterHardwareProducts,
+} from '../services/dynamicStoreTabs';
+import {
+  LayoutGrid,
+  Cog,
+  Frame,
+  Drone,
+  Layers,
+  Camera,
+  Battery,
+  Cpu,
+  Package,
+} from 'lucide-react';
 import './store-landing.css';
+
+const renderTabIcon = (tab: DynamicCategoryTab) => {
+  if (tab.type === 'all') {
+    return <LayoutGrid size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+  }
+  if (tab.type === 'parachute') {
+    return <ParachuteIcon size={15} strokeWidth={2} className="store-landing__chip-icon" />;
+  }
+  if (tab.type === 'agri') {
+    return <Drone size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+  }
+
+  const norm = tab.name.trim().toLowerCase();
+  if (norm.includes('motor')) {
+    return <Cog size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+  }
+  if (norm.includes('frame')) {
+    return <Frame size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+  }
+  if (norm.includes('propeller') || norm.includes('prop')) {
+    return <Layers size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+  }
+  if (norm.includes('drone') || norm.includes('uav')) {
+    return <Drone size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+  }
+  if (norm.includes('camera') || norm.includes('gimbal')) {
+    return <Camera size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+  }
+  if (norm.includes('battery') || norm.includes('power')) {
+    return <Battery size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+  }
+  if (norm.includes('electronic') || norm.includes('esc') || norm.includes('sensor')) {
+    return <Cpu size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+  }
+  return <Package size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />;
+};
 
 // Parachute Recovery Icon matching Lucide 24x24 stroke aesthetic
 const ParachuteIcon: React.FC<{ size?: number; className?: string; strokeWidth?: number }> = ({
@@ -68,7 +120,7 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
   navigateToAgriDrone,
   navigateToProductDetail,
 }) => {
-  const [activeCategoryFilter, setActiveCategoryFilter] = useState<'all' | 'motors' | 'frames' | 'parachute' | 'agri'>('all');
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [childProductsMap, setChildProductsMap] = useState<Record<number, ProductDto[]>>({});
   const [loadingChildren, setLoadingChildren] = useState(false);
@@ -121,104 +173,38 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
     };
   }, [parentProducts]);
 
-  // Dynamically resolve target categories from database records
-  const motorCategory = useMemo(() => {
-    return categories.find((c) => {
-      const n = c.name.trim().toLowerCase();
-      return n === 'motors' || n === 'motor';
-    });
-  }, [categories]);
+  // Dynamically derive all category tabs from database categories and parent series
+  const dynamicTabs = useMemo(() => {
+    return buildDynamicTabs(
+      categories,
+      parentProducts,
+      Boolean(parachuteConfig && parachuteConfig.isEnabled),
+      true
+    );
+  }, [categories, parentProducts, parachuteConfig]);
 
-  const frameCategory = useMemo(() => {
-    return categories.find((c) => {
-      const n = c.name.trim().toLowerCase();
-      return n === 'frames' || n === 'frame';
-    });
-  }, [categories]);
-
-  // Resolve category name from product fields, category ID, or parent relationship
-  const getCategoryName = (product: ProductDto, parent?: ProductDto | null): string => {
-    if (product.categoryName) return product.categoryName;
-    if (product.categoryId) {
-      const found = categories.find((c) => c.id === product.categoryId);
-      if (found) return found.name;
+  // Keep active category filter valid if a selected category is deleted or renamed in admin
+  useEffect(() => {
+    const exists = dynamicTabs.some((t) => t.id === activeCategoryFilter);
+    if (!exists) {
+      setActiveCategoryFilter('all');
     }
-    if (parent?.categoryName) return parent.categoryName;
-    if (parent?.categoryId) {
-      const found = categories.find((c) => c.id === parent.categoryId);
-      if (found) return found.name;
-    }
-    return '';
-  };
+  }, [dynamicTabs, activeCategoryFilter]);
 
-  const isMotorProduct = (product: ProductDto, parent?: ProductDto | null): boolean => {
-    if (motorCategory && (product.categoryId === motorCategory.id || parent?.categoryId === motorCategory.id)) {
-      return true;
-    }
-    const catName = getCategoryName(product, parent).trim().toLowerCase();
-    return catName === 'motors' || catName === 'motor';
-  };
-
-  const isFrameProduct = (product: ProductDto, parent?: ProductDto | null): boolean => {
-    if (frameCategory && (product.categoryId === frameCategory.id || parent?.categoryId === frameCategory.id)) {
-      return true;
-    }
-    const catName = getCategoryName(product, parent).trim().toLowerCase();
-    return catName === 'frames' || catName === 'frame';
-  };
-
-  // Aggregate only actual individual/purchasable products (child products of parent series + standalone products)
-  // Aggregate strictly individual child products belonging to Motors and Frames
-  // Never include parent products, category containers, series containers, or standalone exceptions
+  // Aggregate individual purchasable products across all parent series and categories
   const allIndividualProducts = useMemo(() => {
-    const items: { product: ProductDto; categoryLabel: string; isMotor: boolean; isFrame: boolean }[] = [];
-    const seenIds = new Set<number>();
-
-    parentProducts.forEach((parent) => {
-      const children = childProductsMap[parent.id] || [];
-      children.forEach((child) => {
-        // Exclude parent products and duplicates
-        if (child.productType !== 'PARENT' && !seenIds.has(child.id)) {
-          const isMotor = isMotorProduct(child, parent);
-          const isFrame = isFrameProduct(child, parent);
-
-          // Only include products that belong to Motors or Frames categories
-          if (isMotor || isFrame) {
-            seenIds.add(child.id);
-            const rawCat = getCategoryName(child, parent);
-            const categoryLabel = rawCat || (isFrame ? 'Frames' : 'Motors');
-            items.push({ product: child, categoryLabel, isMotor, isFrame });
-          }
-        }
-      });
-    });
-
-    return items;
-  }, [parentProducts, childProductsMap, categories, motorCategory, frameCategory]);
+    return buildAllIndividualProducts(
+      parentProducts,
+      childProductsMap,
+      categories,
+      dynamicTabs,
+      standaloneProducts
+    );
+  }, [parentProducts, childProductsMap, categories, dynamicTabs, standaloneProducts]);
 
   // Filter individual hardware products based on active tab and search query
   const filteredHardware = useMemo(() => {
-    return allIndividualProducts.filter(({ product, categoryLabel, isMotor, isFrame }) => {
-      // 1. Hardware Category filter
-      if (activeCategoryFilter === 'motors') {
-        if (!isMotor) return false;
-      } else if (activeCategoryFilter === 'frames') {
-        if (!isFrame) return false;
-      } else if (activeCategoryFilter === 'parachute' || activeCategoryFilter === 'agri') {
-        // Recovery Parachutes & Agricultural Drones are standalone tabs, not in the hardware grid
-        return false;
-      }
-      // 'all' includes only actual individual motor and frame child products
-
-      // 2. Search query filter
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
-      return (
-        product.name.toLowerCase().includes(q) ||
-        (product.description && product.description.toLowerCase().includes(q)) ||
-        categoryLabel.toLowerCase().includes(q)
-      );
-    });
+    return filterHardwareProducts(allIndividualProducts, activeCategoryFilter, search);
   }, [allIndividualProducts, activeCategoryFilter, search]);
 
   const activeAgriConfig = agriDroneConfig || getDefaultAgriDroneConfig();
@@ -466,48 +452,17 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
         {/* Filter and Search Bar */}
         <div className="store-landing__filter-bar">
           <div className="store-landing__category-chips">
-            <button
-              type="button"
-              className={`store-landing__chip-btn ${activeCategoryFilter === 'all' ? 'store-landing__chip-btn--active' : ''}`}
-              onClick={() => setActiveCategoryFilter('all')}
-            >
-              <LayoutGrid size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />
-              <span>All Hardware Systems</span>
-            </button>
-            <button
-              type="button"
-              className={`store-landing__chip-btn ${activeCategoryFilter === 'motors' ? 'store-landing__chip-btn--active' : ''}`}
-              onClick={() => setActiveCategoryFilter('motors')}
-            >
-              <Cog size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />
-              <span>Motors</span>
-            </button>
-            <button
-              type="button"
-              className={`store-landing__chip-btn ${activeCategoryFilter === 'frames' ? 'store-landing__chip-btn--active' : ''}`}
-              onClick={() => setActiveCategoryFilter('frames')}
-            >
-              <Frame size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />
-              <span>Frames</span>
-            </button>
-            {parachuteConfig && parachuteConfig.isEnabled && (
+            {dynamicTabs.map((tab) => (
               <button
+                key={tab.id}
                 type="button"
-                className={`store-landing__chip-btn ${activeCategoryFilter === 'parachute' ? 'store-landing__chip-btn--active' : ''}`}
-                onClick={() => setActiveCategoryFilter('parachute')}
+                className={`store-landing__chip-btn ${activeCategoryFilter === tab.id ? 'store-landing__chip-btn--active' : ''}`}
+                onClick={() => setActiveCategoryFilter(tab.id)}
               >
-                <ParachuteIcon size={15} strokeWidth={2} className="store-landing__chip-icon" />
-                <span>Recovery Parachutes</span>
+                {renderTabIcon(tab)}
+                <span>{tab.name}</span>
               </button>
-            )}
-            <button
-              type="button"
-              className={`store-landing__chip-btn ${activeCategoryFilter === 'agri' ? 'store-landing__chip-btn--active' : ''}`}
-              onClick={() => setActiveCategoryFilter('agri')}
-            >
-              <Drone size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />
-              <span>Agricultural Drones</span>
-            </button>
+            ))}
           </div>
 
           <div className="store-landing__search-box">
@@ -670,7 +625,8 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
               {filteredHardware.map(({ product, categoryLabel }) => {
                 const status = getEffectiveProductStatus(product);
                 const isAvailable = status === 'AVAILABLE';
-                const defaultFallback = isFrameProduct(product) ? '/frames/7.webp' : '/manufacturing/stage-2-hd.jpg';
+                const isFrame = categoryLabel.toLowerCase().includes('frame') || product.name.toLowerCase().includes('frame');
+                const defaultFallback = isFrame ? '/frames/7.webp' : '/manufacturing/stage-2-hd.jpg';
 
                 return (
                   <div
