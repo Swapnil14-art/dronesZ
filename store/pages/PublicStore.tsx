@@ -1413,11 +1413,13 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
           /* VIEW 3: ROOT STORE CATALOG WEBPAGE (/ or /store) */
           <StoreLandingCatalog
             parentProducts={parentProducts}
+            standaloneProducts={products.filter((p) => p.productType === 'STANDALONE')}
             search={search}
             setSearch={setSearch}
             loading={loading}
             error={error}
             parachuteConfig={parachuteConfig}
+            agriDroneConfig={agriDroneConfig}
             navigateToParentSeries={navigateToParentSeries}
             navigateToParachute={navigateToParachute}
             navigateToAgriDrone={navigateToAgriDrone}
