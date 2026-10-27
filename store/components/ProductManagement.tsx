@@ -32,6 +32,7 @@ import {
 import { RichTextEditor } from './RichTextEditor';
 import { TableEditor } from './TableEditor';
 import { resizeAndCompressImage } from '../services/imageOptimizer';
+import { getProductTaxLabel } from '../services/productTax';
 
 interface Props {
   token: string;
@@ -97,7 +98,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [formWarranty, setFormWarranty] = useState<string>('1-Yr Factory');
   const [formGrade, setFormGrade] = useState<string>('Aero Precision');
   const [formTaxInclusive, setFormTaxInclusive] = useState<boolean>(true);
-  const [formTaxNote, setFormTaxNote] = useState<string>('GST & Taxes Included');
+  const [formTaxNote, setFormTaxNote] = useState<string>('');
   const [formIsAddToCartEnabled, setFormIsAddToCartEnabled] = useState<boolean>(true);
 
   // Selection & Bulk Actions State
@@ -350,7 +351,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormWarranty('1-Yr Factory');
     setFormGrade('Aero Precision');
     setFormTaxInclusive(true);
-    setFormTaxNote('GST & Taxes Included');
+    setFormTaxNote('');
     setFormIsAddToCartEnabled(true);
     setFormContentSections([]);
     setShowAddBoxMenu(false);
@@ -376,7 +377,11 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormWarranty(product.warranty || '1-Yr Factory');
     setFormGrade(product.grade || 'Aero Precision');
     setFormTaxInclusive(product.taxInclusive !== undefined ? product.taxInclusive : true);
-    setFormTaxNote(product.taxNote || 'GST & Taxes Included');
+    setFormTaxNote(
+      product.taxNote && product.taxNote !== 'GST & Taxes Included' && product.taxNote !== 'Inclusive of GST'
+        ? product.taxNote
+        : ''
+    );
     setFormIsAddToCartEnabled(product.isAddToCartEnabled !== false);
     setDeletedImageIds([]);
 
@@ -618,7 +623,7 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       warranty: formWarranty.trim() || '1-Yr Factory',
       grade: formGrade.trim() || 'Aero Precision',
       taxInclusive: formTaxInclusive,
-      taxNote: formTaxNote.trim() || 'GST & Taxes Included',
+      taxNote: formTaxNote.trim() || 'Inclusive of GST',
       isAddToCartEnabled: formIsAddToCartEnabled,
       contentSections: formContentSections.map((s, idx) => ({
         id: s.id,
@@ -1109,6 +1114,9 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                       ) : (
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--color-primary)' }}>₹{p.price.toFixed(2)}</div>
+                          {getProductTaxLabel(p) && (
+                            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>{getProductTaxLabel(p)}</div>
+                          )}
                           <div style={{ fontSize: '12px', color: 'var(--color-muted)' }}>{p.quantity} in stock</div>
                         </div>
                       )}
@@ -1611,10 +1619,18 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                           <input
                             type="text"
                             className="stitch-input"
-                            placeholder="e.g. GST & Taxes Included or Excl. 18% GST"
+                            placeholder="Leave blank for 'Inclusive of GST' (e.g. Inclusive of Taxes)"
                             value={formTaxNote}
                             onChange={(e) => setFormTaxNote(e.target.value)}
+                            disabled={!formTaxInclusive}
                           />
+                          <span style={{ fontSize: '11px', color: '#64748b', marginTop: '3px', display: 'block' }}>
+                            {!formTaxInclusive
+                              ? 'Taxes excluded: no tax label will be shown beneath price'
+                              : formTaxNote.trim()
+                                ? `Preview label: "${formTaxNote.trim()}"`
+                                : 'Default label: "Inclusive of GST"'}
+                          </span>
                         </div>
                       </div>
                     </div>

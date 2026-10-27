@@ -19,6 +19,7 @@ import { AgriDronePublicPage } from '../components/AgriDronePublicPage';
 import { StoreLandingCatalog } from '../components/StoreLandingCatalog';
 import { loadParachuteConfig, getDefaultParachuteConfig, ParachutePageConfig } from '../services/parachuteConfig';
 import { getDefaultAgriDroneConfig, AgriDronePageConfig } from '../services/agriDroneConfig';
+import { getProductTaxLabel } from '../services/productTax';
 
 const RenderContentSection: React.FC<{ section: ProductContentSectionDto }> = ({ section }) => {
   const sheetNumber = String(section.displayOrder !== undefined && section.displayOrder !== null ? section.displayOrder : 4).padStart(2, '0');
@@ -994,20 +995,34 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                   return (
                     <>
                       {/* Big Price Display */}
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                        <span style={{
-                          fontSize: 'clamp(1.75rem, 1.75rem + 1vw, 2.2rem)',
-                          fontWeight: 800,
-                          color: '#0f172a',
-                          fontFamily: 'var(--font-display, "Space Grotesk", sans-serif)',
-                          lineHeight: 1,
-                          letterSpacing: '-0.02em'
-                        }}>
-                          ₹{singleUnitPrice.toFixed(2)}
-                        </span>
-                        <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
-                          Rupees / Unit
-                        </span>
+                      <div style={{ marginBottom: '1.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem', flexWrap: 'wrap' }}>
+                          <span style={{
+                            fontSize: 'clamp(1.75rem, 1.75rem + 1vw, 2.2rem)',
+                            fontWeight: 800,
+                            color: '#0f172a',
+                            fontFamily: 'var(--font-display, "Space Grotesk", sans-serif)',
+                            lineHeight: 1,
+                            letterSpacing: '-0.02em'
+                          }}>
+                            ₹{singleUnitPrice.toFixed(2)}
+                          </span>
+                          <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                            Rupees / Unit
+                          </span>
+                        </div>
+                        {activeProductDetail.price > 0 && getProductTaxLabel(activeProductDetail) && (
+                          <div style={{
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            color: '#64748b',
+                            marginTop: '0.35rem',
+                            letterSpacing: '0.01em',
+                            lineHeight: 1.4
+                          }}>
+                            {getProductTaxLabel(activeProductDetail)}
+                          </div>
+                        )}
                       </div>
                       {/* Technical Specifications Section Header */}
                       <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem', width: '100%' }}>
@@ -1358,8 +1373,21 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                               </div>
                             </div>
 
-                            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)', marginTop: 'auto', marginBottom: '1rem' }}>
-                              ₹{child.price.toFixed(2)}
+                            <div style={{ marginTop: 'auto', marginBottom: '1rem' }}>
+                              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-primary)', lineHeight: 1.1 }}>
+                                ₹{child.price.toFixed(2)}
+                              </div>
+                              {child.price > 0 && getProductTaxLabel(child) && (
+                                <div style={{
+                                  fontSize: '11px',
+                                  fontWeight: 500,
+                                  color: '#64748b',
+                                  marginTop: '3px',
+                                  lineHeight: 1.25
+                                }}>
+                                  {getProductTaxLabel(child)}
+                                </div>
+                              )}
                             </div>
 
                             <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>

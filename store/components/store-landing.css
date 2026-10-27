@@ -1152,6 +1152,18 @@
   font-size: 1.15rem;
   font-weight: 800;
   color: #0f172a;
+  line-height: 1.1;
+}
+
+.store-landing__hw-tax-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .store-landing__hw-action-btn {

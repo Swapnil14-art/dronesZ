@@ -58,7 +58,7 @@ public class Product {
     private Boolean taxInclusive = true;
 
     @Column(name = "tax_note", length = 150)
-    private String taxNote = "GST & Taxes Included";
+    private String taxNote = "Inclusive of GST";
 
     @Column(name = "is_add_to_cart_enabled", nullable = false)
     private Boolean isAddToCartEnabled = true;
@@ -100,7 +100,7 @@ public class Product {
             this.grade = "Aero Precision";
         }
         if (this.taxNote == null) {
-            this.taxNote = "GST & Taxes Included";
+            this.taxNote = "Inclusive of GST";
         }
     }
 
@@ -126,7 +126,7 @@ public class Product {
             this.grade = "Aero Precision";
         }
         if (this.taxNote == null) {
-            this.taxNote = "GST & Taxes Included";
+            this.taxNote = "Inclusive of GST";
         }
     }
 

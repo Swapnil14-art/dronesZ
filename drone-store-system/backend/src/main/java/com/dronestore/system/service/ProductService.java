@@ -291,7 +291,7 @@ public class ProductService {
         product.setWarranty(request.getWarranty() != null && !request.getWarranty().trim().isEmpty() ? request.getWarranty().trim() : "1-Yr Factory");
         product.setGrade(request.getGrade() != null && !request.getGrade().trim().isEmpty() ? request.getGrade().trim() : "Aero Precision");
         product.setTaxInclusive(request.getTaxInclusive() != null ? request.getTaxInclusive() : true);
-        product.setTaxNote(request.getTaxNote() != null && !request.getTaxNote().trim().isEmpty() ? request.getTaxNote().trim() : "GST & Taxes Included");
+        product.setTaxNote(request.getTaxNote() != null && !request.getTaxNote().trim().isEmpty() ? request.getTaxNote().trim() : "Inclusive of GST");
         product.setIsAddToCartEnabled(request.getIsAddToCartEnabled() != null ? request.getIsAddToCartEnabled() : true);
 
         Product saved = productRepository.save(product);
@@ -362,7 +362,7 @@ public class ProductService {
         product.setWarranty(request.getWarranty() != null && !request.getWarranty().trim().isEmpty() ? request.getWarranty().trim() : "1-Yr Factory");
         product.setGrade(request.getGrade() != null && !request.getGrade().trim().isEmpty() ? request.getGrade().trim() : "Aero Precision");
         product.setTaxInclusive(request.getTaxInclusive() != null ? request.getTaxInclusive() : true);
-        product.setTaxNote(request.getTaxNote() != null && !request.getTaxNote().trim().isEmpty() ? request.getTaxNote().trim() : "GST & Taxes Included");
+        product.setTaxNote(request.getTaxNote() != null && !request.getTaxNote().trim().isEmpty() ? request.getTaxNote().trim() : "Inclusive of GST");
         if (request.getIsAddToCartEnabled() != null) {
             product.setIsAddToCartEnabled(request.getIsAddToCartEnabled());
         }
@@ -718,7 +718,7 @@ public class ProductService {
         dto.setWarranty(product.getWarranty() != null ? product.getWarranty() : "1-Yr Factory");
         dto.setGrade(product.getGrade() != null ? product.getGrade() : "Aero Precision");
         dto.setTaxInclusive(product.getTaxInclusive() != null ? product.getTaxInclusive() : true);
-        dto.setTaxNote(product.getTaxNote() != null ? product.getTaxNote() : "GST & Taxes Included");
+        dto.setTaxNote(product.getTaxNote() != null ? product.getTaxNote() : "Inclusive of GST");
         dto.setIsAddToCartEnabled(product.getIsAddToCartEnabled() != null ? product.getIsAddToCartEnabled() : true);
 
         dto.setImages(imageDtos != null ? imageDtos : Collections.emptyList());

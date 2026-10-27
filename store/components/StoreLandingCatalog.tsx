@@ -10,6 +10,7 @@ import {
 } from '../services/api';
 import { ParachutePageConfig } from '../services/parachuteConfig';
 import { getDefaultAgriDroneConfig, AgriDronePageConfig } from '../services/agriDroneConfig';
+import { getProductTaxLabel } from '../services/productTax';
 import { LayoutGrid, Cog, Frame, Drone } from 'lucide-react';
 import './store-landing.css';
 
@@ -698,6 +699,11 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
                           <span className="store-landing__hw-price">
                             {product.price > 0 ? `₹${product.price.toFixed(2)}` : 'Spec-Based'}
                           </span>
+                          {product.price > 0 && getProductTaxLabel(product) && (
+                            <span className="store-landing__hw-tax-label">
+                              {getProductTaxLabel(product)}
+                            </span>
+                          )}
                           <span style={{
                             display: 'block',
                             fontSize: '10px',

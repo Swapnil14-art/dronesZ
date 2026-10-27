@@ -1277,4 +1277,4 @@ export async function toggleUserEnabled(token: string, id: number, enabled: bool
   return response.json();
 }
 
-
+export { getProductTaxLabel } from './productTax';
