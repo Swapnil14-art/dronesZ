@@ -5,6 +5,10 @@ import {
   shouldAttach,
   formatBytes,
   fileExtension,
+  validateAttachmentFile,
+  validateAttachmentList,
+  MAX_ATTACHMENT_FILE_BYTES,
+  MAX_AGGREGATE_ATTACHMENT_BYTES,
   ATTACH_MAX_BYTES,
   MAX_FILE_BYTES,
 } from "./model-formats";
@@ -46,6 +50,57 @@ describe("validateFile", () => {
     const r = validateFile(fakeFile("huge.stl", "", MAX_FILE_BYTES + 1));
     expect(r.ok).toBe(false);
     expect(r.error).toMatch(/too large/i);
+  });
+});
+
+describe("validateAttachmentFile and validateAttachmentList", () => {
+  it("validates permitted CAD and document formats", () => {
+    const stl = fakeFile("drone_mount.stl", "application/octet-stream", 2048);
+    const step = fakeFile("airframe.step", "application/octet-stream", 4096);
+    const pdf = fakeFile("specs.pdf", "application/pdf", 1024);
+
+    expect(validateAttachmentFile(stl).ok).toBe(true);
+    expect(validateAttachmentFile(step).ok).toBe(true);
+    expect(validateAttachmentFile(pdf).ok).toBe(true);
+
+    const listResult = validateAttachmentList([stl, step, pdf]);
+    expect(listResult.ok).toBe(true);
+    expect(listResult.totalBytes).toBe(2048 + 4096 + 1024);
+  });
+
+  it("strictly rejects dangerous executables (.exe, .sh, .bat, etc.)", () => {
+    const exe = fakeFile("payload.exe", "application/x-msdownload", 500);
+    const sh = fakeFile("script.sh", "text/x-sh", 500);
+    const bat = fakeFile("install.bat", "application/x-bat", 500);
+
+    expect(validateAttachmentFile(exe).ok).toBe(false);
+    expect(validateAttachmentFile(exe).error).toContain("Executable files (.exe) are not permitted");
+
+    expect(validateAttachmentFile(sh).ok).toBe(false);
+    expect(validateAttachmentFile(bat).ok).toBe(false);
+
+    expect(validateAttachmentList([exe]).ok).toBe(false);
+  });
+
+  it("enforces single file size limit (15 MB)", () => {
+    const oversizedFile = fakeFile("heavy_mesh.obj", "model/obj", MAX_ATTACHMENT_FILE_BYTES + 10);
+    const result = validateAttachmentFile(oversizedFile);
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain("exceeds the 15 MB per-file limit");
+  });
+
+  it("enforces aggregate multi-attachment size limit (25 MB)", () => {
+    const file1 = fakeFile("f1.step", "application/octet-stream", 14 * 1024 * 1024);
+    const file2 = fakeFile("f2.step", "application/octet-stream", 12 * 1024 * 1024);
+
+    expect(validateAttachmentFile(file1).ok).toBe(true);
+    expect(validateAttachmentFile(file2).ok).toBe(true);
+
+    // Sum is 26 MB, exceeding 25 MB aggregate limit
+    const listResult = validateAttachmentList([file1, file2]);
+    expect(listResult.ok).toBe(false);
+    expect(listResult.error).toContain("Total attachment size");
+    expect(listResult.error).toContain("exceeds the 25 MB limit");
   });
 });
 

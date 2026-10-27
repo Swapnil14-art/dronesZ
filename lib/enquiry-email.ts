@@ -303,19 +303,7 @@ export function resolveEmailTransport(): EmailTransport | null {
     return new ResendEmailTransport(process.env.RESEND_API_KEY.trim());
   }
 
-  // 2. SMTP Transport check: (SMTP is not configured yet)
-  if (process.env.SMTP_HOST && process.env.SMTP_HOST.trim()) {
-    // When SMTP credentials are provided in env, an SMTP transport handler can be registered here
-    return {
-      name: "SMTP",
-      send: async () => ({
-        ok: false,
-        error: "SMTP transport provider is not fully initialized. Please configure RESEND_API_KEY or SMTP driver.",
-      }),
-    };
-  }
-
-  // No active transport configured
+  // No active transport configured (Resend is the sole required email provider)
   return null;
 }
 
@@ -330,11 +318,11 @@ export async function sendCartEnquiryEmail(details: CartEnquiryDetails): Promise
   if (!transport) {
     return {
       ok: false,
-      error: "Email delivery transport is not configured on the server. Neither SMTP nor Resend API keys are set. Please contact sales@dronesz.in directly.",
+      error: "Email delivery transport is not configured on the server. RESEND_API_KEY is not set. Please contact sales@dronesz.in directly.",
     };
   }
 
-  const to = process.env.CONTACT_TO_EMAIL || CONTACT.email;
+  const to = process.env.ADMIN_EMAIL || process.env.CONTACT_TO_EMAIL || CONTACT.email;
   const from = process.env.RESEND_FROM || `${SITE.shortName} <onboarding@resend.dev>`;
   const subject = formatEnquiryEmailSubject(details);
   const text = formatEnquiryEmailText(details);

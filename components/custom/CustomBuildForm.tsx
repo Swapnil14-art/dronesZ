@@ -6,15 +6,13 @@ import { FormField } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/Button";
 import { CONTACT } from "@/data/site";
 import { CustomBuildSchema } from "@/lib/form-schema";
-import { shouldAttach } from "@/lib/model-formats";
-import { FileDropzone } from "./FileDropzone";
+import { MultiFileDropzone } from "./MultiFileDropzone";
 import "./custom.css";
 
-// The preview (and, through it, the 3D engine) is only needed once a file is chosen — load it
-// on demand so the initial contact bundle stays lean. ssr:false: it's a browser-only viewer.
+// The 3D preview is only loaded on demand for the first mesh file
 const ModelViewer = dynamic(
   () => import("./ModelViewer").then((m) => m.ModelViewer),
-  { ssr: false },
+  { ssr: false }
 );
 
 type PathKey = "design" | "idea" | "general";
@@ -30,32 +28,25 @@ type FieldErrors = Partial<
 >;
 
 /**
- * Custom-build enquiry form. Reuses the Phase-A dropzone + local 3D/image preview, then on
- * submit routes the file by size: small files ride along as a multipart attachment; large ones
- * upload directly to Blob first (bypassing the serverless body cap) and are sent as a link.
- * Client-side validation mirrors the server schema so errors surface inline before any request.
+ * Custom-build enquiry form supporting multiple attachments, client-side validation,
+ * and direct backend PostgreSQL persistence + Resend delivery.
  */
 export function CustomBuildForm({ path = "general" }: CustomBuildFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [honeypot, setHoneypot] = useState("");
 
   const [errors, setErrors] = useState<FieldErrors>({});
   const [fileError, setFileError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [formError, setFormError] = useState<string | null>(null);
+  const [submittedRef, setSubmittedRef] = useState<string | null>(null);
 
-  // Option A ("I have a design") must ship a file; Option B / general enquiries are free to
-  // send just a brief. Enforced here and again server-side at the trust boundary.
+  // Option A ("I have a design") must ship at least one file
   const fileRequired = path === "design";
-
-  const handleFile = (f: File) => {
-    setFile(f);
-    setFileError(null);
-  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,8 +79,8 @@ export function CustomBuildForm({ path = "general" }: CustomBuildFormProps) {
     }
     setErrors({});
 
-    if (fileRequired && !file) {
-      setFileError("Please attach your design file to continue.");
+    if (fileRequired && files.length === 0) {
+      setFileError("Please attach at least one CAD, STEP, or design file to continue.");
       return;
     }
     setFileError(null);
@@ -104,54 +95,50 @@ export function CustomBuildForm({ path = "general" }: CustomBuildFormProps) {
       body.set("message", message);
       body.set("_hp", honeypot);
 
-      if (file && shouldAttach(file.size)) {
-        body.set("file", file);
-      } else if (file) {
-        // Too large to attach — upload to Blob and send the link instead. The Blob client is
-        // imported here (not at module load) so it only ships to visitors who upload a big file.
-        const { upload } = await import("@vercel/blob/client");
-        const blob = await upload(file.name, file, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-          multipart: true,
-        });
-        body.set("fileUrl", blob.url);
-        body.set("fileName", file.name);
+      for (const f of files) {
+        body.append("files", f);
       }
 
       const res = await fetch("/api/custom-build", { method: "POST", body });
+      const data = await res.json().catch(() => null);
+
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as {
-          error?: string;
-        } | null;
         throw new Error(
-          data?.error ?? "Something went wrong. Please try again.",
+          data?.error ?? "Something went wrong. Please try again."
         );
       }
+
+      setSubmittedRef(data?.reference || null);
       setStatus("success");
     } catch (err: unknown) {
       setStatus("error");
       setFormError(
-        err instanceof Error ? err.message : "Something went wrong.",
+        err instanceof Error ? err.message : "Something went wrong."
       );
     }
   };
 
   if (status === "success") {
     return (
-      <div className="custom-form__done" role="status">
-        <p className="custom-form__done-title">
-          Thanks — we’ve got your brief.
-        </p>
-        <p className="custom-form__done-note">
-          Our team will review it and reply to {email} within a business day, on
-          behalf of {CONTACT.legalName}.
+      <div className="custom-form__done" role="status" style={{ borderTop: "4px solid #10b981", background: "#f0fdf4", padding: "2rem", borderRadius: "8px" }}>
+        <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>✅</div>
+        <h2 className="custom-form__done-title" style={{ color: "#065f46", fontSize: "1.5rem", fontWeight: 800, marginBottom: "0.5rem" }}>
+          Thanks — we’ve received your enquiry!
+        </h2>
+        {submittedRef && (
+          <div style={{ display: "inline-block", background: "#d1fae5", color: "#047857", fontWeight: 700, padding: "0.25rem 0.75rem", borderRadius: "4px", fontSize: "0.9rem", marginBottom: "1rem" }}>
+            Reference #{submittedRef}
+          </div>
+        )}
+        <p className="custom-form__done-note" style={{ color: "#047857", lineHeight: 1.6, fontSize: "0.95rem" }}>
+          Our engineering lab will review your brief and reply directly to <strong>{email}</strong>, on behalf of {CONTACT.legalName}.
         </p>
       </div>
     );
   }
 
   const submitting = status === "submitting";
+  const firstMeshFile = files.find((f) => f.name.match(/\.(stl|obj|ply|gltf|glb)$/i));
 
   return (
     <form className="custom-form" onSubmit={submit} noValidate>
@@ -174,7 +161,7 @@ export function CustomBuildForm({ path = "general" }: CustomBuildFormProps) {
       />
       <FormField
         id="phone"
-        label="Phone"
+        label="Phone number"
         type="tel"
         value={phone}
         onChange={setPhone}
@@ -192,28 +179,26 @@ export function CustomBuildForm({ path = "general" }: CustomBuildFormProps) {
       />
 
       <div className="custom-form__file">
-        <p className="custom-form__file-label">
-          {fileRequired ? (
-            <>
-              Attach your design{" "}
-              <span className="custom-form__req">(required)</span>
-            </>
-          ) : (
-            "Attach a design or reference (optional)"
-          )}
-        </p>
-        <FileDropzone
-          file={file}
-          onFileSelected={handleFile}
-          onCleared={() => setFile(null)}
+        <MultiFileDropzone
+          files={files}
+          onFilesChanged={(newFiles) => {
+            setFiles(newFiles);
+            setFileError(null);
+          }}
           onError={(m) => setFileError(m)}
+          label={
+            fileRequired
+              ? "Attach your design files (required)"
+              : "Attach designs or reference files (optional)"
+          }
+          required={fileRequired}
         />
         {fileError && (
-          <p className="custom-form__error" role="alert">
+          <p className="custom-form__error" role="alert" style={{ marginTop: "-0.5rem", marginBottom: "1rem" }}>
             {fileError}
           </p>
         )}
-        {file && <ModelViewer file={file} />}
+        {firstMeshFile && <ModelViewer file={firstMeshFile} />}
       </div>
 
       {/* Honeypot — hidden from users, catches naive bots. */}
@@ -235,8 +220,8 @@ export function CustomBuildForm({ path = "general" }: CustomBuildFormProps) {
         </p>
       )}
 
-      <Button type="submit" onLight className="custom-form__submit">
-        {submitting ? "Sending…" : "Send enquiry →"}
+      <Button type="submit" onLight className="custom-form__submit" disabled={submitting}>
+        {submitting ? "Sending enquiry…" : "Send enquiry →"}
       </Button>
       <p className="custom-form__legal">
         {CONTACT.legalName} · {CONTACT.address}

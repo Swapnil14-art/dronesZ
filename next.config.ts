@@ -1,4 +1,26 @@
 import type { NextConfig } from "next";
+import fs from "node:fs";
+import path from "node:path";
+
+// Load drone-store-system/.env as the single source of configuration
+const envPath = path.resolve(process.cwd(), "drone-store-system/.env");
+if (fs.existsSync(envPath)) {
+  const envContent = fs.readFileSync(envPath, "utf-8");
+  for (const line of envContent.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eqIdx = trimmed.indexOf("=");
+    if (eqIdx === -1) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    let val = trimmed.slice(eqIdx + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (process.env[key] === undefined) {
+      process.env[key] = val;
+    }
+  }
+}
 
 const isDev = process.env.NODE_ENV !== "production";
 const apiOrigin = process.env.NEXT_PUBLIC_API_BASE_URL
@@ -76,7 +98,7 @@ const nextConfig: NextConfig = {
 
     return [
       {
-        source: "/api/:path*",
+        source: "/api/:path((?!custom-build|cart/enquiry|admin/enquiries|upload).*)",
         destination: `${backendUrl.replace(/\/+$/, "")}/api/:path*`,
       },
     ];

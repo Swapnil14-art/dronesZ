@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { MultiFileDropzone } from "../custom/MultiFileDropzone";
 import "./drone-builder.css";
 
 export type DroneType = "quad-hex" | "vtol" | "fixed-wing";
@@ -171,11 +172,16 @@ export function BuildYourOwnDrone() {
   const [city, setCity] = useState<string>("");
   const [honeypot, setHoneypot] = useState<string>("");
 
+  // Attachments state
+  const [files, setFiles] = useState<File[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
+
   // Submission state
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [submittedRef, setSubmittedRef] = useState<string | null>(null);
 
   // Selected object labels for summary
   const selectedTypeObj = DRONE_TYPES.find((t) => t.id === droneType) || DRONE_TYPES[0];
@@ -228,7 +234,23 @@ export function BuildYourOwnDrone() {
     setIsSubmitting(true);
 
     try {
-      // Serialize full technical spec into structured message
+      // Technical specifications payload
+      const technicalSpecs = {
+        droneType: selectedTypeObj.name,
+        droneTypeBadge: selectedTypeObj.badge,
+        payloadCapacity: `${payload.toFixed(1)} kg`,
+        requiredRange: `${range} km`,
+        flightTime: `${flightTime} mins`,
+        operatingAltitudeCeiling: `${altitude} m`,
+        videoTransmission: selectedTxObj.name,
+        videoSetup: selectedSetupObj.name,
+        intendedApplication: application,
+        organization: organization.trim() || undefined,
+        deploymentCity: city.trim() || undefined,
+        leadTimeAcknowledged: "8-9 working days",
+      };
+
+      // Serialize full technical spec into human-readable summary
       const messageBody = [
         "==================================================",
         "BESPOKE UAV BUILD ENQUIRY — DRONESZ INDIA",
@@ -266,20 +288,26 @@ export function BuildYourOwnDrone() {
       formData.set("name", name.trim());
       formData.set("email", email.trim());
       formData.set("phone", phone.trim());
-      formData.set("path", "general");
+      formData.set("path", "build_your_own_drone");
       formData.set("message", messageBody);
+      formData.set("specifications", JSON.stringify(technicalSpecs));
       formData.set("_hp", honeypot);
+
+      for (const f of files) {
+        formData.append("files", f);
+      }
 
       const res = await fetch("/api/custom-build", {
         method: "POST",
         body: formData,
       });
 
+      const data = await res.json().catch(() => null);
       if (!res.ok) {
-        const data = await res.json().catch(() => null);
         throw new Error(data?.error || "Failed to submit custom drone enquiry. Please try again.");
       }
 
+      setSubmittedRef(data?.reference || null);
       setIsSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: unknown) {
@@ -302,6 +330,11 @@ export function BuildYourOwnDrone() {
             <h2 className="byod-success-title">
               UAV Architecture Enquiry Received<span className="dot">.</span>
             </h2>
+            {submittedRef && (
+              <div style={{ display: "inline-block", background: "#fef2f2", color: "var(--byod-red, #e52b31)", border: "1px solid rgba(229, 43, 49, 0.3)", fontWeight: 700, padding: "0.35rem 0.85rem", borderRadius: "4px", fontSize: "0.88rem", fontFamily: "var(--byod-mono)", marginBottom: "16px" }}>
+                Enquiry Reference #{submittedRef}
+              </div>
+            )}
             <p className="byod-success-desc">
               Thank you, <strong>{name}</strong>. Your custom drone architecture specification has been forwarded to our aerospace engineering team at the Indore UAV lab. We will review your CAD and mission requirements and reply to <strong>{email}</strong> within 24 business hours.
             </p>
@@ -888,6 +921,24 @@ export function BuildYourOwnDrone() {
                     placeholder="e.g. Indore, Madhya Pradesh"
                     className="byod-input"
                   />
+                </div>
+
+                <div style={{ marginTop: "20px" }}>
+                  <MultiFileDropzone
+                    files={files}
+                    onFilesChanged={(newFiles) => {
+                      setFiles(newFiles);
+                      setAttachmentError(null);
+                    }}
+                    onError={(err) => setAttachmentError(err)}
+                    label="Mission Schematics, Payloads & CAD Attachments (Optional)"
+                    hint="STL, STEP, OBJ, DXF, PDF, Images, or ZIP · up to 15 MB per file, 25 MB total"
+                  />
+                  {attachmentError && (
+                    <div className="byod-field-error" style={{ marginTop: "6px" }}>
+                      {attachmentError}
+                    </div>
+                  )}
                 </div>
               </div>
 

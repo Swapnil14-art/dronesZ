@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { sendCartEnquiryEmail, CartEnquiryDetails, CartEnquiryItem } from "@/lib/enquiry-email";
+import { createEnquiry, updateEnquiryDeliveryStatus } from "@/lib/db";
+import { sendEnquiryEmail } from "@/lib/resend-service";
 
 // In-memory duplicate submission store: key -> timestamp
 const recentSubmissions = new Map<string, number>();
 
-// Clean up duplicate store periodically
 function cleanupRecentSubmissions() {
   const now = Date.now();
   for (const [key, timestamp] of recentSubmissions.entries()) {
@@ -60,7 +60,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   // 3. Server-side Trust Boundary: Verify User with Backend
-  const backendBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8070";
+  const isDev = process.env.NODE_ENV !== "production";
+  const backendBase =
+    process.env.BACKEND_INTERNAL_URL ||
+    (isDev ? "http://127.0.0.1:8070" : (process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8070"));
   let userProfile: { email: string; fullName: string; phone?: string };
   try {
     const profileRes = await fetch(`${backendBase}/api/user/profile`, {
@@ -123,7 +126,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   // 6. Assemble Verified Cart Details
-  const enquiryItems: CartEnquiryItem[] = cartData.items.map((item) => ({
+  const enquiryItems = cartData.items.map((item) => ({
     productId: item.productId,
     productName: item.productName || `Component #${item.productId}`,
     productType: item.productType || "Hardware Component",
@@ -138,49 +141,58 @@ export async function POST(request: Request): Promise<NextResponse> {
   const indicativeTotal = enquiryItems.reduce((acc, i) => acc + (i.subtotal || 0), 0);
 
   // Generate Reference Number
-  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const enquiryRef = `DZ-ENQ-${Date.now().toString(36).toUpperCase()}-${randomSuffix}`;
+  const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const enquiryRef = `DZ-ENQ-${dateStr}-${randomSuffix}`;
 
-  const hostHeader = request.headers.get("host") || "dronesz.in";
-  const protocol = hostHeader.includes("localhost") ? "http" : "https";
-  const siteUrl = `${protocol}://${hostHeader}`;
+  // 7. Persist to PostgreSQL BEFORE attempting email delivery
+  let savedEnquiry;
+  try {
+    savedEnquiry = await createEnquiry({
+      reference: enquiryRef,
+      enquiryType: "cart_enquiry",
+      customerName: userProfile.fullName || "Customer",
+      customerEmail: userProfile.email,
+      customerPhone: userProfile.phone || undefined,
+      message: notes || undefined,
+      productItems: enquiryItems,
+      totalItems: totalItemCount,
+      indicativeTotal,
+    });
+  } catch (dbErr: any) {
+    console.error("[POST /api/cart/enquiry] Database persistence failed:", dbErr);
+    return fail("Database error: Could not save your enquiry. Please try again.", 500);
+  }
 
-  const enquiryDetails: CartEnquiryDetails = {
-    enquiryRef,
-    customerName: userProfile.fullName || "Customer",
-    customerEmail: userProfile.email,
-    customerPhone: userProfile.phone || undefined,
-    notes: notes || undefined,
-    submittedAt: new Date().toISOString(),
-    items: enquiryItems,
-    totalItems: totalItemCount,
-    indicativeTotal,
-    siteUrl,
-  };
+  // 8. Attempt Email Delivery via Resend
+  const deliveryResult = await sendEnquiryEmail(savedEnquiry, []);
 
-  // 7. Dispatch Email
-  const sendResult = await sendCartEnquiryEmail(enquiryDetails);
+  if (deliveryResult.ok) {
+    await updateEnquiryDeliveryStatus(savedEnquiry.id, "SENT", null);
+    recentSubmissions.set(dedupeKey, now);
 
-  if (!sendResult.ok) {
+    return NextResponse.json({
+      success: true,
+      reference: enquiryRef,
+      message: "Enquiry submitted successfully! Our engineering team will review your requirements and reply shortly.",
+    });
+  } else {
+    await updateEnquiryDeliveryStatus(
+      savedEnquiry.id,
+      "FAILED",
+      deliveryResult.error || "Email delivery failed."
+    );
+
     return NextResponse.json(
       {
         success: false,
+        enquirySaved: true,
+        reference: enquiryRef,
         error:
-          sendResult.error ||
-          "Failed to dispatch enquiry email to DronesZ sales team. Please try again or contact us directly.",
+          deliveryResult.error ||
+          "Your enquiry was safely stored in our database, but automated email dispatch failed.",
       },
-      { status: 503 }
+      { status: 502 }
     );
   }
-
-  // Record submission in dedupe store
-  recentSubmissions.set(dedupeKey, now);
-
-  // Return success with tracking reference
-  // Note: Customer's cart is deliberately KEPT UNCHANGED.
-  return NextResponse.json({
-    success: true,
-    reference: enquiryRef,
-    message: "Enquiry submitted successfully! Our technical engineering team will review your specifications and contact you shortly.",
-  });
 }

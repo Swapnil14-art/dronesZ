@@ -84,3 +84,67 @@ export function formatBytes(bytes: number): string {
   const kb = bytes / 1024;
   return kb < 1024 ? `${kb.toFixed(0)} KB` : `${(kb / 1024).toFixed(1)} MB`;
 }
+
+// Multi-attachment rules for all enquiry forms
+export const MAX_ATTACHMENT_FILE_BYTES = 15 * 1024 * 1024; // 15 MB individual cap
+export const MAX_AGGREGATE_ATTACHMENT_BYTES = 25 * 1024 * 1024; // 25 MB total cap
+
+export const ALLOWED_ATTACHMENT_EXTENSIONS = [
+  "stl", "step", "stp", "obj", "ply", "gltf", "glb", "3ds", "dxf", "dwg",
+  "pdf", "txt", "png", "jpg", "jpeg", "webp", "zip"
+] as const;
+
+export const DISALLOWED_EXECUTABLE_EXTENSIONS = [
+  "exe", "bat", "cmd", "sh", "php", "js", "vbs", "msi", "com", "scr", "pif", "jar", "bin"
+] as const;
+
+export function validateAttachmentFile(file: File): { ok: boolean; error?: string } {
+  const ext = fileExtension(file.name);
+  if (DISALLOWED_EXECUTABLE_EXTENSIONS.includes(ext as any)) {
+    return {
+      ok: false,
+      error: `Executable files (.${ext}) are not permitted for security reasons.`,
+    };
+  }
+
+  const isAllowedExt = ALLOWED_ATTACHMENT_EXTENSIONS.includes(ext as any);
+  const isImageMime = file.type.startsWith("image/");
+  const isPdfMime = file.type === "application/pdf";
+  const isZipMime = file.type.includes("zip");
+
+  if (!isAllowedExt && !isImageMime && !isPdfMime && !isZipMime) {
+    return {
+      ok: false,
+      error: `Unsupported file format (.${ext || "unknown"}). Allowed formats: CAD (.stl, .step, .obj, .dxf), Images, PDF, TXT, and ZIP.`,
+    };
+  }
+
+  if (file.size > MAX_ATTACHMENT_FILE_BYTES) {
+    return {
+      ok: false,
+      error: `"${file.name}" exceeds the 15 MB per-file limit (${formatBytes(file.size)}).`,
+    };
+  }
+
+  return { ok: true };
+}
+
+export function validateAttachmentList(files: File[]): { ok: boolean; error?: string; totalBytes?: number } {
+  let totalBytes = 0;
+  for (const f of files) {
+    const single = validateAttachmentFile(f);
+    if (!single.ok) return single;
+    totalBytes += f.size;
+  }
+
+  if (totalBytes > MAX_AGGREGATE_ATTACHMENT_BYTES) {
+    return {
+      ok: false,
+      error: `Total attachment size (${formatBytes(totalBytes)}) exceeds the 25 MB limit for direct email delivery. Please remove some files.`,
+      totalBytes,
+    };
+  }
+
+  return { ok: true, totalBytes };
+}
+

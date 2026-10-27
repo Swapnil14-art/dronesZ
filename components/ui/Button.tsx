@@ -19,6 +19,7 @@ interface LinkButtonProps extends BaseProps {
 interface ActionButtonProps extends BaseProps {
   onClick?: () => void;
   type?: "button" | "submit";
+  disabled?: boolean;
 }
 
 function classes(variant: Variant, onLight: boolean, extra?: string): string {
@@ -53,6 +54,7 @@ export function Button({
   onLight = false,
   onClick,
   type = "button",
+  disabled,
   children,
   className,
 }: ActionButtonProps) {
@@ -60,6 +62,7 @@ export function Button({
     <button
       type={type}
       onClick={onClick}
+      disabled={disabled}
       className={classes(variant, onLight, className)}
     >
       {children}

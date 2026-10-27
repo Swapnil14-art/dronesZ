@@ -64,20 +64,17 @@ export interface SendResult {
 
 export async function sendLeadEmail(lead: LeadEmail): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.CONTACT_TO_EMAIL || CONTACT.email;
+  const to = process.env.ADMIN_EMAIL || process.env.CONTACT_TO_EMAIL || CONTACT.email;
   // A verified sender the client controls goes in RESEND_FROM; until then Resend's shared
   // onboarding sender lets the flow work end-to-end for testing.
   const from =
     process.env.RESEND_FROM || `${SITE.shortName} <onboarding@resend.dev>`;
 
   if (!apiKey) {
-    // Deliberate operational fallback, not stray debug output: with no provider configured we
-    // must not lose the lead, so record it server-side and report success to the visitor.
-    console.info(
-      "[lead] RESEND_API_KEY unset — lead not emailed:",
-      bodyText(lead),
-    );
-    return { ok: true, logged: true };
+    return {
+      ok: false,
+      error: "RESEND_API_KEY is not configured on the server. Please set RESEND_API_KEY in environment variables.",
+    };
   }
 
   try {

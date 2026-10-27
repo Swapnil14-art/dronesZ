@@ -131,8 +131,8 @@ describe('sendCartEnquiryEmail', () => {
     const result = await sendCartEnquiryEmail(mockEnquiry);
     expect(result.ok).toBe(true);
     expect(result.messageId).toBe('mock-msg-123');
-    expect(deliveredPayload).not.toBeNull();
-    expect(deliveredPayload.to).toContain('sales@dronesz.in');
+    const expectedRecipient = process.env.ADMIN_EMAIL || process.env.CONTACT_TO_EMAIL || 'sales@dronesz.in';
+    expect(deliveredPayload.to).toContain(expectedRecipient);
     expect(deliveredPayload.subject).toContain('DZ-ENQ-20261028-TEST01');
     expect(deliveredPayload.replyTo).toBe('aarav@example.com');
   });
