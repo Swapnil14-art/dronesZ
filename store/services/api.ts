@@ -554,6 +554,30 @@ export async function clearUserCart(token: string): Promise<CartDto> {
   return response.json();
 }
 
+export interface CartEnquirySubmissionResponse {
+  success: boolean;
+  reference?: string;
+  message?: string;
+  error?: string;
+}
+
+export async function submitCartEnquiry(token: string, notes?: string): Promise<CartEnquirySubmissionResponse> {
+  const response = await fetch('/api/cart/enquiry', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ notes }),
+  });
+
+  const data = await response.json().catch(() => ({ success: false, error: 'Network communication error.' }));
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || 'Failed to submit enquiry.');
+  }
+  return data;
+}
+
 /* User Checkout & Orders APIs */
 export async function fetchCheckoutSummary(token: string): Promise<CheckoutSummaryDto> {
   const response = await fetch(`${API_BASE_URL}/api/user/checkout-summary`, {

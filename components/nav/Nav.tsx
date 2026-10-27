@@ -421,9 +421,9 @@ export function Nav() {
             <div className="nav__store-actions">
               <Link
                 href="/cart"
-                title="Shopping Cart"
+                title="Enquiry Cart"
                 className={`nav__icon-btn ${pathname === '/cart' ? 'is-active' : ''}`}
-                aria-label="Shopping Cart"
+                aria-label="Enquiry Cart"
               >
                 <CartIcon size={20} />
                 {cartItemCount > 0 && (

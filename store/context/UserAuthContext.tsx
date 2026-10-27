@@ -9,6 +9,7 @@ import {
   addToUserCart,
   updateUserCartItem,
   removeUserCartItem,
+  clearUserCart,
 } from '../services/api';
 
 interface UserAuthContextType {
@@ -25,6 +26,7 @@ interface UserAuthContextType {
   addToCart: (productId: number, quantity?: number) => Promise<void>;
   updateCartQuantity: (itemId: number, quantity: number) => Promise<void>;
   removeFromCart: (itemId: number) => Promise<void>;
+  clearCart: () => Promise<void>;
 }
 
 const UserAuthContext = createContext<UserAuthContextType | undefined>(undefined);
@@ -121,6 +123,12 @@ export const UserAuthProvider: React.FC<{ children: ReactNode }> = ({ children }
     setCart(updatedCart);
   };
 
+  const clearCart = async () => {
+    if (!token) return;
+    const updatedCart = await clearUserCart(token);
+    setCart(updatedCart);
+  };
+
   const cartItemCount = cart?.totalItems || 0;
 
   return (
@@ -139,6 +147,7 @@ export const UserAuthProvider: React.FC<{ children: ReactNode }> = ({ children }
         addToCart,
         updateCartQuantity,
         removeFromCart,
+        clearCart,
       }}
     >
       {children}

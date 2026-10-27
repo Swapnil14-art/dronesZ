@@ -1175,13 +1175,13 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                           </span>
                         </button>
 
-                        {/* Buy Now Button */}
+                        {/* Enquire Now Button */}
                         <button
                           type="button"
                           disabled={!canPurchase}
                           onClick={async () => {
                             await handleAddToCart(activeProductDetail, selectedQuantity * multiplier);
-                            navigateTo('/checkout');
+                            navigateTo('/cart');
                           }}
                           style={{
                             flex: '1 1 130px',
@@ -1210,7 +1210,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                             e.currentTarget.style.borderColor = '#cbd5e1';
                           }}
                         >
-                          Buy Now
+                          Enquire Now
                         </button>
                       </div>
 

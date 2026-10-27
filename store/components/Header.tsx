@@ -215,10 +215,10 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
 
           {/* Action Icon Controls: Cart & Profile */}
           <div className="dronesz-actions">
-            {/* Shopping Cart Button */}
+            {/* Enquiry Cart Button */}
             <button
               onClick={() => navigateTo('/cart')}
-              title="Shopping Cart"
+              title="Enquiry Cart"
               className={`dronesz-icon-btn ${activePage === 'cart' ? 'text-primary' : ''}`}
               style={{ color: activePage === 'cart' ? '#e52b31' : '#94a3b8' }}
             >
