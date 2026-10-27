@@ -62,6 +62,7 @@ function buildCatalogViewModel({
   };
 
   // Aggregate only actual individual/purchasable products
+  // Aggregate strictly individual child products belonging to Motors and Frames
   const allIndividualProducts: { product: ProductDto; categoryLabel: string; isMotor: boolean; isFrame: boolean }[] = [];
   const seenIds = new Set<number>();
 
@@ -69,25 +70,17 @@ function buildCatalogViewModel({
     const children = childProductsMap[parent.id] || [];
     children.forEach((child) => {
       if (child.productType !== 'PARENT' && !seenIds.has(child.id)) {
-        seenIds.add(child.id);
-        const rawCat = getCategoryName(child, parent);
         const isMotor = isMotorProduct(child, parent);
         const isFrame = isFrameProduct(child, parent);
-        const categoryLabel = rawCat || (isFrame ? 'Frames' : isMotor ? 'Motors' : 'Hardware');
-        allIndividualProducts.push({ product: child, categoryLabel, isMotor, isFrame });
+
+        if (isMotor || isFrame) {
+          seenIds.add(child.id);
+          const rawCat = getCategoryName(child, parent);
+          const categoryLabel = rawCat || (isFrame ? 'Frames' : 'Motors');
+          allIndividualProducts.push({ product: child, categoryLabel, isMotor, isFrame });
+        }
       }
     });
-  });
-
-  standaloneProducts.forEach((prod) => {
-    if (prod.productType === 'STANDALONE' && !seenIds.has(prod.id)) {
-      seenIds.add(prod.id);
-      const rawCat = getCategoryName(prod);
-      const isMotor = isMotorProduct(prod);
-      const isFrame = isFrameProduct(prod);
-      const categoryLabel = rawCat || (isFrame ? 'Frames' : isMotor ? 'Motors' : 'Hardware');
-      allIndividualProducts.push({ product: prod, categoryLabel, isMotor, isFrame });
-    }
   });
 
   // Filter individual hardware products
@@ -109,16 +102,16 @@ function buildCatalogViewModel({
     );
   });
 
-  // Standalone exception cards visibility
+  // Standalone exception cards visibility (only on their respective tabs)
   const isParachuteVisible =
     Boolean(parachuteConfig && parachuteConfig.isEnabled) &&
-    (activeCategoryFilter === 'all' || activeCategoryFilter === 'parachute') &&
+    activeCategoryFilter === 'parachute' &&
     (!search.trim() ||
       (parachuteConfig?.displayName && parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase())) ||
       'parachute recovery systems for drones'.includes(search.toLowerCase()));
 
   const isAgriDroneVisible =
-    (activeCategoryFilter === 'all' || activeCategoryFilter === 'agri') &&
+    activeCategoryFilter === 'agri' &&
     (!search.trim() ||
       (agriDroneConfig?.displayName && agriDroneConfig.displayName.toLowerCase().includes(search.toLowerCase())) ||
       'agricultural spraying drone hexacopter rpas 10l precision spraying'.includes(search.toLowerCase()));
@@ -133,8 +126,8 @@ function buildCatalogViewModel({
 
 describe('StoreLandingCatalog Hardware Filtering for 5 Category Tabs', () => {
   const realCategories: CategoryDto[] = [
-    { id: 1, name: 'Motors', slug: 'motors', description: 'Drone motors', displayOrder: 1, isActive: true },
-    { id: 2, name: 'Frames', slug: 'frames', description: 'Drone frames', displayOrder: 2, isActive: true },
+    { id: 1, name: 'Motors', description: 'Drone motors' },
+    { id: 2, name: 'Frames', description: 'Drone frames' },
   ];
 
   const realParents: ProductDto[] = [
@@ -176,7 +169,7 @@ describe('StoreLandingCatalog Hardware Filtering for 5 Category Tabs', () => {
     ],
   };
 
-  it('1. Tab "all": Displays all individual purchasable items and exactly one of each standalone exception, excluding parent products', () => {
+  it('1. Tab "all": Displays only individual child products belonging to Motors and Frames, excluding parent products and standalone exceptions', () => {
     const result = buildCatalogViewModel({
       categories: realCategories,
       parentProducts: realParents,
@@ -184,15 +177,16 @@ describe('StoreLandingCatalog Hardware Filtering for 5 Category Tabs', () => {
       activeCategoryFilter: 'all',
     });
 
-    // Contains 5 motors + 4 frames = 9 individual items
+    // Contains only the 5 motors + 4 frames child products = 9 items
     expect(result.filteredHardware).toHaveLength(9);
-    // Verifies no parent product exists in individual items
+    expect(result.filteredHardware.every((item) => item.isMotor || item.isFrame)).toBe(true);
+    // Verifies no parent product exists
     expect(result.filteredHardware.some((item) => item.product.productType === 'PARENT')).toBe(false);
     expect(result.filteredHardware.some((item) => item.product.id === 9 || item.product.id === 29)).toBe(false);
 
-    // Standalone cards
-    expect(result.isParachuteVisible).toBe(true);
-    expect(result.isAgriDroneVisible).toBe(true);
+    // Standalone cards (Parachute and Agri Drone) are NEVER visible under "All Hardware Systems"
+    expect(result.isParachuteVisible).toBe(false);
+    expect(result.isAgriDroneVisible).toBe(false);
   });
 
   it('2. Tab "motors": Displays only actual motor products, excluding frames, parents, parachutes, and agri drones', () => {

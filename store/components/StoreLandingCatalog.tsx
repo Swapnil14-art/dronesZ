@@ -10,7 +10,34 @@ import {
 } from '../services/api';
 import { ParachutePageConfig } from '../services/parachuteConfig';
 import { getDefaultAgriDroneConfig, AgriDronePageConfig } from '../services/agriDroneConfig';
+import { LayoutGrid, Cog, Frame, Drone } from 'lucide-react';
 import './store-landing.css';
+
+// Parachute Recovery Icon matching Lucide 24x24 stroke aesthetic
+const ParachuteIcon: React.FC<{ size?: number; className?: string; strokeWidth?: number }> = ({
+  size = 15,
+  className,
+  strokeWidth = 2,
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M12 3a9 9 0 0 0-9 9c3-1 6-1 9-1s6 0 9 1a9 9 0 0 0-9-9z" />
+    <path d="M3 12c2.5 3.5 6.5 8 9 9" />
+    <path d="M21 12c-2.5 3.5-6.5 8-9 9" />
+    <path d="M12 11v10" />
+    <circle cx="12" cy="21" r="1" fill="currentColor" />
+  </svg>
+);
 
 interface StoreLandingCatalogProps {
   parentProducts: ProductDto[];
@@ -52,7 +79,7 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
       .then((cats) => {
         if (isMounted) setCategories(cats);
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       isMounted = false;
     };
@@ -140,50 +167,47 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
   };
 
   // Aggregate only actual individual/purchasable products (child products of parent series + standalone products)
-  // Exclude parent products and series-level containers that exist only to group variants.
+  // Aggregate strictly individual child products belonging to Motors and Frames
+  // Never include parent products, category containers, series containers, or standalone exceptions
   const allIndividualProducts = useMemo(() => {
-    const items: { product: ProductDto; categoryLabel: string }[] = [];
+    const items: { product: ProductDto; categoryLabel: string; isMotor: boolean; isFrame: boolean }[] = [];
     const seenIds = new Set<number>();
 
-    // 1. Child products from parent series
     parentProducts.forEach((parent) => {
       const children = childProductsMap[parent.id] || [];
       children.forEach((child) => {
+        // Exclude parent products and duplicates
         if (child.productType !== 'PARENT' && !seenIds.has(child.id)) {
-          seenIds.add(child.id);
-          const rawCat = getCategoryName(child, parent);
-          const categoryLabel = rawCat || (isFrameProduct(child, parent) ? 'Frames' : isMotorProduct(child, parent) ? 'Motors' : 'Hardware');
-          items.push({ product: child, categoryLabel });
+          const isMotor = isMotorProduct(child, parent);
+          const isFrame = isFrameProduct(child, parent);
+
+          // Only include products that belong to Motors or Frames categories
+          if (isMotor || isFrame) {
+            seenIds.add(child.id);
+            const rawCat = getCategoryName(child, parent);
+            const categoryLabel = rawCat || (isFrame ? 'Frames' : 'Motors');
+            items.push({ product: child, categoryLabel, isMotor, isFrame });
+          }
         }
       });
     });
 
-    // 2. Standalone purchasable products in catalog (if any exist)
-    (standaloneProducts || []).forEach((prod) => {
-      if (prod.productType === 'STANDALONE' && !seenIds.has(prod.id)) {
-        seenIds.add(prod.id);
-        const rawCat = getCategoryName(prod);
-        const categoryLabel = rawCat || (isFrameProduct(prod) ? 'Frames' : isMotorProduct(prod) ? 'Motors' : 'Hardware');
-        items.push({ product: prod, categoryLabel });
-      }
-    });
-
     return items;
-  }, [parentProducts, childProductsMap, standaloneProducts, categories, motorCategory, frameCategory]);
+  }, [parentProducts, childProductsMap, categories, motorCategory, frameCategory]);
 
   // Filter individual hardware products based on active tab and search query
   const filteredHardware = useMemo(() => {
-    return allIndividualProducts.filter(({ product, categoryLabel }) => {
+    return allIndividualProducts.filter(({ product, categoryLabel, isMotor, isFrame }) => {
       // 1. Hardware Category filter
       if (activeCategoryFilter === 'motors') {
-        if (!isMotorProduct(product)) return false;
+        if (!isMotor) return false;
       } else if (activeCategoryFilter === 'frames') {
-        if (!isFrameProduct(product)) return false;
+        if (!isFrame) return false;
       } else if (activeCategoryFilter === 'parachute' || activeCategoryFilter === 'agri') {
-        // Recovery Parachutes & Agricultural Drones are standalone exceptions, not in the hardware variant grid
+        // Recovery Parachutes & Agricultural Drones are standalone tabs, not in the hardware grid
         return false;
       }
-      // 'all' includes all actual individual hardware
+      // 'all' includes only actual individual motor and frame child products
 
       // 2. Search query filter
       if (!search.trim()) return true;
@@ -194,21 +218,21 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
         categoryLabel.toLowerCase().includes(q)
       );
     });
-  }, [allIndividualProducts, activeCategoryFilter, search, motorCategory, frameCategory]);
+  }, [allIndividualProducts, activeCategoryFilter, search]);
 
   const activeAgriConfig = agriDroneConfig || getDefaultAgriDroneConfig();
 
-  // Standalone Parachute Card visibility
+  // Standalone Parachute Card visibility (only on the Recovery Parachutes tab)
   const isParachuteVisible =
     Boolean(parachuteConfig && parachuteConfig.isEnabled) &&
-    (activeCategoryFilter === 'all' || activeCategoryFilter === 'parachute') &&
+    activeCategoryFilter === 'parachute' &&
     (!search.trim() ||
       (parachuteConfig?.displayName && parachuteConfig.displayName.toLowerCase().includes(search.toLowerCase())) ||
       'parachute recovery systems for drones'.includes(search.toLowerCase()));
 
-  // Standalone Agricultural Drone Card visibility
+  // Standalone Agricultural Drone Card visibility (only on the Agricultural Drones tab)
   const isAgriDroneVisible =
-    (activeCategoryFilter === 'all' || activeCategoryFilter === 'agri') &&
+    activeCategoryFilter === 'agri' &&
     (!search.trim() ||
       (activeAgriConfig.displayName && activeAgriConfig.displayName.toLowerCase().includes(search.toLowerCase())) ||
       'agricultural spraying drone hexacopter rpas 10l precision spraying'.includes(search.toLowerCase()));
@@ -446,21 +470,24 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
               className={`store-landing__chip-btn ${activeCategoryFilter === 'all' ? 'store-landing__chip-btn--active' : ''}`}
               onClick={() => setActiveCategoryFilter('all')}
             >
-              All Hardware Systems
+              <LayoutGrid size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />
+              <span>All Hardware Systems</span>
             </button>
             <button
               type="button"
               className={`store-landing__chip-btn ${activeCategoryFilter === 'motors' ? 'store-landing__chip-btn--active' : ''}`}
               onClick={() => setActiveCategoryFilter('motors')}
             >
-              Motors
+              <Cog size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />
+              <span>Motors</span>
             </button>
             <button
               type="button"
               className={`store-landing__chip-btn ${activeCategoryFilter === 'frames' ? 'store-landing__chip-btn--active' : ''}`}
               onClick={() => setActiveCategoryFilter('frames')}
             >
-              Frames
+              <Frame size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />
+              <span>Frames</span>
             </button>
             {parachuteConfig && parachuteConfig.isEnabled && (
               <button
@@ -468,7 +495,8 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
                 className={`store-landing__chip-btn ${activeCategoryFilter === 'parachute' ? 'store-landing__chip-btn--active' : ''}`}
                 onClick={() => setActiveCategoryFilter('parachute')}
               >
-                Recovery Parachutes
+                <ParachuteIcon size={15} strokeWidth={2} className="store-landing__chip-icon" />
+                <span>Recovery Parachutes</span>
               </button>
             )}
             <button
@@ -476,7 +504,8 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
               className={`store-landing__chip-btn ${activeCategoryFilter === 'agri' ? 'store-landing__chip-btn--active' : ''}`}
               onClick={() => setActiveCategoryFilter('agri')}
             >
-              Agricultural Drones
+              <Drone size={15} strokeWidth={2} className="store-landing__chip-icon" aria-hidden="true" />
+              <span>Agricultural Drones</span>
             </button>
           </div>
 
