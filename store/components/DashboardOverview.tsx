@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProducts, fetchCategories, ProductDto, CategoryDto, getEffectiveProductStatus } from '../services/api';
+import { fetchProducts, ProductDto, getEffectiveProductStatus } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 interface Props {
   token: string;
-  onNavigateTab: (tab: 'products' | 'categories') => void;
+  onNavigateTab: (tab: 'products') => void;
 }
 
 export const DashboardOverview: React.FC<Props> = ({ token, onNavigateTab }) => {
   const { admin } = useAuth();
   const [products, setProducts] = useState<ProductDto[]>([]);
-  const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,12 +21,8 @@ export const DashboardOverview: React.FC<Props> = ({ token, onNavigateTab }) => 
     setLoading(true);
     setError(null);
     try {
-      const [prodRes, catRes] = await Promise.all([
-        fetchProducts(token, { size: 100 }),
-        fetchCategories(token),
-      ]);
+      const prodRes = await fetchProducts(token, { size: 100 });
       setProducts(prodRes.content);
-      setCategories(catRes);
     } catch (err: any) {
       setError(err.message || 'Failed to load overview metrics');
     } finally {
@@ -81,19 +76,6 @@ export const DashboardOverview: React.FC<Props> = ({ token, onNavigateTab }) => 
             </div>
 
             {/* Metric 2 */}
-            <div className="stitch-stat-card" style={{ borderTopColor: 'var(--color-tertiary)' }}>
-              <div className="stitch-stat-label">Store Categories</div>
-              <div className="stitch-stat-value">{categories.length}</div>
-              <button
-                onClick={() => onNavigateTab('categories')}
-                className="btn-stitch-secondary-link"
-                style={{ marginTop: '0.75rem', fontSize: '13px', color: 'var(--color-tertiary)' }}
-              >
-                Manage Categories &rarr;
-              </button>
-            </div>
-
-            {/* Metric 3 */}
             <div className="stitch-stat-card" style={{ borderTopColor: 'var(--color-tertiary)' }}>
               <div className="stitch-stat-label">In Stock &amp; Available</div>
               <div className="stitch-stat-value" style={{ color: 'var(--color-tertiary)' }}>

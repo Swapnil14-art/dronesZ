@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { DashboardOverview } from '../components/DashboardOverview';
 import { ProductManagement } from '../components/ProductManagement';
-import { CategoryManagement } from '../components/CategoryManagement';
 import { UserManagement } from '../components/UserManagement';
 import { ParachuteManagement } from '../components/ParachuteManagement';
 import { CustomNavManagement } from '../components/CustomNavManagement';
 import { EnquiryManagement } from '../components/EnquiryManagement';
 
-type TabType = 'overview' | 'enquiries' | 'products' | 'categories' | 'users' | 'parachute' | 'custom-nav';
+type TabType = 'overview' | 'enquiries' | 'products' | 'users' | 'parachute' | 'custom-nav';
 
 export const ProtectedAdminDashboard: React.FC = () => {
   const { admin, token, logout } = useAuth();
@@ -55,13 +54,6 @@ export const ProtectedAdminDashboard: React.FC = () => {
               onClick={() => setActiveTab('products')}
             >
               <span style={{ fontSize: '1.1rem' }}></span> Products
-            </div>
-
-            <div
-              className={`stitch-admin-nav-item ${activeTab === 'categories' ? 'active' : ''}`}
-              onClick={() => setActiveTab('categories')}
-            >
-              <span style={{ fontSize: '1.1rem' }}></span> Categories
             </div>
 
             <div
@@ -117,7 +109,6 @@ export const ProtectedAdminDashboard: React.FC = () => {
         )}
         {activeTab === 'enquiries' && <EnquiryManagement token={token} />}
         {activeTab === 'products' && <ProductManagement token={token} />}
-        {activeTab === 'categories' && <CategoryManagement token={token} />}
         {activeTab === 'users' && <UserManagement token={token} />}
         {activeTab === 'parachute' && <ParachuteManagement token={token} />}
         {activeTab === 'custom-nav' && <CustomNavManagement token={token} />}
