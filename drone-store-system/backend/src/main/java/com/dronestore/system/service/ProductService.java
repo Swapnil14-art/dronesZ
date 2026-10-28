@@ -223,8 +223,12 @@ public class ProductService {
         if (product.getStatus() == ProductStatus.ARCHIVED) {
             throw new ResourceNotFoundException("Product with ID " + id + " not found");
         }
-        // Option B: treat product as not found if its category is soft-deleted
-        if (product.getCategory() != null && Boolean.TRUE.equals(product.getCategory().getIsDeleted())) {
+        // If the product is a CHILD, its lifecycle and visibility are governed by its parent series
+        if (product.getProductType() == ProductType.CHILD && product.getParent() != null) {
+            if (product.getParent().getStatus() == ProductStatus.ARCHIVED) {
+                throw new ResourceNotFoundException("Product with ID " + id + " not found");
+            }
+        } else if (product.getCategory() != null && Boolean.TRUE.equals(product.getCategory().getIsDeleted())) {
             throw new ResourceNotFoundException("Product with ID " + id + " not found");
         }
         return mapToDto(product, true);

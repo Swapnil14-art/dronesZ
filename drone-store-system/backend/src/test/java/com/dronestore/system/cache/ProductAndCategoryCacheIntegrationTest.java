@@ -179,8 +179,9 @@ class ProductAndCategoryCacheIntegrationTest {
         img.setCreatedAt(LocalDateTime.now());
         img.setUpdatedAt(LocalDateTime.now());
 
-        when(productImageRepository.findByProductIdOrderByDisplayOrderAsc(30L))
-                .thenReturn(Collections.singletonList(img));
+        ProductImageDto imgDto = new ProductImageDto(100L, 30L, "drone.jpg", 2048L, "image/jpeg", true, 0, LocalDateTime.now(), LocalDateTime.now());
+        when(productImageRepository.findImageDtosByProductId(30L))
+                .thenReturn(Collections.singletonList(imgDto));
 
         List<ProductImageDto> images1 = productImageService.getProductImages(30L);
         assertEquals(1, images1.size());
@@ -190,7 +191,7 @@ class ProductAndCategoryCacheIntegrationTest {
         assertEquals(1, images2.size());
         assertEquals("drone.jpg", images2.get(0).getFileName());
 
-        verify(productImageRepository, times(1)).findByProductIdOrderByDisplayOrderAsc(30L);
+        verify(productImageRepository, times(1)).findImageDtosByProductId(30L);
     }
 
     @Test

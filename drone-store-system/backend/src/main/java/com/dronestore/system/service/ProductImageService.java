@@ -54,8 +54,7 @@ public class ProductImageService {
     @Cacheable(value = CacheNames.PRODUCT_IMAGES, key = "#productId", sync = true)
     @Transactional(readOnly = true)
     public List<ProductImageDto> getProductImages(Long productId) {
-        List<ProductImage> images = productImageRepository.findByProductIdOrderByDisplayOrderAsc(productId);
-        return images.stream().map(this::mapToDto).collect(Collectors.toList());
+        return productImageRepository.findImageDtosByProductId(productId);
     }
 
     @Transactional

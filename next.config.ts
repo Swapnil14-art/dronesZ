@@ -98,7 +98,7 @@ const nextConfig: NextConfig = {
 
     return [
       {
-        source: "/api/:path((?!custom-build|cart/enquiry|admin/enquiries|upload).*)",
+        source: "/api/:path((?!custom-build|cart/enquiry|admin/enquiries|upload|health).*)",
         destination: `${backendUrl.replace(/\/+$/, "")}/api/:path*`,
       },
     ];

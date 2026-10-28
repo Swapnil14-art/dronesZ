@@ -19,5 +19,7 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8070 10000
 
-# Launch application with memory limits and bind directly to Render's $PORT
-ENTRYPOINT ["sh", "-c", "java -Xms128m -Xmx256m -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=32m -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom -jar app.jar --server.port=${PORT:-8070}"]
+ENV MALLOC_ARENA_MAX=2
+
+# Launch application with strictly budgeted 512MB RAM container memory limits and bind directly to Render's $PORT
+ENTRYPOINT ["sh", "-c", "java -Xms64m -Xmx192m -Xss384k -XX:MaxMetaspaceSize=96m -XX:ReservedCodeCacheSize=24m -XX:CompressedClassSpaceSize=24m -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom -jar app.jar --server.port=${PORT:-8070}"]

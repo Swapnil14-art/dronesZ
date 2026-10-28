@@ -24,7 +24,17 @@ export interface RateLimitResult {
   retryAfter: number;
 }
 
+function cleanupExpired(now: number): void {
+  if (hits.size < 500) return;
+  for (const [k, v] of hits.entries()) {
+    if (now >= v.resetAt) {
+      hits.delete(k);
+    }
+  }
+}
+
 export function rateLimit(key: string, now: number): RateLimitResult {
+  cleanupExpired(now);
   const existing = hits.get(key);
 
   if (!existing || now >= existing.resetAt) {

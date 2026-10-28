@@ -630,7 +630,8 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
       }
     } catch (err: any) {
       if (!cached && !activeProductDetail) {
-        setError('Failed to load product specifications page.');
+        const msg = err?.message || 'Failed to load product specifications page.';
+        setError(msg === 'Product not found' ? `Product #${id} was not found.` : msg);
         setActiveProductDetail(null);
       }
     } finally {

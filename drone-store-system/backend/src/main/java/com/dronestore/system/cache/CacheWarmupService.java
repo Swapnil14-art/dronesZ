@@ -8,6 +8,7 @@ import com.dronestore.system.service.CategoryService;
 import com.dronestore.system.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -18,10 +19,11 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Safe, asynchronous cache warming on application startup.
- * Pre-populates high-frequency public read data (catalog page 0, categories, top parent series)
- * so that initial visitors receive instant Redis cache hits without experiencing cold PostgreSQL latency.
+ * Disabled by default on 512MB RAM container environments to prevent startup memory spikes
+ * and avoid triggering heavy background operations on keep-alive health pings.
  */
 @Component
+@ConditionalOnProperty(name = "dronestore.cache.warmup.enabled", havingValue = "true", matchIfMissing = false)
 public class CacheWarmupService {
 
     private static final Logger log = LoggerFactory.getLogger(CacheWarmupService.class);

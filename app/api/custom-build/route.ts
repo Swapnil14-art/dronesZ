@@ -196,8 +196,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(
       {
         success: false,
-        error: globalErr?.message || "Internal server error",
-        stack: globalErr?.stack,
+        error: process.env.NODE_ENV !== "production" ? (globalErr?.message || "Internal server error") : "Internal server error",
       },
       { status: 500 }
     );

@@ -54,6 +54,19 @@ describe("rateLimit", () => {
     for (let i = 0; i < 5; i++) expect(rateLimit(k, t).ok).toBe(true);
     expect(rateLimit(k, t).ok).toBe(false);
   });
+
+  it("cleans up expired entries when map size exceeds threshold", () => {
+    const t = 5_000_000;
+    // Populate entries with old timestamps
+    for (let i = 0; i < 550; i++) {
+      rateLimit(`cleanup-test-${i}`, t);
+    }
+    // Now call rateLimit with a timestamp beyond the 15-minute window
+    const newT = t + 16 * 60 * 1000;
+    const freshKey = key();
+    const res = rateLimit(freshKey, newT);
+    expect(res.ok).toBe(true);
+  });
 });
 
 describe("clientIp", () => {

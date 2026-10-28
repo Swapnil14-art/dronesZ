@@ -79,7 +79,7 @@ export function getDbPool(): Pool {
           port: 6543,
           database: "postgres",
           user: "postgres.shuomuvvemiesoxyabnp",
-          password: process.env.DB_PASSWORD || "Esha2909123#",
+          password: process.env.DB_PASSWORD || "",
           ssl: { rejectUnauthorized: false },
           max: 10,
           idleTimeoutMillis: 30000,
