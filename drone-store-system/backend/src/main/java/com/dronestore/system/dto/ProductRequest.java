@@ -30,8 +30,6 @@ public class ProductRequest {
 
     private Long parentId;
 
-    private Long categoryId;
-
     private String image;
 
     private String dispatchTime;
@@ -106,14 +104,6 @@ public class ProductRequest {
 
     public void setParentId(Long parentId) {
         this.parentId = parentId;
-    }
-
-    public Long getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
     }
 
     public String getImage() {

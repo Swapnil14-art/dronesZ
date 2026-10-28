@@ -3,7 +3,6 @@ import {
   ProductDto,
   ProductRequest,
   ProductType,
-  CategoryDto,
   ProductStatus,
   ProductContentSectionType,
   ProductContentSectionRequest,
@@ -14,7 +13,6 @@ import {
   deleteProduct,
   archiveProduct,
   restoreProduct,
-  fetchCategories,
   uploadMultipleProductImages,
   fetchProductImages,
   setPrimaryProductImage,
@@ -62,7 +60,6 @@ const CloudUploadIcon: React.FC<{ size?: number; color?: string; style?: React.C
 
 export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [products, setProducts] = useState<ProductDto[]>([]);
-  const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [parentProducts, setParentProducts] = useState<ProductDto[]>([]);
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -75,7 +72,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [totalElements, setTotalElements] = useState<number>(0);
   const [search, setSearch] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
 
   // Modal states
@@ -90,7 +86,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   const [formPrice, setFormPrice] = useState<string>('0');
   const [formQuantity, setFormQuantity] = useState<string>('0');
   const [formStatus, setFormStatus] = useState<ProductStatus>('AVAILABLE');
-  const [formCategoryId, setFormCategoryId] = useState<string>('');
   const [formParentId, setFormParentId] = useState<string>('');
 
   // Dynamic Delivery / Warranty / Grade / Tax fields
@@ -153,22 +148,12 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
   }, [isAddModalOpen, editingProduct, deletingProduct]);
 
   useEffect(() => {
-    loadCategories();
     loadParentProducts();
   }, [token]);
 
   useEffect(() => {
     loadProductsList();
-  }, [token, page, search, statusFilter, categoryFilter, typeFilter, includeArchived]);
-
-  const loadCategories = async () => {
-    try {
-      const res = await fetchCategories(token);
-      setCategories(res);
-    } catch (err: any) {
-      console.error('Failed to load categories', err);
-    }
-  };
+  }, [token, page, search, statusFilter, typeFilter, includeArchived]);
 
   const loadParentProducts = async () => {
     try {
@@ -188,7 +173,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
         size: 15,
         search: search.trim() || undefined,
         status: statusFilter || undefined,
-        categoryId: categoryFilter || undefined,
         productType: (typeFilter as ProductType) || undefined,
         includeArchived,
       });
@@ -345,7 +329,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormPrice('0');
     setFormQuantity('0');
     setFormStatus('AVAILABLE');
-    setFormCategoryId('');
     setFormParentId('');
     setFormDispatchTime('24-48 Hours');
     setFormWarranty('1-Yr Factory');
@@ -371,7 +354,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
     setFormPrice(product.price.toString());
     setFormQuantity(product.quantity.toString());
     setFormStatus(product.status);
-    setFormCategoryId(product.categoryId ? product.categoryId.toString() : '');
     setFormParentId(product.parentId ? product.parentId.toString() : '');
     setFormDispatchTime(product.dispatchTime || '24-48 Hours');
     setFormWarranty(product.warranty || '1-Yr Factory');
@@ -617,7 +599,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
       price: priceNum,
       quantity: qtyNum,
       status: formStatus,
-      categoryId: formCategoryId ? Number(formCategoryId) : null,
       parentId: formProductType === 'CHILD' && formParentId ? Number(formParentId) : null,
       dispatchTime: formDispatchTime.trim() || '24-48 Hours',
       warranty: formWarranty.trim() || '1-Yr Factory',
@@ -914,23 +895,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
           <option value="ARCHIVED">Archived</option>
         </select>
 
-        <select
-          className="stitch-select"
-          value={categoryFilter}
-          onChange={(e) => {
-            setCategoryFilter(e.target.value);
-            setPage(0);
-          }}
-          style={{ width: '180px' }}
-        >
-          <option value="">All Categories</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-
         <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '13px', cursor: 'pointer', userSelect: 'none', color: 'var(--color-on-surface)', whiteSpace: 'nowrap' }}>
           <input
             type="checkbox"
@@ -1059,7 +1023,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                   <th style={{ width: '64px' }}>Image</th>
                   <th>Product Details</th>
                   <th>Type &amp; Hierarchy</th>
-                  <th>Category</th>
                   <th>Price &amp; Stock</th>
                   <th>Status</th>
                   <th style={{ textAlign: 'center', width: '130px' }}>Add to Cart</th>
@@ -1107,7 +1070,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                         </div>
                       )}
                     </td>
-                    <td>{p.categoryName || <span style={{ color: 'var(--color-muted)' }}>None</span>}</td>
                     <td>
                       {p.productType === 'PARENT' ? (
                         <span style={{ color: 'var(--color-muted)', fontStyle: 'italic', fontSize: '13px' }}>Series Header (No direct price)</span>
@@ -1438,22 +1400,6 @@ export const ProductManagement: React.FC<Props> = ({ token }) => {
                           >
                             <option value="PARENT">PARENT (Series Header / Category Line)</option>
                             <option value="CHILD">CHILD (Variant Model under Parent Series)</option>
-                          </select>
-                        </div>
-
-                        <div className="stitch-form-group">
-                          <label className="stitch-label">Category</label>
-                          <select
-                            className="stitch-select"
-                            value={formCategoryId}
-                            onChange={(e) => setFormCategoryId(e.target.value)}
-                          >
-                            <option value="">None (Uncategorized)</option>
-                            {categories.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name}
-                              </option>
-                            ))}
                           </select>
                         </div>
                       </div>

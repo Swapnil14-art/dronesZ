@@ -41,7 +41,6 @@ public class AdminProductController {
             @RequestParam(name = "size", defaultValue = "20") int size,
             @RequestParam(name = "search", required = false) String search,
             @RequestParam(name = "status", required = false) ProductStatus status,
-            @RequestParam(name = "categoryId", required = false) Long categoryId,
             @RequestParam(name = "parentId", required = false) Long parentId,
             @RequestParam(name = "productType", required = false) ProductType productType,
             @RequestParam(name = "sortBy", defaultValue = "createdAt") String sortBy,
@@ -49,7 +48,7 @@ public class AdminProductController {
             @RequestParam(name = "includeArchived", defaultValue = "false") boolean includeArchived) {
 
         PageResponse<ProductDto> response = productService.getProducts(
-                page, size, search, status, categoryId, parentId, productType, sortBy, sortDir, includeArchived);
+                page, size, search, status, parentId, productType, sortBy, sortDir, includeArchived);
         return ResponseEntity.ok(response);
     }
 

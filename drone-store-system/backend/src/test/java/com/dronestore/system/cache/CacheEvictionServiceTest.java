@@ -16,8 +16,6 @@ class CacheEvictionServiceTest {
     private Cache catalogCache;
     private Cache detailCache;
     private Cache childrenCache;
-    private Cache categoriesListCache;
-    private Cache categoryDetailCache;
     private CacheEvictionService evictionService;
 
     @BeforeEach
@@ -26,14 +24,10 @@ class CacheEvictionServiceTest {
         catalogCache = mock(Cache.class);
         detailCache = mock(Cache.class);
         childrenCache = mock(Cache.class);
-        categoriesListCache = mock(Cache.class);
-        categoryDetailCache = mock(Cache.class);
 
         when(cacheManager.getCache(CacheNames.PRODUCTS_CATALOG)).thenReturn(catalogCache);
         when(cacheManager.getCache(CacheNames.PRODUCT_DETAIL)).thenReturn(detailCache);
         when(cacheManager.getCache(CacheNames.PRODUCT_CHILDREN)).thenReturn(childrenCache);
-        when(cacheManager.getCache(CacheNames.CATEGORIES_LIST)).thenReturn(categoriesListCache);
-        when(cacheManager.getCache(CacheNames.CATEGORY_DETAIL)).thenReturn(categoryDetailCache);
 
         evictionService = new CacheEvictionService(cacheManager);
     }
@@ -68,15 +62,5 @@ class CacheEvictionServiceTest {
         verify(detailCache, times(1)).evict(10L);
         verify(childrenCache, times(1)).evict(10L);
         verify(childrenCache, times(1)).evict(5L);
-    }
-
-    @Test
-    @DisplayName("evictCategoryComplete should evict category list, category detail and product catalog")
-    void testEvictCategoryComplete() {
-        evictionService.evictCategoryComplete(3L);
-
-        verify(categoriesListCache, times(1)).clear();
-        verify(categoryDetailCache, times(1)).evict(3L);
-        verify(catalogCache, times(1)).clear();
     }
 }

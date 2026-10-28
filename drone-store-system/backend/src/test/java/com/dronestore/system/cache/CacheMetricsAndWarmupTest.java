@@ -1,10 +1,8 @@
 package com.dronestore.system.cache;
 
-import com.dronestore.system.dto.CategoryDto;
 import com.dronestore.system.dto.PageResponse;
 import com.dronestore.system.dto.ProductDto;
 import com.dronestore.system.entity.ProductType;
-import com.dronestore.system.service.CategoryService;
 import com.dronestore.system.service.ProductService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,13 +44,9 @@ class CacheMetricsAndWarmupTest {
     }
 
     @Test
-    @DisplayName("CacheWarmupService should safely warm categories, catalog, and parent variants")
+    @DisplayName("CacheWarmupService should safely warm catalog and parent variants")
     void testCacheWarmupService_Execution() {
         ProductService productService = mock(ProductService.class);
-        CategoryService categoryService = mock(CategoryService.class);
-
-        CategoryDto catDto = new CategoryDto(1L, "Motors", "FPV Motors", false, null, null, null);
-        when(categoryService.getAllCategories()).thenReturn(Collections.singletonList(catDto));
 
         ProductDto parentProduct = new ProductDto();
         parentProduct.setId(10L);
@@ -70,10 +64,9 @@ class CacheMetricsAndWarmupTest {
         childDto.setProductType(ProductType.CHILD);
         when(productService.getChildProducts(10L)).thenReturn(Collections.singletonList(childDto));
 
-        CacheWarmupService warmupService = new CacheWarmupService(productService, categoryService);
+        CacheWarmupService warmupService = new CacheWarmupService(productService);
         assertDoesNotThrow(warmupService::warmCachesSafely);
 
-        verify(categoryService, times(1)).getAllCategories();
         verify(productService, times(1)).getPublicProducts(0, 20, null, null, "createdAt", "desc");
         verify(productService, times(1)).getChildProducts(10L);
     }

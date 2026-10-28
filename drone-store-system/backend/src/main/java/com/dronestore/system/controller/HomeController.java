@@ -33,10 +33,8 @@ public class HomeController {
         endpoints.put("Health Check", "GET /health");
         endpoints.put("Public Storefront Products", "GET /api/products (Standalone & Parent products)");
         endpoints.put("Public Parent Product Children", "GET /api/products/{id}/children");
-        endpoints.put("Public Storefront Categories", "GET /api/categories");
         endpoints.put("Admin Login", "POST /api/auth/admin/login");
         endpoints.put("Admin Profile", "GET /api/admin/me (Bearer Token)");
-        endpoints.put("Admin Categories Management", "GET|POST|PUT|DELETE /api/admin/categories (Bearer Token)");
         endpoints.put("Admin Products Management", "GET|POST|PUT|DELETE /api/admin/products (Bearer Token)");
 
         response.put("endpoints", endpoints);

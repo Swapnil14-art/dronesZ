@@ -6,23 +6,16 @@ import {
   resolveItemCategoryLabel,
   isStandaloneException,
 } from './dynamicStoreTabs';
-import { CategoryDto, ProductDto } from './api';
+import { ProductDto } from './api';
 
 describe('dynamicStoreTabs Service', () => {
-  const initialCategories: CategoryDto[] = [
-    { id: 1, name: 'Motors', description: 'Drone Motors' },
-    { id: 2, name: 'Frames', description: 'Drone Frames' },
-  ];
-
   const parentMotors: ProductDto = {
     id: 9,
-    name: 'High-Performance Motors Series',
+    name: 'Motors',
     price: 0,
     quantity: 0,
     status: 'AVAILABLE',
     productType: 'PARENT',
-    categoryId: 1,
-    categoryName: 'Motors',
     createdAt: '',
     updatedAt: '',
   };
@@ -34,20 +27,18 @@ describe('dynamicStoreTabs Service', () => {
     quantity: 0,
     status: 'AVAILABLE',
     productType: 'PARENT',
-    categoryId: 2,
-    categoryName: 'Frames',
     createdAt: '',
     updatedAt: '',
   };
 
   const motorChildren: ProductDto[] = [
-    { id: 26, name: 'DZ-8017 Motor', price: 14500, quantity: 10, status: 'AVAILABLE', productType: 'CHILD', parentId: 9, categoryId: 1, categoryName: 'Motors', createdAt: '', updatedAt: '' },
-    { id: 27, name: 'DZ-8120 Motor', price: 18200, quantity: 8, status: 'AVAILABLE', productType: 'CHILD', parentId: 9, categoryId: 1, categoryName: 'Motors', createdAt: '', updatedAt: '' },
+    { id: 26, name: 'DZ-8017 Motor', price: 14500, quantity: 10, status: 'AVAILABLE', productType: 'CHILD', parentId: 9, createdAt: '', updatedAt: '' },
+    { id: 27, name: 'DZ-8120 Motor', price: 18200, quantity: 8, status: 'AVAILABLE', productType: 'CHILD', parentId: 9, createdAt: '', updatedAt: '' },
   ];
 
   const frameChildren: ProductDto[] = [
-    { id: 36, name: 'Carbon 5-inch Frame', price: 3400, quantity: 20, status: 'AVAILABLE', productType: 'CHILD', parentId: 29, categoryId: 2, categoryName: 'Frames', createdAt: '', updatedAt: '' },
-    { id: 37, name: 'Carbon 7-inch Frame', price: 4200, quantity: 15, status: 'AVAILABLE', productType: 'CHILD', parentId: 29, categoryId: 2, categoryName: 'Frames', createdAt: '', updatedAt: '' },
+    { id: 36, name: 'Carbon 5-inch Frame', price: 3400, quantity: 20, status: 'AVAILABLE', productType: 'CHILD', parentId: 29, createdAt: '', updatedAt: '' },
+    { id: 37, name: 'Carbon 7-inch Frame', price: 4200, quantity: 15, status: 'AVAILABLE', productType: 'CHILD', parentId: 29, createdAt: '', updatedAt: '' },
   ];
 
   const childMap: Record<number, ProductDto[]> = {
@@ -55,8 +46,8 @@ describe('dynamicStoreTabs Service', () => {
     29: frameChildren,
   };
 
-  it('1. Generates All Hardware Systems, Motors, Frames, and standalone tabs dynamically', () => {
-    const tabs = buildDynamicTabs(initialCategories, [parentMotors, parentFrames], true, true);
+  it('1. Generates All Hardware Systems, Motors, Frames, and standalone tabs dynamically from parent series', () => {
+    const tabs = buildDynamicTabs([parentMotors, parentFrames], true, true);
     expect(tabs.map((t) => t.name)).toEqual([
       'All Hardware Systems',
       'Motors',
@@ -66,37 +57,29 @@ describe('dynamicStoreTabs Service', () => {
     ]);
   });
 
-  it('2. Dynamically adds new tab when a category is added in admin without code changes', () => {
-    const updatedCategories: CategoryDto[] = [
-      ...initialCategories,
-      { id: 3, name: 'Propellers', description: 'Carbon & Plastic Propellers' },
-    ];
-
+  it('2. Dynamically adds new tab when a parent series is added without code changes', () => {
     const parentProps: ProductDto = {
       id: 50,
-      name: 'High Thrust Propeller Series',
+      name: 'Propellers',
       price: 0,
       quantity: 0,
       status: 'AVAILABLE',
       productType: 'PARENT',
-      categoryId: 3,
-      categoryName: 'Propellers',
       createdAt: '',
       updatedAt: '',
     };
 
     const propChildren: ProductDto[] = [
-      { id: 51, name: 'HQProp 5x4.3x3 V2S', price: 350, quantity: 100, status: 'AVAILABLE', productType: 'CHILD', parentId: 50, categoryId: 3, categoryName: 'Propellers', createdAt: '', updatedAt: '' },
+      { id: 51, name: 'HQProp 5x4.3x3 V2S', price: 350, quantity: 100, status: 'AVAILABLE', productType: 'CHILD', parentId: 50, createdAt: '', updatedAt: '' },
     ];
 
-    const tabs = buildDynamicTabs(updatedCategories, [parentMotors, parentFrames, parentProps], true, true);
+    const tabs = buildDynamicTabs([parentMotors, parentFrames, parentProps], true, true);
     expect(tabs.map((t) => t.name)).toContain('Propellers');
 
     const extendedMap = { ...childMap, 50: propChildren };
     const allItems = buildAllIndividualProducts(
       [parentMotors, parentFrames, parentProps],
       extendedMap,
-      updatedCategories,
       tabs
     );
 
@@ -105,28 +88,28 @@ describe('dynamicStoreTabs Service', () => {
     expect(inAll).toHaveLength(5);
     expect(inAll.some((item) => item.product.id === 51)).toBe(true);
 
-    // HQProp appears in the new Propellers category tab
-    const inPropTab = filterHardwareProducts(allItems, 'cat-3');
+    // HQProp appears in the new Propellers parent tab
+    const inPropTab = filterHardwareProducts(allItems, 'parent-50');
     expect(inPropTab).toHaveLength(1);
     expect(inPropTab[0].product.name).toBe('HQProp 5x4.3x3 V2S');
 
     // HQProp does NOT appear in Motors or Frames tab
-    expect(filterHardwareProducts(allItems, 'cat-1').some((i) => i.product.id === 51)).toBe(false);
-    expect(filterHardwareProducts(allItems, 'cat-2').some((i) => i.product.id === 51)).toBe(false);
+    expect(filterHardwareProducts(allItems, 'parent-9').some((i) => i.product.id === 51)).toBe(false);
+    expect(filterHardwareProducts(allItems, 'parent-29').some((i) => i.product.id === 51)).toBe(false);
   });
 
-  it('3. Products appear in BOTH All Hardware Systems and their respective category tab with no duplicates', () => {
-    const tabs = buildDynamicTabs(initialCategories, [parentMotors, parentFrames], true, true);
-    const allItems = buildAllIndividualProducts([parentMotors, parentFrames], childMap, initialCategories, tabs);
+  it('3. Products appear in BOTH All Hardware Systems and their respective parent series tab with no duplicates', () => {
+    const tabs = buildDynamicTabs([parentMotors, parentFrames], true, true);
+    const allItems = buildAllIndividualProducts([parentMotors, parentFrames], childMap, tabs);
 
     const inAll = filterHardwareProducts(allItems, 'all');
     expect(inAll).toHaveLength(4);
 
-    const inMotors = filterHardwareProducts(allItems, 'cat-1');
+    const inMotors = filterHardwareProducts(allItems, 'parent-9');
     expect(inMotors).toHaveLength(2);
     expect(inMotors.every((m) => m.categoryLabel === 'Motors')).toBe(true);
 
-    const inFrames = filterHardwareProducts(allItems, 'cat-2');
+    const inFrames = filterHardwareProducts(allItems, 'parent-29');
     expect(inFrames).toHaveLength(2);
     expect(inFrames.every((f) => f.categoryLabel === 'Frames')).toBe(true);
 
@@ -137,40 +120,45 @@ describe('dynamicStoreTabs Service', () => {
     });
   });
 
-  it('4. Handles category renaming dynamically', () => {
-    const renamedCategories: CategoryDto[] = [
-      { id: 1, name: 'Propulsion Systems', description: 'Updated Motor Name' },
-      { id: 2, name: 'Frames', description: 'Drone Frames' },
-    ];
+  it('4. Handles parent series renaming dynamically', () => {
+    const renamedParentMotors: ProductDto = {
+      ...parentMotors,
+      name: 'Propulsion Systems',
+    };
 
-    const tabs = buildDynamicTabs(renamedCategories, [parentMotors, parentFrames], true, true);
+    const tabs = buildDynamicTabs([renamedParentMotors, parentFrames], true, true);
     expect(tabs.map((t) => t.name)).toContain('Propulsion Systems');
     expect(tabs.map((t) => t.name)).not.toContain('Motors');
 
-    const allItems = buildAllIndividualProducts([parentMotors, parentFrames], childMap, renamedCategories, tabs);
-    const inRenamed = filterHardwareProducts(allItems, 'cat-1');
+    const allItems = buildAllIndividualProducts([renamedParentMotors, parentFrames], childMap, tabs);
+    const inRenamed = filterHardwareProducts(allItems, 'parent-9');
     expect(inRenamed).toHaveLength(2);
+    expect(inRenamed.every((m) => m.categoryLabel === 'Propulsion Systems')).toBe(true);
   });
 
-  it('5. Handles category deletion in admin (isDeleted = true)', () => {
-    const categoriesWithDeleted: CategoryDto[] = [
-      { id: 1, name: 'Motors', description: 'Drone Motors' },
-      { id: 2, name: 'Frames', description: 'Drone Frames', isDeleted: true },
-    ];
+  it('5. Handles archived parent series by excluding them from tabs', () => {
+    const archivedFrameParent: ProductDto = {
+      ...parentFrames,
+      status: 'ARCHIVED',
+    };
 
-    const tabs = buildDynamicTabs(categoriesWithDeleted, [parentMotors], true, true);
+    const tabs = buildDynamicTabs([parentMotors, archivedFrameParent], true, true);
     expect(tabs.map((t) => t.name)).not.toContain('Frames');
   });
 
   it('6. Preserves standalone Recovery Parachutes and Agricultural Drones tabs without duplication', () => {
-    // If a category in DB was created with a name containing parachute or agricultural, it should not duplicate
-    const categoriesWithDuplicate: CategoryDto[] = [
-      ...initialCategories,
-      { id: 4, name: 'Recovery Parachutes' },
-      { id: 5, name: 'Agricultural Drones' },
-    ];
+    const parentWithParachuteName: ProductDto = {
+      id: 99,
+      name: 'Recovery Parachutes System',
+      price: 0,
+      quantity: 0,
+      status: 'AVAILABLE',
+      productType: 'PARENT',
+      createdAt: '',
+      updatedAt: '',
+    };
 
-    const tabs = buildDynamicTabs(categoriesWithDuplicate, [parentMotors, parentFrames], true, true);
+    const tabs = buildDynamicTabs([parentMotors, parentFrames, parentWithParachuteName], true, true);
     const parachuteTabs = tabs.filter((t) => t.name.toLowerCase().includes('parachute'));
     const agriTabs = tabs.filter((t) => t.name.toLowerCase().includes('agri'));
 
@@ -181,35 +169,41 @@ describe('dynamicStoreTabs Service', () => {
     expect(agriTabs[0].type).toBe('agri');
   });
 
-  it('7. Handles empty categories gracefully without throwing', () => {
-    const categoriesWithEmpty: CategoryDto[] = [
-      ...initialCategories,
-      { id: 99, name: 'Empty Test Category' },
-    ];
+  it('7. Handles empty parent series gracefully without throwing', () => {
+    const emptyParent: ProductDto = {
+      id: 999,
+      name: 'Empty Test Series',
+      price: 0,
+      quantity: 0,
+      status: 'AVAILABLE',
+      productType: 'PARENT',
+      createdAt: '',
+      updatedAt: '',
+    };
 
-    const tabs = buildDynamicTabs(categoriesWithEmpty, [parentMotors, parentFrames], false, false);
-    expect(tabs.some((t) => t.id === 'cat-99')).toBe(true);
+    const tabs = buildDynamicTabs([parentMotors, parentFrames, emptyParent], false, false);
+    expect(tabs.some((t) => t.id === 'parent-999')).toBe(true);
 
-    const allItems = buildAllIndividualProducts([parentMotors, parentFrames], childMap, categoriesWithEmpty, tabs);
-    const inEmpty = filterHardwareProducts(allItems, 'cat-99');
+    const allItems = buildAllIndividualProducts([parentMotors, parentFrames, emptyParent], childMap, tabs);
+    const inEmpty = filterHardwareProducts(allItems, 'parent-999');
     expect(inEmpty).toHaveLength(0);
   });
 
-  it('8. Supports search filtering within dynamic category tabs and across All Hardware Systems', () => {
-    const tabs = buildDynamicTabs(initialCategories, [parentMotors, parentFrames], true, true);
-    const allItems = buildAllIndividualProducts([parentMotors, parentFrames], childMap, initialCategories, tabs);
+  it('8. Supports search filtering within dynamic parent tabs and across All Hardware Systems', () => {
+    const tabs = buildDynamicTabs([parentMotors, parentFrames], true, true);
+    const allItems = buildAllIndividualProducts([parentMotors, parentFrames], childMap, tabs);
 
     // Search across All Hardware Systems
     const searchInAll = filterHardwareProducts(allItems, 'all', '8017');
     expect(searchInAll).toHaveLength(1);
     expect(searchInAll[0].product.name).toBe('DZ-8017 Motor');
 
-    // Search within Motors category tab
-    const searchInMotors = filterHardwareProducts(allItems, 'cat-1', '8017');
+    // Search within Motors parent tab
+    const searchInMotors = filterHardwareProducts(allItems, 'parent-9', '8017');
     expect(searchInMotors).toHaveLength(1);
 
-    // Search within Frames category tab returns empty when item is in Motors
-    const searchInFrames = filterHardwareProducts(allItems, 'cat-2', '8017');
+    // Search within Frames parent tab returns empty when item is in Motors
+    const searchInFrames = filterHardwareProducts(allItems, 'parent-29', '8017');
     expect(searchInFrames).toHaveLength(0);
   });
 });

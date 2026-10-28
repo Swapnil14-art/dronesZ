@@ -299,32 +299,6 @@ export const Header: React.FC<HeaderProps> = ({ activePage = 'store' }) => {
                         Account Dashboard
                       </button>
 
-                      <button
-                        onClick={() => {
-                          setIsProfileMenuOpen(false);
-                          navigateTo('/orders');
-                        }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.75rem',
-                          padding: '0.6rem 1rem',
-                          background: 'none',
-                          border: 'none',
-                          textAlign: 'left',
-                          fontSize: '0.9rem',
-                          fontWeight: 600,
-                          color: '#f8fafc',
-                          cursor: 'pointer',
-                          width: '100%',
-                        }}
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: '20px', color: '#e52b31' }}>
-                          package_2
-                        </span>
-                        Order History
-                      </button>
-
                       <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', margin: '0.25rem 0' }} />
 
                       <button

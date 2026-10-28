@@ -2,18 +2,15 @@ package com.dronestore.system.cache;
 
 import com.dronestore.system.config.CacheNames;
 import com.dronestore.system.dto.*;
-import com.dronestore.system.entity.Category;
 import com.dronestore.system.entity.Product;
 import com.dronestore.system.entity.ProductContentSection;
 import com.dronestore.system.entity.ProductImage;
 import com.dronestore.system.entity.ProductStatus;
 import com.dronestore.system.entity.ProductType;
-import com.dronestore.system.repository.CategoryRepository;
 import com.dronestore.system.repository.ProductContentSectionRepository;
 import com.dronestore.system.repository.ProductImageRepository;
 import com.dronestore.system.repository.ProductRepository;
 import com.dronestore.system.service.CacheEvictionService;
-import com.dronestore.system.service.CategoryService;
 import com.dronestore.system.service.ProductImageService;
 import com.dronestore.system.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +43,6 @@ import static org.mockito.Mockito.*;
 @Import({
         ProductAndCategoryCacheIntegrationTest.TestCacheConfig.class,
         ProductService.class,
-        CategoryService.class,
         ProductImageService.class,
         CacheEvictionService.class
 })
@@ -62,18 +58,13 @@ class ProductAndCategoryCacheIntegrationTest {
                     CacheNames.PRODUCT_DETAIL,
                     CacheNames.PRODUCT_CHILDREN,
                     CacheNames.PRODUCT_IMAGES,
-                    CacheNames.PRODUCT_SECTIONS,
-                    CacheNames.CATEGORIES_LIST,
-                    CacheNames.CATEGORY_DETAIL
+                    CacheNames.PRODUCT_SECTIONS
             );
         }
     }
 
     @Autowired
     private ProductService productService;
-
-    @Autowired
-    private CategoryService categoryService;
 
     @Autowired
     private ProductImageService productImageService;
@@ -83,9 +74,6 @@ class ProductAndCategoryCacheIntegrationTest {
 
     @MockBean
     private ProductRepository productRepository;
-
-    @MockBean
-    private CategoryRepository categoryRepository;
 
     @MockBean
     private ProductImageRepository productImageRepository;
@@ -98,7 +86,7 @@ class ProductAndCategoryCacheIntegrationTest {
         for (String cacheName : cacheManager.getCacheNames()) {
             Objects.requireNonNull(cacheManager.getCache(cacheName)).clear();
         }
-        reset(productRepository, categoryRepository, productImageRepository, productContentSectionRepository);
+        reset(productRepository, productImageRepository, productContentSectionRepository);
     }
 
     private Product createMockProduct(Long id, String name, ProductType type, Product parent) {
@@ -223,30 +211,6 @@ class ProductAndCategoryCacheIntegrationTest {
     }
 
     @Test
-    @DisplayName("getAllCategories and getCategoryById should cache results")
-    void testCategories_CacheHit() {
-        Category cat = new Category("Motors", "FPV Motors");
-        cat.setId(1L);
-        cat.setCreatedAt(LocalDateTime.now());
-        cat.setUpdatedAt(LocalDateTime.now());
-
-        when(categoryRepository.findByIsDeletedFalse()).thenReturn(Collections.singletonList(cat));
-        when(categoryRepository.findByIdAndIsDeletedFalse(1L)).thenReturn(Optional.of(cat));
-
-        List<CategoryDto> all1 = categoryService.getAllCategories();
-        List<CategoryDto> all2 = categoryService.getAllCategories();
-        assertEquals(1, all1.size());
-        assertEquals(1, all2.size());
-        verify(categoryRepository, times(1)).findByIsDeletedFalse();
-
-        CategoryDto detail1 = categoryService.getCategoryById(1L);
-        CategoryDto detail2 = categoryService.getCategoryById(1L);
-        assertEquals("Motors", detail1.getName());
-        assertEquals("Motors", detail2.getName());
-        verify(categoryRepository, times(1)).findByIdAndIsDeletedFalse(1L);
-    }
-
-    @Test
     @DisplayName("Admin updating child product should invalidate parent children cache and child detail cache")
     void testChildProductUpdate_InvalidatesParentCache() {
         Product parent = createMockProduct(50L, "Parent Drone", ProductType.PARENT, null);
@@ -286,37 +250,6 @@ class ProductAndCategoryCacheIntegrationTest {
         List<ProductDto> freshChildren = productService.getChildProducts(50L);
         assertEquals("Child Drone V2", freshChildren.get(0).getName());
         verify(productRepository, times(2)).findByParentIdAndProductType(50L, ProductType.CHILD);
-    }
-
-    @Test
-    @DisplayName("Admin updating category should invalidate category and product catalog caches")
-    void testCategoryUpdate_InvalidatesCatalogAndCategoryCache() {
-        Category cat = new Category("Old Name", "Desc");
-        cat.setId(99L);
-        cat.setCreatedAt(LocalDateTime.now());
-        cat.setUpdatedAt(LocalDateTime.now());
-
-        when(categoryRepository.findByIsDeletedFalse()).thenReturn(Collections.singletonList(cat));
-        when(categoryRepository.findByIdAndIsDeletedFalse(99L)).thenReturn(Optional.of(cat));
-        when(categoryRepository.findById(99L)).thenReturn(Optional.of(cat));
-
-        // Cache all categories
-        categoryService.getAllCategories();
-        categoryService.getCategoryById(99L);
-
-        // Update category
-        CategoryRequest req = new CategoryRequest();
-        req.setName("New Name");
-        req.setDescription("Updated Desc");
-
-        cat.setName("New Name");
-        when(categoryRepository.save(any(Category.class))).thenReturn(cat);
-
-        categoryService.updateCategory(99L, req);
-
-        // Cache entries should be cleared
-        assertNull(Objects.requireNonNull(cacheManager.getCache(CacheNames.CATEGORIES_LIST)).get("all"));
-        assertNull(Objects.requireNonNull(cacheManager.getCache(CacheNames.CATEGORY_DETAIL)).get(99L));
     }
 
     @Test

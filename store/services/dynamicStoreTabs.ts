@@ -1,10 +1,9 @@
-import { CategoryDto, ProductDto } from './api';
+import { ProductDto } from './api';
 
 export interface DynamicCategoryTab {
-  id: string; // e.g. "all", "cat-1", "parent-9", "parachute", "agri"
+  id: string; // e.g. "all", "parent-9", "parachute", "agri"
   name: string; // Display label, e.g. "All Hardware Systems", "Motors", "Frames"
-  type: 'all' | 'category' | 'parent' | 'parachute' | 'agri';
-  categoryId?: number;
+  type: 'all' | 'parent' | 'parachute' | 'agri';
   parentId?: number;
 }
 
@@ -31,33 +30,21 @@ export function isStandaloneException(name?: string | null): boolean {
 }
 
 /**
- * Resolves the primary category label to display on product cards.
+ * Resolves the primary category/system label to display on product cards based on its parent series.
  */
 export function resolveItemCategoryLabel(
   child: ProductDto,
-  parent: ProductDto | null,
-  categories: CategoryDto[]
+  parent: ProductDto | null
 ): string {
-  if (child.categoryName?.trim()) return child.categoryName.trim();
-  if (child.categoryId) {
-    const found = categories.find((c) => c.id === child.categoryId);
-    if (found?.name?.trim()) return found.name.trim();
-  }
-  if (parent?.categoryName?.trim()) return parent.categoryName.trim();
-  if (parent?.categoryId) {
-    const found = categories.find((c) => c.id === parent.categoryId);
-    if (found?.name?.trim()) return found.name.trim();
-  }
   if (parent?.name?.trim()) return parent.name.trim();
   return 'Hardware';
 }
 
 /**
- * Dynamically builds all catalogue tabs based on database categories, parent series,
+ * Dynamically builds all catalogue tabs based on parent series
  * and standalone module configurations.
  */
 export function buildDynamicTabs(
-  categories: CategoryDto[],
   parentProducts: ProductDto[],
   parachuteEnabled: boolean = false,
   agriDroneEnabled: boolean = true
@@ -74,24 +61,7 @@ export function buildDynamicTabs(
   seenNormalizedNames.add('all hardware systems');
   seenNormalizedNames.add('all');
 
-  // 1. Process active database categories
-  const activeCategories = (categories || []).filter(
-    (c) => !c.isDeleted && !isStandaloneException(c.name)
-  );
-
-  for (const cat of activeCategories) {
-    const norm = cat.name.trim().toLowerCase();
-    if (!norm || seenNormalizedNames.has(norm)) continue;
-    seenNormalizedNames.add(norm);
-    tabs.push({
-      id: `cat-${cat.id}`,
-      name: cat.name.trim(),
-      type: 'category',
-      categoryId: cat.id,
-    });
-  }
-
-  // 2. Process parent product series (eligible parent products not yet represented by a category)
+  // Process parent product series (each eligible parent product series becomes a store tab)
   for (const parent of parentProducts || []) {
     if (parent.productType !== 'PARENT' || parent.status === 'ARCHIVED') continue;
     if (isStandaloneException(parent.name)) continue;
@@ -99,17 +69,7 @@ export function buildDynamicTabs(
     const parentName = parent.name.trim();
     const parentNorm = parentName.toLowerCase();
 
-    // Check if parent product is already represented by an existing category tab
-    const alreadyRepresented = tabs.some((t) => {
-      if (t.type !== 'category') return false;
-      if (parent.categoryId && t.categoryId === parent.categoryId) return true;
-      const tNorm = t.name.toLowerCase();
-      if (tNorm === parentNorm) return true;
-      if (parent.categoryName && tNorm === parent.categoryName.trim().toLowerCase()) return true;
-      return false;
-    });
-
-    if (!alreadyRepresented && !seenNormalizedNames.has(parentNorm)) {
+    if (!seenNormalizedNames.has(parentNorm)) {
       seenNormalizedNames.add(parentNorm);
       tabs.push({
         id: `parent-${parent.id}`,
@@ -120,7 +80,7 @@ export function buildDynamicTabs(
     }
   }
 
-  // 3. Standalone product tabs (Recovery Parachutes & Agricultural Drones)
+  // Standalone product tabs (Recovery Parachutes & Agricultural Drones)
   if (parachuteEnabled) {
     tabs.push({
       id: 'parachute',
@@ -147,7 +107,6 @@ export function buildDynamicTabs(
 export function buildAllIndividualProducts(
   parentProducts: ProductDto[],
   childProductsMap: Record<number, ProductDto[]>,
-  categories: CategoryDto[],
   tabs: DynamicCategoryTab[],
   standaloneProducts: ProductDto[] = []
 ): IndividualHardwareItem[] {
@@ -167,22 +126,12 @@ export function buildAllIndividualProducts(
       if (isStandaloneException(child.name)) return;
       if (seenIds.has(child.id)) return;
 
-      const categoryLabel = resolveItemCategoryLabel(child, parent, categories);
+      const categoryLabel = resolveItemCategoryLabel(child, parent);
 
       // Match child product to all applicable tabs
       const matchedTabIds = tabs
         .filter((tab) => {
           if (tab.type === 'all') return true;
-          if (tab.type === 'category') {
-            if (child.categoryId && child.categoryId === tab.categoryId) return true;
-            if (parent.categoryId && parent.categoryId === tab.categoryId) return true;
-            const tabNorm = tab.name.toLowerCase();
-            if (child.categoryName && child.categoryName.trim().toLowerCase() === tabNorm) return true;
-            if (parent.categoryName && parent.categoryName.trim().toLowerCase() === tabNorm) return true;
-            if (parent.name && parent.name.trim().toLowerCase() === tabNorm) return true;
-            if (categoryLabel.toLowerCase() === tabNorm) return true;
-            return false;
-          }
           if (tab.type === 'parent') {
             if (child.parentId && child.parentId === tab.parentId) return true;
             if (parent.id === tab.parentId) return true;
@@ -211,17 +160,10 @@ export function buildAllIndividualProducts(
     if (isStandaloneException(standalone.name)) return;
     if (seenIds.has(standalone.id)) return;
 
-    const categoryLabel = resolveItemCategoryLabel(standalone, null, categories);
+    const categoryLabel = resolveItemCategoryLabel(standalone, null);
     const matchedTabIds = tabs
       .filter((tab) => {
         if (tab.type === 'all') return true;
-        if (tab.type === 'category') {
-          if (standalone.categoryId && standalone.categoryId === tab.categoryId) return true;
-          const tabNorm = tab.name.toLowerCase();
-          if (standalone.categoryName && standalone.categoryName.trim().toLowerCase() === tabNorm) return true;
-          if (categoryLabel.toLowerCase() === tabNorm) return true;
-          return false;
-        }
         return false;
       })
       .map((t) => t.id);

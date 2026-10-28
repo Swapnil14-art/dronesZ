@@ -8,7 +8,7 @@ import { UserDashboard } from './pages/UserDashboard';
 import { AdminLogin } from './pages/AdminLogin';
 import { ProtectedAdminDashboard } from './pages/ProtectedAdminDashboard';
 
-type ViewRoute = 'store' | 'cart' | 'checkout' | 'dashboard' | 'orders' | 'admin-login' | 'admin-dashboard';
+type ViewRoute = 'store' | 'cart' | 'checkout' | 'dashboard' | 'admin-login' | 'admin-dashboard';
 
 function getInitialView(): ViewRoute {
   const path = window.location.pathname.toLowerCase();
@@ -19,8 +19,7 @@ function getInitialView(): ViewRoute {
   }
   if (path.startsWith('/cart')) return 'cart';
   if (path.startsWith('/checkout')) return 'checkout';
-  if (path.startsWith('/dashboard')) return 'dashboard';
-  if (path.startsWith('/orders')) return 'orders';
+  if (path.startsWith('/dashboard') || path.startsWith('/orders')) return 'dashboard';
   
   return 'store';
 }
@@ -48,8 +47,6 @@ const MainRouter: React.FC = () => {
       window.history.pushState({}, '', '/checkout');
     } else if (view === 'dashboard') {
       window.history.pushState({}, '', '/dashboard');
-    } else if (view === 'orders') {
-      window.history.pushState({}, '', '/orders');
     } else if (view === 'admin-login') {
       window.history.pushState({}, '', '/admin/login');
     } else if (view === 'admin-dashboard') {
@@ -108,10 +105,6 @@ const MainRouter: React.FC = () => {
 
   if (currentView === 'dashboard') {
     return <UserDashboard initialTab="profile" />;
-  }
-
-  if (currentView === 'orders') {
-    return <UserDashboard initialTab="orders" />;
   }
 
   // Public Customer Storefront (URL: http://localhost:3000/)

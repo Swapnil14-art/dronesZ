@@ -81,16 +81,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // three.js ships untranspiled ESM; keep it server-external-safe and tree-shaken.
-  transpilePackages: ["three"],
+  // three.js and gsap ship untranspiled ESM; transpile for stable vendor chunking across SSR and client
+  transpilePackages: ["three", "gsap", "@gsap/react", "lenis"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
   async rewrites() {
     const backendUrl =
       process.env.BACKEND_INTERNAL_URL ||
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      (isDev ? "http://127.0.0.1:8070" : "");
+      (isDev ? "http://127.0.0.1:8070" : process.env.NEXT_PUBLIC_API_BASE_URL || "");
 
     if (!backendUrl) {
       return [];

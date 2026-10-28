@@ -893,7 +893,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
               </span>
               <span style={{ color: '#cbd5e1' }}>/</span>
               <span style={{ color: '#64748b' }}>
-                {activeProductDetail.categoryName || 'FPV Propulsion'}
+                Hardware Systems
               </span>
               <span style={{ color: '#cbd5e1' }}>/</span>
               <span style={{ color: '#64748b' }}>
@@ -944,7 +944,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                     CINEMATIC CLASS
                   </span>
                   <span style={{ color: '#64748b', fontSize: '12px', fontWeight: 500 }}>
-                    • {activeProductDetail.categoryName || (activeProductDetail.productType === 'CHILD' ? 'Series 7 Flight Stator' : 'Series 7 Flight Stator')}
+                    • {activeProductDetail.productType === 'CHILD' ? 'Hardware Series Component' : 'Hardware System Series'}
                   </span>
                 </div>
 

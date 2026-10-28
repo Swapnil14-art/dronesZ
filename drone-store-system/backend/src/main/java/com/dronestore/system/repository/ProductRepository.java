@@ -11,8 +11,6 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
-    boolean existsByCategoryId(Long categoryId);
-
     boolean existsByParentId(Long parentId);
 
     List<Product> findByParentId(Long parentId);

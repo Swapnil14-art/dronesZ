@@ -1,8 +1,5 @@
-"use client";
-
-import React from "react";
-import { UserDashboard } from "@/store/pages/UserDashboard";
+import { redirect } from "next/navigation";
 
 export default function OrdersRoutePage() {
-  return <UserDashboard initialTab="orders" />;
+  redirect("/dashboard");
 }

@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUserAuth } from '../context/UserAuthContext';
 import {
   UserAddressDto,
-  OrderDto,
   fetchUserAddresses,
-  fetchUserOrders,
   createUserAddress,
   updateUserAddress,
   deleteUserAddress,
@@ -15,12 +13,12 @@ import { StitchHeader } from '../components/StitchHeader';
 import { StitchFooter } from '../components/StitchFooter';
 
 interface UserDashboardProps {
-  initialTab?: 'profile' | 'addresses' | 'orders';
+  initialTab?: 'profile' | 'addresses';
 }
 
 export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'profile' }) => {
   const { user, token, isAuthenticated } = useUserAuth();
-  const [activeTab, setActiveTab] = useState<'profile' | 'addresses' | 'orders'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'profile' | 'addresses'>(initialTab);
 
   // Profile edit state
   const [fullName, setFullName] = useState(user?.fullName || '');
@@ -42,10 +40,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
   const [addrCountry, setAddrCountry] = useState('India');
   const [savingAddr, setSavingAddr] = useState(false);
 
-  // Orders state
-  const [orders, setOrders] = useState<OrderDto[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
 
   const loadAddresses = async () => {
@@ -58,23 +52,9 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
     }
   };
 
-  const loadOrders = async () => {
-    if (!token) return;
-    try {
-      setLoadingOrders(true);
-      const data = await fetchUserOrders(token);
-      setOrders(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load orders');
-    } finally {
-      setLoadingOrders(false);
-    }
-  };
-
   useEffect(() => {
     if (isAuthenticated) {
       if (activeTab === 'addresses') loadAddresses();
-      if (activeTab === 'orders') loadOrders();
     }
   }, [isAuthenticated, activeTab, token]);
 
@@ -207,7 +187,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
             Welcome back, {user?.fullName}
           </h1>
           <p style={{ color: 'var(--color-muted)', marginTop: '0.25rem' }}>
-            Manage profile settings, saved shipping addresses, and order history.
+            Manage profile settings and saved shipping addresses.
           </p>
         </div>
 
@@ -252,23 +232,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
             }}
           >
             📍 Delivery Addresses
-          </button>
-          <button
-            onClick={() => setActiveTab('orders')}
-            style={{
-              padding: '0.75rem 1.25rem',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === 'orders' ? '3px solid var(--color-primary)' : 'none',
-              color: activeTab === 'orders' ? 'var(--color-primary)' : 'var(--color-muted)',
-              fontWeight: 700,
-              fontSize: '0.95rem',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-            }}
-          >
-            📦 Order History
           </button>
         </div>
 
@@ -381,63 +344,6 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ initialTab = 'prof
                       <button className="btn-stitch-danger" style={{ fontSize: '12px' }} onClick={() => handleDeleteAddress(addr.id)}>
                         Delete
                       </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 3: ORDERS */}
-        {activeTab === 'orders' && (
-          <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--color-on-surface)' }}>
-              Component Order History
-            </h2>
-
-            {loadingOrders ? (
-              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-muted)' }}>Loading order history...</div>
-            ) : orders.length === 0 ? (
-              <div className="stitch-card" style={{ textAlign: 'center', padding: 'clamp(2rem, 5vw, 4rem) 1.5rem' }}>
-                <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>📦</div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>No orders placed yet</h3>
-                <p style={{ color: 'var(--color-muted)', marginBottom: '1.5rem' }}>Your order history will appear here once you place an order.</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {orders.map((order) => (
-                  <div key={order.id} className="stitch-card" style={{ padding: 'clamp(1rem, 3vw, 1.75rem)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', borderBottom: '1px solid var(--color-outline)', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--color-on-surface)' }}>
-                          Order #{order.orderNumber}
-                        </div>
-                        <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-                          Placed on: {new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-                        <span className={order.status === 'DELIVERED' ? 'badge-tertiary' : order.status === 'CANCELLED' ? 'badge-error' : 'badge-amber'}>
-                          {order.status}
-                        </span>
-                        <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-primary)' }}>
-                          ₹{order.totalAmount.toLocaleString('en-IN')}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      {order.items.map((item) => (
-                        <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', fontSize: '14px' }}>
-                          <div>
-                            <span style={{ fontWeight: 600, color: 'var(--color-on-surface)' }}>{item.productName}</span>
-                            <span style={{ color: 'var(--color-muted)', marginLeft: '0.5rem' }}>× {item.quantity}</span>
-                          </div>
-                          <div style={{ fontWeight: 600, color: 'var(--color-on-surface)', flexShrink: 0 }}>₹{item.price.toLocaleString('en-IN')}</div>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 ))}

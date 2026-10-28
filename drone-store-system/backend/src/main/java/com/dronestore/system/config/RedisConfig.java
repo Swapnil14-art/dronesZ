@@ -53,9 +53,6 @@ public class RedisConfig extends CachingConfigurerSupport {
     @Value("${dronestore.cache.ttl.product-sections:900}")
     private long productSectionsTtl;
 
-    @Value("${dronestore.cache.ttl.categories:900}")
-    private long categoriesTtl;
-
     @Value("${dronestore.cache.ttl.default:600}")
     private long defaultTtl;
 
@@ -180,12 +177,6 @@ public class RedisConfig extends CachingConfigurerSupport {
 
         cacheConfigurations.put(CacheNames.PRODUCT_SECTIONS,
                 defaultCacheConfig.entryTtl(Duration.ofSeconds(productSectionsTtl)));
-
-        cacheConfigurations.put(CacheNames.CATEGORIES_LIST,
-                defaultCacheConfig.entryTtl(Duration.ofSeconds(categoriesTtl)));
-
-        cacheConfigurations.put(CacheNames.CATEGORY_DETAIL,
-                defaultCacheConfig.entryTtl(Duration.ofSeconds(categoriesTtl)));
 
         org.springframework.data.redis.cache.RedisCacheWriter cacheWriter =
                 org.springframework.data.redis.cache.RedisCacheWriter.nonLockingRedisCacheWriter(redisConnectionFactory);

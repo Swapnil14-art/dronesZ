@@ -18,8 +18,6 @@ public class ProductDto {
     private ProductStatus status;
     private ProductType productType;
     private Long parentId;
-    private Long categoryId;
-    private String categoryName;
     private String image;
     private String dispatchTime;
     private String warranty;
@@ -98,22 +96,6 @@ public class ProductDto {
 
     public void setParentId(Long parentId) {
         this.parentId = parentId;
-    }
-
-    public Long getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
     }
 
     public String getImage() {

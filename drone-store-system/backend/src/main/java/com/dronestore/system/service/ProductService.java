@@ -7,7 +7,6 @@ import com.dronestore.system.dto.ProductContentSectionRequest;
 import com.dronestore.system.dto.ProductDto;
 import com.dronestore.system.dto.ProductImageDto;
 import com.dronestore.system.dto.ProductRequest;
-import com.dronestore.system.entity.Category;
 import com.dronestore.system.entity.Product;
 import com.dronestore.system.entity.ProductContentSection;
 import com.dronestore.system.entity.ProductImage;
@@ -16,7 +15,6 @@ import com.dronestore.system.entity.ProductType;
 import com.dronestore.system.exception.BadRequestException;
 import com.dronestore.system.exception.ResourceConflictException;
 import com.dronestore.system.exception.ResourceNotFoundException;
-import com.dronestore.system.repository.CategoryRepository;
 import com.dronestore.system.repository.ProductContentSectionRepository;
 import com.dronestore.system.repository.ProductImageRepository;
 import com.dronestore.system.repository.ProductRepository;
@@ -43,18 +41,15 @@ import java.util.stream.Collectors;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
     private final ProductContentSectionRepository productContentSectionRepository;
     private final CacheEvictionService cacheEvictionService;
 
     public ProductService(ProductRepository productRepository,
-                          CategoryRepository categoryRepository,
                           ProductImageRepository productImageRepository,
                           ProductContentSectionRepository productContentSectionRepository,
                           CacheEvictionService cacheEvictionService) {
         this.productRepository = productRepository;
-        this.categoryRepository = categoryRepository;
         this.productImageRepository = productImageRepository;
         this.productContentSectionRepository = productContentSectionRepository;
         this.cacheEvictionService = cacheEvictionService;
@@ -62,14 +57,14 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public PageResponse<ProductDto> getProducts(int page, int size, String search, ProductStatus status,
-                                                Long categoryId, Long parentId, ProductType productType,
+                                                Long parentId, ProductType productType,
                                                 String sortBy, String sortDir) {
-        return getProducts(page, size, search, status, categoryId, parentId, productType, sortBy, sortDir, false);
+        return getProducts(page, size, search, status, parentId, productType, sortBy, sortDir, false);
     }
 
     @Transactional(readOnly = true)
     public PageResponse<ProductDto> getProducts(int page, int size, String search, ProductStatus status,
-                                                Long categoryId, Long parentId, ProductType productType,
+                                                Long parentId, ProductType productType,
                                                 String sortBy, String sortDir, boolean includeArchived) {
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -120,10 +115,6 @@ public class ProductService {
                 predicates.add(cb.equal(root.get("productType"), productType));
             }
 
-            if (categoryId != null) {
-                predicates.add(cb.equal(root.get("category").get("id"), categoryId));
-            }
-
             if (parentId != null) {
                 predicates.add(cb.equal(root.get("parent").get("id"), parentId));
             }
@@ -155,15 +146,6 @@ public class ProductService {
 
             predicates.add(root.get("productType").in(Arrays.asList(ProductType.STANDALONE, ProductType.PARENT)));
             predicates.add(cb.notEqual(root.get("status"), ProductStatus.ARCHIVED));
-
-            // Option B: hide products whose category has been soft-deleted
-            // Products with no category (null) are always shown
-            javax.persistence.criteria.Join<Object, Object> categoryJoin =
-                    root.join("category", javax.persistence.criteria.JoinType.LEFT);
-            predicates.add(cb.or(
-                    cb.isNull(root.get("category")),
-                    cb.equal(categoryJoin.get("isDeleted"), false)
-            ));
 
             if (search != null && !search.trim().isEmpty()) {
                 String searchPattern = "%" + search.trim().toLowerCase() + "%";
@@ -228,8 +210,6 @@ public class ProductService {
             if (product.getParent().getStatus() == ProductStatus.ARCHIVED) {
                 throw new ResourceNotFoundException("Product with ID " + id + " not found");
             }
-        } else if (product.getCategory() != null && Boolean.TRUE.equals(product.getCategory().getIsDeleted())) {
-            throw new ResourceNotFoundException("Product with ID " + id + " not found");
         }
         return mapToDto(product, true);
     }
@@ -251,11 +231,6 @@ public class ProductService {
             throw new BadRequestException("Product ID " + parentId + " is not a PARENT product series.");
         }
 
-        // Option B: if the parent's category is soft-deleted, return empty children
-        if (parent.getCategory() != null && Boolean.TRUE.equals(parent.getCategory().getIsDeleted())) {
-            return Collections.emptyList();
-        }
-
         List<Product> children = productRepository.findByParentIdAndProductType(parentId, ProductType.CHILD);
         List<Product> activeChildren = children.stream()
                 .filter(child -> child.getStatus() != ProductStatus.ARCHIVED)
@@ -267,12 +242,6 @@ public class ProductService {
     @Transactional
     public ProductDto createProduct(ProductRequest request) {
         validateProductRules(request, null);
-
-        Category category = null;
-        if (request.getCategoryId() != null) {
-            category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + request.getCategoryId() + " not found"));
-        }
 
         Product parent = null;
         if (request.getProductType() == ProductType.CHILD && request.getParentId() != null) {
@@ -287,7 +256,6 @@ public class ProductService {
         product.setPrice(request.getPrice() != null ? request.getPrice() : BigDecimal.ZERO);
         product.setQuantity(request.getQuantity() != null ? request.getQuantity() : 0);
         product.setStatus(request.getStatus());
-        product.setCategory(category);
         product.setParent(parent);
         product.setImage(request.getImage());
 
@@ -333,12 +301,6 @@ public class ProductService {
             }
         }
 
-        Category category = null;
-        if (request.getCategoryId() != null) {
-            category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Category with ID " + request.getCategoryId() + " not found"));
-        }
-
         Product parent = null;
         if (request.getProductType() == ProductType.CHILD && request.getParentId() != null) {
             if (request.getParentId().equals(id)) {
@@ -358,7 +320,6 @@ public class ProductService {
         product.setPrice(request.getPrice() != null ? request.getPrice() : BigDecimal.ZERO);
         product.setQuantity(request.getQuantity() != null ? request.getQuantity() : 0);
         product.setStatus(request.getStatus());
-        product.setCategory(category);
         product.setParent(parent);
         product.setImage(request.getImage());
 
@@ -745,11 +706,6 @@ public class ProductService {
         dto.setImage(img);
         dto.setCreatedAt(product.getCreatedAt());
         dto.setUpdatedAt(product.getUpdatedAt());
-
-        if (product.getCategory() != null) {
-            dto.setCategoryId(product.getCategory().getId());
-            dto.setCategoryName(product.getCategory().getName());
-        }
 
         if (product.getParent() != null) {
             dto.setParentId(product.getParent().getId());

@@ -61,20 +61,6 @@ export interface ProductContentSectionRequest {
   enabled?: boolean;
 }
 
-export interface CategoryDto {
-  id: number;
-  name: string;
-  description?: string;
-  isDeleted?: boolean;
-  deletedAt?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface CategoryRequest {
-  name: string;
-  description?: string;
-}
 
 export interface ProductImageDto {
   id: number;
@@ -98,8 +84,6 @@ export interface ProductDto {
   status: ProductStatus;
   productType: ProductType;
   parentId?: number | null;
-  categoryId?: number | null;
-  categoryName?: string | null;
   image?: string | null;
   images?: ProductImageDto[];
   primaryImage?: ProductImageDto;
@@ -122,7 +106,6 @@ export interface ProductRequest {
   status: ProductStatus;
   productType: ProductType;
   parentId?: number | null;
-  categoryId?: number | null;
   image?: string;
   dispatchTime?: string;
   warranty?: string;
@@ -207,48 +190,9 @@ export interface CartDto {
   totalItems: number;
 }
 
-export interface CheckoutSummaryDto {
-  cart: CartDto;
-  addresses: UserAddressDto[];
-  subtotal: number;
-  taxAmount: number;
-  shippingFee: number;
-  grandTotal: number;
-  canPlaceOrder: boolean;
-  placeOrderMessage: string;
-}
-
-export interface OrderItemDto {
-  id: number;
-  productId?: number;
-  productName: string;
-  price: number;
-  quantity: number;
-  subtotal: number;
-}
-
-export interface OrderDto {
-  id: number;
-  orderNumber: string;
-  totalAmount: number;
-  status: string;
-  deliveryAddress: string;
-  items: OrderItemDto[];
-  createdAt: string;
-}
 
 const getApiBaseUrl = (): string => {
-  // 1. Explicit environment variable override (configured in Vercel / .env)
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/+$/, '');
-  }
-
-  // 2. Server-Side Rendering (SSR) runtime internal URL
-  if (process.env.BACKEND_INTERNAL_URL) {
-    return process.env.BACKEND_INTERNAL_URL.replace(/\/+$/, '');
-  }
-
-  // 3. Browser runtime localhost detection for local development
+  // 1. Browser runtime localhost detection for local development
   if (typeof window !== 'undefined') {
     const isLocalhost =
       window.location.hostname === 'localhost' ||
@@ -258,12 +202,25 @@ const getApiBaseUrl = (): string => {
     if (isLocalhost) {
       return 'http://localhost:8070';
     }
-
-    return '';
   }
 
+  // 2. Local development SSR detection
   const isDev = process.env.NODE_ENV !== 'production';
-  return isDev ? 'http://localhost:8070' : '';
+  if (isDev && !process.env.VERCEL) {
+    return 'http://localhost:8070';
+  }
+
+  // 3. Explicit environment variable override (configured in Vercel / .env)
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/+$/, '');
+  }
+
+  // 4. Server-Side Rendering (SSR) runtime internal URL
+  if (process.env.BACKEND_INTERNAL_URL) {
+    return process.env.BACKEND_INTERNAL_URL.replace(/\/+$/, '');
+  }
+
+  return '';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -578,50 +535,6 @@ export async function submitCartEnquiry(token: string, notes?: string): Promise<
   return data;
 }
 
-/* User Checkout & Orders APIs */
-export async function fetchCheckoutSummary(token: string): Promise<CheckoutSummaryDto> {
-  const response = await fetch(`${API_BASE_URL}/api/user/checkout-summary`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to load checkout summary');
-  }
-
-  return response.json();
-}
-
-export async function fetchUserOrders(token: string): Promise<OrderDto[]> {
-  const response = await fetch(`${API_BASE_URL}/api/user/orders`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch user orders');
-  }
-
-  return response.json();
-}
-
-/* Public Storefront Read-Only APIs (No Auth Header) */
-export async function fetchPublicCategories(): Promise<CategoryDto[]> {
-  const response = await fetch(`${API_BASE_URL}/api/categories`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to load store categories');
-  }
-
-  return response.json();
-}
 
 export async function fetchPublicProducts(
   params?: {
@@ -692,91 +605,6 @@ export async function fetchAdminProfile(token: string): Promise<AdminDto> {
   return response.json();
 }
 
-export async function fetchCategories(token: string, includeDeleted: boolean = false): Promise<CategoryDto[]> {
-  const query = includeDeleted ? '?includeDeleted=true' : '';
-  const response = await fetch(`${API_BASE_URL}/api/admin/categories${query}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to fetch categories', timestamp: '' }));
-    throw new Error(err.message || 'Failed to fetch categories');
-  }
-
-  return response.json();
-}
-
-export async function createCategory(token: string, data: CategoryRequest): Promise<CategoryDto> {
-  const response = await fetch(`${API_BASE_URL}/api/admin/categories`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to create category', timestamp: '' }));
-    throw new Error(err.message || 'Failed to create category');
-  }
-
-  return response.json();
-}
-
-export async function updateCategory(token: string, id: number, data: CategoryRequest): Promise<CategoryDto> {
-  const response = await fetch(`${API_BASE_URL}/api/admin/categories/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to update category', timestamp: '' }));
-    throw new Error(err.message || 'Failed to update category');
-  }
-
-  return response.json();
-}
-
-export async function deleteCategory(token: string, id: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/admin/categories/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to delete category', timestamp: '' }));
-    throw new Error(err.message || 'Failed to delete category');
-  }
-}
-
-export async function restoreCategory(token: string, id: number): Promise<CategoryDto> {
-  const response = await fetch(`${API_BASE_URL}/api/admin/categories/${id}/restore`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const err: ErrorResponse = await response.json().catch(() => ({ status: response.status, error: 'Error', message: 'Failed to restore category', timestamp: '' }));
-    throw new Error(err.message || 'Failed to restore category');
-  }
-
-  return response.json();
-}
 
 export async function fetchProducts(
   token: string,
@@ -785,7 +613,6 @@ export async function fetchProducts(
     size?: number;
     search?: string;
     status?: string;
-    categoryId?: number | string;
     parentId?: number | string;
     productType?: ProductType;
     includeArchived?: boolean;
@@ -796,7 +623,6 @@ export async function fetchProducts(
   if (params?.size !== undefined) queryParams.append('size', params.size.toString());
   if (params?.search) queryParams.append('search', params.search);
   if (params?.status) queryParams.append('status', params.status);
-  if (params?.categoryId) queryParams.append('categoryId', params.categoryId.toString());
   if (params?.parentId) queryParams.append('parentId', params.parentId.toString());
   if (params?.productType) queryParams.append('productType', params.productType);
   if (params?.includeArchived) queryParams.append('includeArchived', 'true');

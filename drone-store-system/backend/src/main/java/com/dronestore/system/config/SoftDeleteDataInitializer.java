@@ -37,16 +37,5 @@ public class SoftDeleteDataInitializer implements ApplicationRunner {
         } catch (Exception e) {
             log.warn("[SoftDelete Init] Could not backfill users.is_deleted: {}", e.getMessage());
         }
-
-        try {
-            int catsFixed = jdbcTemplate.update(
-                "UPDATE categories SET is_deleted = false WHERE is_deleted IS NULL"
-            );
-            if (catsFixed > 0) {
-                log.info("[SoftDelete Init] Backfilled {} category row(s) with is_deleted = false", catsFixed);
-            }
-        } catch (Exception e) {
-            log.warn("[SoftDelete Init] Could not backfill categories.is_deleted: {}", e.getMessage());
-        }
     }
 }

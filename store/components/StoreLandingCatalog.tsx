@@ -2,9 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   ProductDto,
-  CategoryDto,
   fetchPublicChildProducts,
-  fetchPublicCategories,
   getProductImageUrl,
   getEffectiveProductStatus
 } from '../services/api';
@@ -121,22 +119,8 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
   navigateToProductDetail,
 }) => {
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
-  const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [childProductsMap, setChildProductsMap] = useState<Record<number, ProductDto[]>>({});
   const [loadingChildren, setLoadingChildren] = useState(false);
-
-  // Fetch official database categories dynamically
-  useEffect(() => {
-    let isMounted = true;
-    fetchPublicCategories()
-      .then((cats) => {
-        if (isMounted) setCategories(cats);
-      })
-      .catch(() => { });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Pre-fetch children for parent series to showcase authentic hardware specimens & images
   useEffect(() => {
@@ -173,15 +157,14 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
     };
   }, [parentProducts]);
 
-  // Dynamically derive all category tabs from database categories and parent series
+  // Dynamically derive all category tabs from parent series
   const dynamicTabs = useMemo(() => {
     return buildDynamicTabs(
-      categories,
       parentProducts,
       Boolean(parachuteConfig && parachuteConfig.isEnabled),
       true
     );
-  }, [categories, parentProducts, parachuteConfig]);
+  }, [parentProducts, parachuteConfig]);
 
   // Keep active category filter valid if a selected category is deleted or renamed in admin
   useEffect(() => {
@@ -191,16 +174,15 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
     }
   }, [dynamicTabs, activeCategoryFilter]);
 
-  // Aggregate individual purchasable products across all parent series and categories
+  // Aggregate individual purchasable products across all parent series
   const allIndividualProducts = useMemo(() => {
     return buildAllIndividualProducts(
       parentProducts,
       childProductsMap,
-      categories,
       dynamicTabs,
       standaloneProducts
     );
-  }, [parentProducts, childProductsMap, categories, dynamicTabs, standaloneProducts]);
+  }, [parentProducts, childProductsMap, dynamicTabs, standaloneProducts]);
 
   // Filter individual hardware products based on active tab and search query
   const filteredHardware = useMemo(() => {

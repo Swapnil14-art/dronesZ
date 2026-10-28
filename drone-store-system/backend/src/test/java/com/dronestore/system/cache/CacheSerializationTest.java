@@ -1,6 +1,5 @@
 package com.dronestore.system.cache;
 
-import com.dronestore.system.dto.CategoryDto;
 import com.dronestore.system.dto.PageResponse;
 import com.dronestore.system.dto.ProductContentSectionDto;
 import com.dronestore.system.dto.ProductDto;
@@ -52,8 +51,6 @@ class CacheSerializationTest {
         dto.setQuantity(15);
         dto.setStatus(ProductStatus.AVAILABLE);
         dto.setProductType(ProductType.STANDALONE);
-        dto.setCategoryId(2L);
-        dto.setCategoryName("Enterprise Drones");
         dto.setCreatedAt(LocalDateTime.of(2026, 3, 15, 10, 30, 0));
         dto.setUpdatedAt(LocalDateTime.of(2026, 3, 16, 12, 0, 0));
 
@@ -127,29 +124,5 @@ class CacheSerializationTest {
         assertEquals(1L, result.getTotalElements());
         assertEquals(1, result.getContent().size());
         assertEquals("DronesZ Scout V2", result.getContent().get(0).getName());
-    }
-
-    @Test
-    @DisplayName("CategoryDto should serialize and deserialize properly")
-    void testCategoryDtoSerialization() {
-        CategoryDto dto = new CategoryDto(
-                5L,
-                "Surveillance Drones",
-                "Long range inspection quadcopters",
-                LocalDateTime.of(2026, 1, 1, 12, 0),
-                LocalDateTime.of(2026, 2, 1, 12, 0)
-        );
-
-        byte[] serialized = serializer.serialize(dto);
-        assertNotNull(serialized);
-
-        Object deserialized = serializer.deserialize(serialized);
-        assertNotNull(deserialized);
-        assertTrue(deserialized instanceof CategoryDto);
-
-        CategoryDto result = (CategoryDto) deserialized;
-        assertEquals(5L, result.getId());
-        assertEquals("Surveillance Drones", result.getName());
-        assertEquals("Long range inspection quadcopters", result.getDescription());
     }
 }

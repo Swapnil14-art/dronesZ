@@ -247,8 +247,7 @@ export function Nav() {
     pathname.startsWith("/products") ||
     pathname === "/cart" ||
     pathname === "/checkout" ||
-    pathname === "/dashboard" ||
-    pathname === "/orders";
+    pathname === "/dashboard";
 
   return (
     <>
@@ -437,7 +436,7 @@ export function Nav() {
                     type="button"
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                     title="Account Options"
-                    className={`nav__icon-btn ${pathname === '/dashboard' || pathname === '/orders' ? 'is-active' : ''}`}
+                    className={`nav__icon-btn ${pathname === '/dashboard' ? 'is-active' : ''}`}
                     aria-label="Account Options"
                   >
                     <UserIcon size={20} />
@@ -458,15 +457,6 @@ export function Nav() {
                         >
                           <UserIcon size={18} />
                           Account Dashboard
-                        </Link>
-
-                        <Link
-                          href="/orders"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="nav__dropdown-item"
-                        >
-                          <PackageIcon size={18} />
-                          Order History
                         </Link>
 
                         <div className="nav__dropdown-divider" />

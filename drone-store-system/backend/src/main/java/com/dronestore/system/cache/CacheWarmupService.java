@@ -1,10 +1,8 @@
 package com.dronestore.system.cache;
 
-import com.dronestore.system.dto.CategoryDto;
 import com.dronestore.system.dto.PageResponse;
 import com.dronestore.system.dto.ProductDto;
 import com.dronestore.system.entity.ProductType;
-import com.dronestore.system.service.CategoryService;
 import com.dronestore.system.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,11 +27,9 @@ public class CacheWarmupService {
     private static final Logger log = LoggerFactory.getLogger(CacheWarmupService.class);
 
     private final ProductService productService;
-    private final CategoryService categoryService;
 
-    public CacheWarmupService(ProductService productService, CategoryService categoryService) {
+    public CacheWarmupService(ProductService productService) {
         this.productService = productService;
-        this.categoryService = categoryService;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -49,11 +45,7 @@ public class CacheWarmupService {
         long startTime = System.currentTimeMillis();
 
         try {
-            // 1. Warm categories list
-            List<CategoryDto> categories = categoryService.getAllCategories();
-            log.debug("Cache warmed: {} categories preloaded.", categories != null ? categories.size() : 0);
-
-            // 2. Warm default public catalog (page 0, size 20)
+            // 1. Warm default public catalog (page 0, size 20)
             PageResponse<ProductDto> catalog = productService.getPublicProducts(0, 20, null, null, "createdAt", "desc");
             log.debug("Cache warmed: public catalog page 0 ({} items) preloaded.",
                     catalog != null && catalog.getContent() != null ? catalog.getContent().size() : 0);

@@ -139,28 +139,4 @@ public class CacheEvictionService {
             evictProductSections(parentId);
         }
     }
-
-    /**
-     * Invalidation when categories are created, updated, or deleted.
-     */
-    public void evictCategoryComplete(Long categoryId) {
-        try {
-            Cache listCache = cacheManager.getCache(CacheNames.CATEGORIES_LIST);
-            if (listCache != null) {
-                listCache.clear();
-                log.debug("Evicted all entries in cache '{}'", CacheNames.CATEGORIES_LIST);
-            }
-            if (categoryId != null) {
-                Cache detailCache = cacheManager.getCache(CacheNames.CATEGORY_DETAIL);
-                if (detailCache != null) {
-                    detailCache.evict(categoryId);
-                    log.debug("Evicted category ID {} from cache '{}'", categoryId, CacheNames.CATEGORY_DETAIL);
-                }
-            }
-            // Invalidate product catalog since category names and filtering change
-            evictProductCatalog();
-        } catch (Exception e) {
-            log.warn("Failed to evict category cache: {}", e.getMessage());
-        }
-    }
 }

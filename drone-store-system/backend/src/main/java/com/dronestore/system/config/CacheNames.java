@@ -33,14 +33,4 @@ public final class CacheNames {
      * Cache for product content sections and specifications by product ID.
      */
     public static final String PRODUCT_SECTIONS = "products:sections";
-
-    /**
-     * Cache for the list of all categories.
-     */
-    public static final String CATEGORIES_LIST = "categories:list";
-
-    /**
-     * Cache for individual category details by category ID.
-     */
-    public static final String CATEGORY_DETAIL = "categories:detail";
 }

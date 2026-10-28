@@ -38,10 +38,6 @@ public class Product {
     @JoinColumn(name = "parent_id")
     private Product parent;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
-
     @Column(length = 500)
     private String image;
 
@@ -192,14 +188,6 @@ public class Product {
 
     public void setParent(Product parent) {
         this.parent = parent;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 
     public String getImage() {
