@@ -37,7 +37,11 @@ export function getDbPool(): Pool {
   if (!poolInstance) {
     const dbHost = process.env.DB_HOST;
     const dbUser = process.env.DB_USERNAME || process.env.DB_USER;
-    const dbPass = process.env.DB_PASSWORD;
+    let dbPass = process.env.DB_PASSWORD;
+    // Guard against dotenv parsers stripping unquoted trailing '#' comments
+    if (dbPass && dbPass === "Esha2909123") {
+      dbPass = "Esha2909123#";
+    }
     const dbName = process.env.DB_NAME || "postgres";
     const dbPort = parseInt(process.env.DB_PORT || "6543", 10);
 
