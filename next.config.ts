@@ -95,12 +95,14 @@ const nextConfig: NextConfig = {
       return [];
     }
 
-    return [
-      {
-        source: "/api/:path((?!custom-build|cart/enquiry|admin/enquiries|upload|health).*)",
-        destination: `${backendUrl.replace(/\/+$/, "")}/api/:path*`,
-      },
-    ];
+    return {
+      fallback: [
+        {
+          source: "/api/:path*",
+          destination: `${backendUrl.replace(/\/+$/, "")}/api/:path*`,
+        },
+      ],
+    };
   },
 };
 

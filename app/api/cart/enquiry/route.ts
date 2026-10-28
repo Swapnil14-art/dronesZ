@@ -19,6 +19,12 @@ function fail(message: string, status: number, headers?: Record<string, string>)
   return NextResponse.json({ success: false, error: message }, { status, headers });
 }
 
+export const dynamic = "force-dynamic";
+
+export async function GET(): Promise<NextResponse> {
+  return NextResponse.json({ status: "ok", endpoint: "/api/cart/enquiry" });
+}
+
 export async function POST(request: Request): Promise<NextResponse> {
   cleanupRecentSubmissions();
 
@@ -66,7 +72,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     (isDev ? "http://127.0.0.1:8070" : (process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8070"));
   let userProfile: { email: string; fullName: string; phone?: string };
   try {
-    const profileRes = await fetch(`${backendBase}/api/user/profile`, {
+    const profileRes = await fetch(`${backendBase}/api/user/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -161,7 +167,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
   } catch (dbErr: any) {
     console.error("[POST /api/cart/enquiry] Database persistence failed:", dbErr);
-    return fail("Database error: Could not save your enquiry. Please try again.", 500);
+    const detail = dbErr?.message ? ` (${dbErr.message})` : "";
+    return fail(`Database error: Could not save your enquiry${detail}. Please try again.`, 500);
   }
 
   // 8. Attempt Email Delivery via Resend

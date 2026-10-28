@@ -55,7 +55,12 @@ export function getDbPool(): Pool {
         connectionTimeoutMillis: 10000,
       });
     } else {
-      const rawConnectionString = process.env.DATABASE_URL || process.env.DB_URL;
+      const rawConnectionString =
+        process.env.POSTGRES_URL ||
+        process.env.POSTGRES_PRISMA_URL ||
+        process.env.DATABASE_URL ||
+        process.env.DB_URL ||
+        process.env.POSTGRES_URL_NON_POOLING;
       const connectionString = rawConnectionString
         ? rawConnectionString.replace(/^jdbc:/, "")
         : undefined;
@@ -75,11 +80,11 @@ export function getDbPool(): Pool {
       } else {
         // Fallback default Supabase pooler
         poolInstance = new PgPool({
-          host: "aws-0-ap-northeast-1.pooler.supabase.com",
-          port: 6543,
-          database: "postgres",
-          user: "postgres.shuomuvvemiesoxyabnp",
-          password: process.env.DB_PASSWORD || "",
+          host: dbHost || "aws-0-ap-northeast-1.pooler.supabase.com",
+          port: isNaN(dbPort) ? 6543 : dbPort,
+          database: dbName || "postgres",
+          user: dbUser || "postgres.shuomuvvemiesoxyabnp",
+          password: dbPass || process.env.DB_PASSWORD || "",
           ssl: { rejectUnauthorized: false },
           max: 10,
           idleTimeoutMillis: 30000,

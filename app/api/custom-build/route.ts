@@ -158,7 +158,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   } catch (dbErr: any) {
     console.error("[POST /api/custom-build] Database persistence failed:", dbErr);
-    return fail("Database error: Could not save your enquiry. Please try again.", 500);
+    const detail = dbErr?.message ? ` (${dbErr.message})` : "";
+    return fail(`Database error: Could not save your enquiry${detail}. Please try again.`, 500);
   }
 
   // Attempt Resend Email Delivery

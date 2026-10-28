@@ -26,7 +26,7 @@ public class UserController {
         this.addressService = addressService;
     }
 
-    @GetMapping("/me")
+    @GetMapping({"/me", "/profile"})
     public ResponseEntity<UserDto> getCurrentUserProfile(Authentication authentication) {
         String email = authentication.getName();
         UserDto profile = userService.getUserProfile(email);
