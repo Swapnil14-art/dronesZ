@@ -266,7 +266,7 @@ export function BuildYourOwnDrone() {
         city.trim() ? `• Target Location: ${city.trim()}` : null,
         "",
         "--- 4. DISPATCH ADVISORY ---",
-        "• Production Lead Time: SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS (Acknowledged)",
+        "• Subject to Order Requirements and Mutual Confirmation",
         "",
         customNotes.trim() ? `--- 5. MISSION NOTES & CUSTOM REQUIREMENTS ---\n${customNotes.trim()}` : null,
         "==================================================",
@@ -337,7 +337,7 @@ export function BuildYourOwnDrone() {
                 </svg>
                 <div>
                   <div className="byod-shipping-title">
-                    SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS
+                    SHIPPING DETAILS
                   </div>
                   <p className="byod-shipping-desc">
                     Every custom UAV architecture undergoes structural carbon validation, stator balance tuning, and mandatory bench flight-testing before dispatch from our Indore facility.
@@ -443,7 +443,7 @@ export function BuildYourOwnDrone() {
                 ⚡ Dispatch Lead Time
               </span>
               <span>
-                SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS
+                Subject to Order Requirements and Mutual Confirmation
               </span>
             </div>
           </div>
@@ -462,7 +462,7 @@ export function BuildYourOwnDrone() {
               </svg>
               <div>
                 <div className="byod-shipping-title">
-                  SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS
+                  SHIPPING Details
                 </div>
                 <p className="byod-shipping-desc">
                   Every custom UAV architecture undergoes structural carbon validation, stator balance tuning, and mandatory bench flight-testing in Indore before final customer dispatch.
@@ -470,7 +470,7 @@ export function BuildYourOwnDrone() {
               </div>
             </div>
             <span className="byod-shipping-badge">
-              8–9 Days Dispatch Window
+              To Be Mutually Agreed Upon
             </span>
           </div>
 
@@ -981,7 +981,7 @@ export function BuildYourOwnDrone() {
                   Production &amp; Dispatch Window
                 </div>
                 <p className="byod-summary-shipping-note">
-                  <strong>SHIPPING WILL BE INITIATED AFTER 8–9 WORKING DAYS</strong> following aerodynamic qualification and motor balance tuning in Indore.
+                  <strong>Dispatch Lead Time: Subject to Order Requirements and Mutual Confirmation</strong> following aerodynamic qualification and motor balance tuning in Indore.
                 </p>
               </div>
 
