@@ -104,11 +104,6 @@ const VIDEO_TRANSMISSION_OPTIONS = [
     name: "Digital HD (Low-Latency)",
     desc: "1080p60 ultra-crisp downlink, digital noise rejection, secure telemetry stream.",
   },
-  {
-    id: "cofdm" as VideoTransmission,
-    name: "Tactical COFDM / Dual-Link",
-    desc: "Military-grade NLOS penetration, AES-encrypted high-bandwidth video & telemetry.",
-  },
 ];
 
 const VIDEO_SETUP_OPTIONS = [
@@ -126,11 +121,6 @@ const VIDEO_SETUP_OPTIONS = [
     id: "multispectral-lidar" as VideoSetup,
     name: "Multi-Spectral / LiDAR Mount",
     desc: "Calibrated vibration-damped bracket and power bus for precision survey sensors.",
-  },
-  {
-    id: "custom-mount" as VideoSetup,
-    name: "Client Sensor (Custom Damping Plate)",
-    desc: "Universal payload dovetail interface — mount your own proprietary instruments.",
   },
 ];
 
