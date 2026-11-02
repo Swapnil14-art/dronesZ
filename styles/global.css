@@ -2,6 +2,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 @import "./tokens.css";
 @import "./typography.css";
+@import "./skeletons.css";
 @import "../store/index.css";
 
 /* ---- Reset ---- */

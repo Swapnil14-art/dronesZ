@@ -60,7 +60,9 @@ const orgJsonLd = {
   },
 };
 
+import React, { Suspense } from "react";
 import { StoreProviders } from "@/components/providers/StoreProviders";
+import { NavigationProgressBar } from "@/components/ui/NavigationProgressBar";
 
 export default function RootLayout({
   children,
@@ -78,6 +80,9 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
+        <Suspense fallback={null}>
+          <NavigationProgressBar />
+        </Suspense>
         <StoreProviders>
           <LenisGSAPProvider>
             <Nav />

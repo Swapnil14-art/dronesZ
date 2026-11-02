@@ -14,6 +14,7 @@ import {
 import { ParachutePageConfig } from '../services/parachuteConfig';
 import { getDefaultAgriDroneConfig, AgriDronePageConfig } from '../services/agriDroneConfig';
 import { getProductTaxLabel } from '../services/productTax';
+import { StoreLandingSkeleton } from './StoreLandingSkeleton';
 import {
   DynamicCategoryTab,
   buildDynamicTabs,
@@ -513,14 +514,9 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
           </div>
         </div>
 
-        {/* Loading State */}
+        {/* Loading State: Content-matched skeleton cards */}
         {loading && filteredHardware.length === 0 && !isParachuteVisible && !isAgriDroneVisible && (
-          <div style={{ padding: '1.5rem 1rem', textAlign: 'center', color: '#64748b' }}>
-            <div style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-              Synchronizing DronesZ verified propulsion and airframe series...
-            </div>
-            <div style={{ fontSize: '13px', color: '#94a3b8' }}>Connecting to hardware catalog</div>
-          </div>
+          <StoreLandingSkeleton />
         )}
 
         {/* Standalone Exception Systems Grid (Recovery Parachutes & Agricultural Drones) */}

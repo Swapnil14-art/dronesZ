@@ -56,8 +56,9 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
   }, [images, primaryImageUrl]);
 
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
-  const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState<number | boolean>(false);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [imageLoading, setImageLoading] = useState<boolean>(true);
 
   // Set initial selected index
   useEffect(() => {
@@ -99,6 +100,11 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
   }, [isLightboxOpen, handlePrev, handleNext]);
 
   const activeImage = normalizedImages[selectedIndex] || normalizedImages[0];
+
+  useEffect(() => {
+    setImageLoading(true);
+  }, [activeImage?.url]);
+
   const activeDrawingId = drawingId || (sku ? `DRAWING ID: ${sku}` : `DRAWING ID: DZ-${productId > 0 ? productId : 2207}-V2`);
   const activePrimaryAxis = primaryAxis || 'Primary Axis: 1850KV Unibell';
 
@@ -171,17 +177,32 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({
         </button>
 
         {activeImage?.url ? (
-          <img
-            src={activeImage.url}
-            alt={`${productName} - ${activeImage.label}`}
-            decoding="async"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              transition: 'transform 0.2s ease-out',
-            }}
-          />
+          <>
+            {imageLoading && (
+              <div
+                className="dronesz-skeleton"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 2,
+                }}
+              />
+            )}
+            <img
+              src={activeImage.url}
+              alt={`${productName} - ${activeImage.label}`}
+              decoding="async"
+              onLoad={() => setImageLoading(false)}
+              onError={() => setImageLoading(false)}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: imageLoading ? 0 : 1,
+                transition: 'opacity 0.25s ease-out, transform 0.2s ease-out',
+              }}
+            />
+          </>
         ) : (
           <div style={{ textAlign: 'center', color: '#94a3b8' }}>
             <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🛸</div>

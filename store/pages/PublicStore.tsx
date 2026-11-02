@@ -16,7 +16,10 @@ import { StitchFooter } from '../components/StitchFooter';
 import { ProductGallery } from '../components/ProductGallery';
 import { ParachutePublicPage } from '../components/ParachutePublicPage';
 import { AgriDronePublicPage } from '../components/AgriDronePublicPage';
+import { AgriDroneSkeleton } from '../components/AgriDroneSkeleton';
 import { StoreLandingCatalog } from '../components/StoreLandingCatalog';
+import { ProductDetailSkeleton } from '../components/ProductDetailSkeleton';
+import { CategoryVariantSkeleton } from '../components/CategoryVariantSkeleton';
 import { loadParachuteConfig, getDefaultParachuteConfig, ParachutePageConfig } from '../services/parachuteConfig';
 import { getDefaultAgriDroneConfig, AgriDronePageConfig } from '../services/agriDroneConfig';
 import { getProductTaxLabel } from '../services/productTax';
@@ -815,7 +818,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
 
         {/* VIEW 5: AGRICULTURAL SPRAYING DRONE WEBPAGE (/store/agricultural-spraying-drone) */}
         {(view === 'agri-drone' || isAgriDroneRoute) ? (
-          <AgriDronePublicPage config={agriDroneConfig} />
+          agriDroneConfig ? <AgriDronePublicPage config={agriDroneConfig} /> : <AgriDroneSkeleton />
         ) : (view === 'parachute' || isParachuteRoute) ? (
           parachuteConfig && parachuteConfig.isEnabled ? (
             <ParachutePublicPage config={parachuteConfig} />
@@ -835,10 +838,7 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
             </div>
           )
         ) : (view === 'product' && loadingProductDetail && !activeProductDetail) ? (
-          <div style={{ padding: '6rem 2rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-            <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>Loading DronesZ Hardware Specifications...</div>
-            <div style={{ fontSize: '14px', color: 'var(--color-on-surface-variant)' }}>Fetching live database record for specimen ID</div>
-          </div>
+          <ProductDetailSkeleton />
         ) : activeProductDetail ? (
           <div className="product-detail-page-container" style={{ width: '100%', minWidth: 0, boxSizing: 'border-box' }}>
             {/* Breadcrumb Navigation */}
@@ -1149,14 +1149,27 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                             e.currentTarget.style.background = '#dc2626';
                           }}
                         >
-                          <CartIcon size={18} style={{ stroke: '#ffffff' }} />
-                          <span>
-                            {addingToCartId === activeProductDetail.id
-                              ? 'Adding...'
-                              : isOutOfStock
-                                ? 'Out of Stock'
-                                : 'Add to Cart'}
-                          </span>
+                          {addingToCartId === activeProductDetail.id ? (
+                            <>
+                              <span
+                                style={{
+                                  display: 'inline-block',
+                                  width: '15px',
+                                  height: '15px',
+                                  border: '2px solid rgba(255, 255, 255, 0.4)',
+                                  borderTopColor: '#ffffff',
+                                  borderRadius: '50%',
+                                  animation: 'dronesz-spin 0.6s linear infinite',
+                                }}
+                              />
+                              <span>Adding to Cart...</span>
+                            </>
+                          ) : (
+                            <>
+                              <CartIcon size={18} style={{ stroke: '#ffffff' }} />
+                              <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
+                            </>
+                          )}
                         </button>
 
                         {/* Enquire Now Button */}
@@ -1276,13 +1289,9 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
             </div>
 
             {loadingChildren && !activeParent ? (
-              <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-                Loading product series and variants...
-              </div>
+              <CategoryVariantSkeleton />
             ) : loadingChildren ? (
-              <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--color-muted)' }}>
-                Loading product variants for {activeParent ? activeParent.name : 'series'}...
-              </div>
+              <CategoryVariantSkeleton />
             ) : filteredChildProducts.length === 0 ? (
               <div style={{ background: '#fff', border: '1px solid var(--color-outline)', padding: '4rem', textAlign: 'center', color: 'var(--color-muted)', borderRadius: '0.5rem' }}>
                 No child variants listed for this parent series.
@@ -1377,14 +1386,33 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
                                   cursor: canChildPurchase ? 'pointer' : 'not-allowed'
                                 }}
                               >
-                                <CartIcon size={18} />
-                                {addingToCartId === child.id
-                                  ? 'Adding...'
-                                  : isChildOutOfStock
-                                    ? 'Out of Stock'
-                                    : isChildMaxInCart
-                                      ? 'Max in Cart'
-                                      : 'Add to Cart'}
+                                {addingToCartId === child.id ? (
+                                  <>
+                                    <span
+                                      style={{
+                                        display: 'inline-block',
+                                        width: '14px',
+                                        height: '14px',
+                                        border: '2px solid rgba(255, 255, 255, 0.4)',
+                                        borderTopColor: '#ffffff',
+                                        borderRadius: '50%',
+                                        animation: 'dronesz-spin 0.6s linear infinite',
+                                      }}
+                                    />
+                                    <span>Adding...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CartIcon size={18} />
+                                    <span>
+                                      {isChildOutOfStock
+                                        ? 'Out of Stock'
+                                        : isChildMaxInCart
+                                          ? 'Max in Cart'
+                                          : 'Add to Cart'}
+                                    </span>
+                                  </>
+                                )}
                               </button>
                               <button
                                 onClick={(e) => {
