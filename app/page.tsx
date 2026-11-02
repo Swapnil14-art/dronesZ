@@ -4,6 +4,7 @@ import { MissionSpecSection } from "@/components/spec/MissionSpecSection";
 import { CustomAirframesSection } from "@/components/frames/CustomAirframesSection";
 import { ContactSection } from "@/components/contact/ContactSection";
 import { Footer } from "@/components/footer/Footer";
+import { StoreBackgroundWarmer } from "@/components/store/StoreBackgroundWarmer";
 
 export default function HomePage() {
   return (
@@ -14,6 +15,7 @@ export default function HomePage() {
       <CustomAirframesSection />
       <ContactSection />
       <Footer />
+      <StoreBackgroundWarmer />
     </main>
   );
 }

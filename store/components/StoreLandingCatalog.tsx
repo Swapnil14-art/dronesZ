@@ -6,6 +6,11 @@ import {
   getProductImageUrl,
   getEffectiveProductStatus
 } from '../services/api';
+import {
+  getCachedChildren,
+  cacheChildren,
+  isChildrenFresh
+} from '../services/storeCache';
 import { ParachutePageConfig } from '../services/parachuteConfig';
 import { getDefaultAgriDroneConfig, AgriDronePageConfig } from '../services/agriDroneConfig';
 import { getProductTaxLabel } from '../services/productTax';
@@ -119,7 +124,16 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
   navigateToProductDetail,
 }) => {
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
-  const [childProductsMap, setChildProductsMap] = useState<Record<number, ProductDto[]>>({});
+  const [childProductsMap, setChildProductsMap] = useState<Record<number, ProductDto[]>>(() => {
+    const initialMap: Record<number, ProductDto[]> = {};
+    for (const p of parentProducts) {
+      const cached = getCachedChildren(p.id);
+      if (cached && cached.length > 0) {
+        initialMap[p.id] = cached;
+      }
+    }
+    return initialMap;
+  });
   const [loadingChildren, setLoadingChildren] = useState(false);
 
   // Pre-fetch children for parent series to showcase authentic hardware specimens & images
@@ -127,14 +141,41 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
     let isMounted = true;
     const loadHardware = async () => {
       if (parentProducts.length === 0) return;
-      setLoadingChildren(true);
+
       const map: Record<number, ProductDto[]> = {};
+      const parentsToFetch: ProductDto[] = [];
+
+      for (const p of parentProducts) {
+        const cached = getCachedChildren(p.id);
+        if (cached && cached.length > 0 && isChildrenFresh(p.id)) {
+          map[p.id] = cached;
+        } else {
+          parentsToFetch.push(p);
+        }
+      }
+
+      // If all parent series are already cached and fresh, avoid redundant network requests
+      if (parentsToFetch.length === 0) {
+        if (isMounted) {
+          setChildProductsMap((prev) => ({ ...prev, ...map }));
+          setLoadingChildren(false);
+        }
+        return;
+      }
+
+      // Surface any already cached children immediately so UI is not blocked
+      if (Object.keys(map).length > 0 && isMounted) {
+        setChildProductsMap((prev) => ({ ...prev, ...map }));
+      }
+
+      setLoadingChildren(true);
 
       try {
         await Promise.all(
-          parentProducts.map(async (p) => {
+          parentsToFetch.map(async (p) => {
             try {
               const children = await fetchPublicChildProducts(p.id);
+              cacheChildren(p.id, children);
               if (isMounted) {
                 map[p.id] = children;
               }
@@ -144,7 +185,7 @@ export const StoreLandingCatalog: React.FC<StoreLandingCatalogProps> = ({
           })
         );
         if (isMounted) {
-          setChildProductsMap(map);
+          setChildProductsMap((prev) => ({ ...prev, ...map }));
         }
       } finally {
         if (isMounted) setLoadingChildren(false);

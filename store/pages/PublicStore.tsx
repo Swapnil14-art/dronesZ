@@ -248,81 +248,34 @@ const CheckCircleIcon = ({ size = 18, style }: { size?: number; style?: React.CS
   </svg>
 );
 
-export function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
+export {
+  slugify,
+  clearStoreCache,
+  isMainCatalogFresh,
+  getCachedMainCatalog,
+  cacheMainCatalog,
+  getCachedParent,
+  cacheParent,
+  isChildrenFresh,
+  getCachedChildren,
+  cacheChildren,
+  getCachedProductDetail,
+  cacheProductDetail,
+  STORE_CACHE_TTL_MS,
+} from '../services/storeCache';
 
-// Module-level in-memory cache to ensure instant, zero-flicker transitions and back navigation
-let cachedMainCatalog: ProductDto[] | null = null;
-const cachedParentMap = new Map<string, ProductDto>();
-const cachedChildrenMap = new Map<number, ProductDto[]>();
-const cachedProductDetailMap = new Map<number, ProductDto>();
-
-export function clearStoreCache(): void {
-  cachedMainCatalog = null;
-  cachedParentMap.clear();
-  cachedChildrenMap.clear();
-  cachedProductDetailMap.clear();
-}
-
-export function getCachedMainCatalog(): ProductDto[] | null {
-  return cachedMainCatalog;
-}
-
-export function cacheMainCatalog(products: ProductDto[]): void {
-  cachedMainCatalog = products;
-  for (const p of products) {
-    if (p.productType === 'PARENT') {
-      cacheParent(p);
-    }
-  }
-}
-
-export function getCachedParent(slugOrId: string | number): ProductDto | null {
-  const key = String(slugOrId).toLowerCase().trim();
-  if (cachedParentMap.has(key)) {
-    return cachedParentMap.get(key)!;
-  }
-  for (const p of cachedParentMap.values()) {
-    if (
-      slugify(p.name) === key ||
-      `${slugify(p.name)}-${p.id}` === key ||
-      String(p.id) === key
-    ) {
-      return p;
-    }
-  }
-  return null;
-}
-
-export function cacheParent(parent: ProductDto): void {
-  cachedParentMap.set(String(parent.id), parent);
-  cachedParentMap.set(slugify(parent.name), parent);
-  cachedParentMap.set(`${slugify(parent.name)}-${parent.id}`, parent);
-}
-
-export function getCachedChildren(parentId: number): ProductDto[] | null {
-  return cachedChildrenMap.get(parentId) || null;
-}
-
-export function cacheChildren(parentId: number, children: ProductDto[]): void {
-  cachedChildrenMap.set(parentId, children);
-  for (const c of children) {
-    cachedProductDetailMap.set(c.id, c);
-  }
-}
-
-export function getCachedProductDetail(id: number): ProductDto | null {
-  return cachedProductDetailMap.get(id) || null;
-}
-
-export function cacheProductDetail(id: number, product: ProductDto): void {
-  cachedProductDetailMap.set(id, product);
-}
+import {
+  slugify,
+  isMainCatalogFresh,
+  getCachedMainCatalog,
+  cacheMainCatalog,
+  getCachedParent,
+  cacheParent,
+  getCachedChildren,
+  cacheChildren,
+  getCachedProductDetail,
+  cacheProductDetail,
+} from '../services/storeCache';
 
 export type StoreView = 'catalog' | 'category' | 'product' | 'parachute' | 'agri-drone';
 
@@ -577,7 +530,18 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
     }
   };
 
-  const loadMainCatalog = async () => {
+  const loadMainCatalog = async (force: boolean = false) => {
+    const isSearchActive = Boolean(search.trim());
+
+    if (!force && !isSearchActive && isMainCatalogFresh()) {
+      const cached = getCachedMainCatalog();
+      if (cached && cached.length > 0) {
+        setProducts(cached);
+        setLoading(false);
+        return;
+      }
+    }
+
     if (products.length === 0) {
       setLoading(true);
     }
@@ -587,10 +551,14 @@ export const PublicStore: React.FC<PublicStoreProps> = ({
         search: search.trim() || undefined,
         size: 50,
       });
-      cacheMainCatalog(res.content);
+      if (!isSearchActive) {
+        cacheMainCatalog(res.content);
+      }
       setProducts(res.content);
     } catch (err: any) {
-      setError('Unable to load storefront catalog. Please check backend connection.');
+      if (products.length === 0 && !getCachedMainCatalog()?.length) {
+        setError('Unable to load storefront catalog. Please check backend connection.');
+      }
     } finally {
       setLoading(false);
     }
