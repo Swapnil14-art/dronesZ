@@ -6,9 +6,18 @@ import "@/components/sections.css";
 import "./contact.css";
 
 export const metadata: Metadata = {
-  title: `Contact — ${SITE.name}`,
+  title: "Contact & Custom Engineering Brief",
   description:
-    "Talk to DronesZ India about custom builds, counter-UAS, and lab setup.",
+    "Connect with DronesZ India for custom airframe engineering, counter-UAS systems, bulk hardware orders, and drone lab setup in Indore, India.",
+  alternates: {
+    canonical: "/contact",
+  },
+  openGraph: {
+    title: `Contact & Custom Engineering Brief | ${SITE.name}`,
+    description:
+      "Connect with DronesZ India for custom airframe engineering, counter-UAS systems, bulk hardware orders, and drone lab setup in Indore, India.",
+    url: "/contact",
+  },
 };
 
 /**

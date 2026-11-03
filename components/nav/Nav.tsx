@@ -265,7 +265,7 @@ export function Nav() {
         >
           <img
             src="/brand/drone-mark.png"
-            alt=""
+            alt="DronesZ India Logo"
             width={26}
             height={26}
             className="nav__brand-mark"

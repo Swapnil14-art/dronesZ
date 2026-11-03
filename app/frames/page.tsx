@@ -5,9 +5,18 @@ import { SITE } from "@/data/site";
 import "@/components/sections.css";
 
 export const metadata: Metadata = {
-  title: `Custom Airframes & Frames — ${SITE.name}`,
+  title: "Custom Airframes & Frames",
   description:
     "Bespoke drone airframes, precision carbon fabrication, counter-UAS platforms, and engineering from CAD to flight-ready hardware.",
+  alternates: {
+    canonical: "/frames",
+  },
+  openGraph: {
+    title: `Custom Airframes & Frames | ${SITE.name}`,
+    description:
+      "Bespoke drone airframes, precision carbon fabrication, counter-UAS platforms, and engineering from CAD to flight-ready hardware.",
+    url: "/frames",
+  },
 };
 
 export default function FramesPage() {

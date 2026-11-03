@@ -5,21 +5,20 @@ import { LenisGSAPProvider } from "@/components/providers/LenisGSAPProvider";
 import { Nav } from "@/components/nav/Nav";
 import { SoundToggle } from "@/components/audio/SoundToggle";
 
-// Absolute base for OG/canonical URLs. Vercel injects VERCEL_URL per deploy; override with
-// NEXT_PUBLIC_SITE_URL once the client's domain is connected.
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-  ? process.env.NEXT_PUBLIC_SITE_URL
-  : process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+import { getSiteUrl } from "@/lib/seo";
 
-const title = "DronesZ India — Redefining Flight. Assembling the Future.";
+const siteUrl = getSiteUrl();
+
+const defaultTitle = "DronesZ India — Redefining Flight. Assembling the Future.";
 const description =
   "DronesZ India: custom drones, counter-UAS systems, consumer drones, components, and lab setup services. Indore-based.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title,
+  title: {
+    default: defaultTitle,
+    template: "%s | DronesZ India",
+  },
   description,
   applicationName: "DronesZ India",
   alternates: { canonical: "/" },
@@ -31,15 +30,32 @@ export const metadata: Metadata = {
     shortcut: "/favicon.ico",
     apple: "/icon.png",
   },
+  verification: {
+    google:
+      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ||
+      process.env.GOOGLE_SITE_VERIFICATION ||
+      undefined,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   // og:image / twitter:image are auto-wired from app/opengraph-image.tsx.
   openGraph: {
-    title,
+    title: defaultTitle,
     description,
     type: "website",
     locale: "en_IN",
     siteName: "DronesZ India",
   },
-  twitter: { card: "summary_large_image", title, description },
+  twitter: { card: "summary_large_image", title: defaultTitle, description },
 };
 
 // Organization structured data — tells Google the correct entity name ("DronesZ", with the S)
@@ -57,6 +73,23 @@ const orgJsonLd = {
     addressLocality: "Indore",
     addressRegion: "MP",
     addressCountry: "IN",
+  },
+};
+
+// WebSite structured data with SearchAction
+const webSiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "DronesZ India",
+  alternateName: "DronesZ",
+  url: siteUrl,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: `${siteUrl}/store?search={search_term_string}`,
+    },
+    "query-input": "required name=search_term_string",
   },
 };
 
@@ -79,6 +112,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
         />
         <Suspense fallback={null}>
           <NavigationProgressBar />

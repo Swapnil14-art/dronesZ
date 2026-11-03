@@ -9,7 +9,7 @@ export function Footer() {
           <div className="footer__brand">
             <img
               src="/brand/drone-mark.png"
-              alt=""
+              alt="DronesZ India Logo"
               width={30}
               height={30}
               className="footer__brand-mark"
