@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl, getProductsForSeo, slugify, isStandaloneException } from "@/lib/seo";
 
+export const revalidate = 3600; // Revalidate sitemap dynamically every hour
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
   const now = new Date();

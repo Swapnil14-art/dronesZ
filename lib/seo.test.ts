@@ -6,6 +6,7 @@ import {
   generateCollectionJsonLd,
   generateBreadcrumbJsonLd,
   generateWebSiteJsonLd,
+  getProductsForSeo,
   SeoProduct,
 } from "./seo";
 import robots from "../app/robots";
@@ -30,20 +31,48 @@ describe("DronesZ SEO Foundation Tests", () => {
   });
 
   describe("Site URL Resolution", () => {
-    it("uses NEXT_PUBLIC_SITE_URL when defined", () => {
+    it("uses NEXT_PUBLIC_SITE_URL when defined and strips trailing slash", () => {
       process.env.NEXT_PUBLIC_SITE_URL = "https://custom-drones.in/";
       expect(getSiteUrl()).toBe("https://custom-drones.in");
     });
 
-    it("uses VERCEL_URL with https prefix when NEXT_PUBLIC_SITE_URL is not set", () => {
+    it("uses VERCEL_URL prefixed with https:// on VERCEL_ENV=preview when NEXT_PUBLIC_SITE_URL is not set", () => {
       delete process.env.NEXT_PUBLIC_SITE_URL;
-      process.env.VERCEL_URL = "dronesz-preview.vercel.app";
-      expect(getSiteUrl()).toBe("https://dronesz-preview.vercel.app");
+      process.env.VERCEL_ENV = "preview";
+      process.env.VERCEL_URL = "droneszwebsite-abc123-drones-z.vercel.app";
+      expect(getSiteUrl()).toBe("https://droneszwebsite-abc123-drones-z.vercel.app");
+      delete process.env.VERCEL_ENV;
+      delete process.env.VERCEL_URL;
     });
 
-    it("falls back to default production URL when no environment variables are set in production", () => {
+    it("returns canonical production domain in production regardless of VERCEL_URL", () => {
       delete process.env.NEXT_PUBLIC_SITE_URL;
+      process.env.VERCEL_ENV = "production";
+      process.env.VERCEL_URL = "droneszwebsite-ajij8wmm8w-drones-z.vercel.app";
+      const prevNodeEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = "production";
+      expect(getSiteUrl()).toBe("https://dronesz.in");
+      (process.env as any).NODE_ENV = prevNodeEnv;
+      delete process.env.VERCEL_ENV;
       delete process.env.VERCEL_URL;
+    });
+
+    it("returns localhost in local development when no Vercel env is present", () => {
+      delete process.env.NEXT_PUBLIC_SITE_URL;
+      delete process.env.VERCEL_ENV;
+      delete process.env.VERCEL_URL;
+      delete process.env.VERCEL;
+      const prevNodeEnv = process.env.NODE_ENV;
+      (process.env as any).NODE_ENV = "development";
+      expect(getSiteUrl()).toBe("http://localhost:3000");
+      (process.env as any).NODE_ENV = prevNodeEnv;
+    });
+
+    it("falls back to canonical production domain when no environment variables are set", () => {
+      delete process.env.NEXT_PUBLIC_SITE_URL;
+      delete process.env.VERCEL_ENV;
+      delete process.env.VERCEL_URL;
+      delete process.env.VERCEL;
       const prevNodeEnv = process.env.NODE_ENV;
       (process.env as any).NODE_ENV = "production";
       expect(getSiteUrl()).toBe("https://dronesz.in");
@@ -277,6 +306,130 @@ describe("DronesZ SEO Foundation Tests", () => {
         index: false,
         follow: false,
       });
+    });
+  });
+
+  describe("getProductsForSeo — child product fetching", () => {
+    it("fetches children for each parent and returns a merged flat list", async () => {
+      const parentProduct = {
+        id: 9,
+        name: "High-Performance Motors Series",
+        description: "Motor series",
+        price: 0,
+        quantity: 0,
+        status: "AVAILABLE",
+        productType: "PARENT",
+        parentId: null,
+        image: "/api/products/9/images/37",
+        images: [],
+        updatedAt: "2026-10-27T21:17:16.846",
+        createdAt: "2026-08-29T00:18:34.825",
+      };
+      const childProduct = {
+        id: 30,
+        name: "3110-900 KV",
+        description: "Motor child",
+        price: 3776,
+        quantity: 500,
+        status: "AVAILABLE",
+        productType: "CHILD",
+        parentId: 9,
+        image: "/api/products/30/images/42",
+        images: [],
+        updatedAt: "2026-10-29T05:41:09.024",
+        createdAt: "2026-09-14T16:14:56.407",
+      };
+
+      const fetchMock = vi.fn((url: string) => {
+        if (url.includes("/api/products?")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ content: [parentProduct], totalElements: 1 }),
+          });
+        }
+        if (url.includes("/api/products/9/children")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([childProduct]),
+          });
+        }
+        return Promise.resolve({ ok: false });
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const products = await getProductsForSeo();
+
+      vi.unstubAllGlobals();
+
+      expect(products.length).toBe(2);
+      const ids = products.map((p) => p.id);
+      expect(ids).toContain(9);
+      expect(ids).toContain(30);
+
+      const child = products.find((p) => p.id === 30);
+      expect(child?.productType).toBe("CHILD");
+      expect(child?.parentId).toBe(9);
+
+      const childCall = fetchMock.mock.calls.find((args: any[]) =>
+        String(args[0]).includes("/api/products/9/children")
+      );
+      expect(childCall).toBeDefined();
+    });
+
+    it("excludes ARCHIVED children from results", async () => {
+      const parentProduct = {
+        id: 9,
+        name: "Motors",
+        description: "",
+        price: 0,
+        quantity: 0,
+        status: "AVAILABLE",
+        productType: "PARENT",
+        parentId: null,
+        image: null,
+        images: [],
+        updatedAt: null,
+        createdAt: null,
+      };
+      const archivedChild = {
+        id: 55,
+        name: "Old Motor",
+        description: "",
+        price: 100,
+        quantity: 0,
+        status: "ARCHIVED",
+        productType: "CHILD",
+        parentId: 9,
+        image: null,
+        images: [],
+        updatedAt: null,
+        createdAt: null,
+      };
+
+      const fetchMock = vi.fn((url: string) => {
+        if (url.includes("/api/products?")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ content: [parentProduct] }),
+          });
+        }
+        if (url.includes("/children")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([archivedChild]),
+          });
+        }
+        return Promise.resolve({ ok: false });
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const products = await getProductsForSeo();
+
+      vi.unstubAllGlobals();
+
+      const ids = products.map((p) => p.id);
+      expect(ids).not.toContain(55);
+      expect(ids).toContain(9);
     });
   });
 

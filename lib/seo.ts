@@ -18,21 +18,36 @@ export interface SeoProduct {
   createdAt?: string;
 }
 
+export const CANONICAL_PRODUCTION_DOMAIN = "https://dronesz.in";
+
 /**
  * Resolves the canonical base URL of the site.
- * Prioritizes explicit NEXT_PUBLIC_SITE_URL, then Vercel system URL,
- * then production domain fallback (or localhost in dev).
+ * 1. Honors explicit NEXT_PUBLIC_SITE_URL if configured.
+ * 2. In non-production preview environments (e.g. pull requests on Vercel where VERCEL_ENV === 'preview'),
+ *    uses VERCEL_URL so preview deployments can be tested independently.
+ * 3. In local development (NODE_ENV === 'development' and not on Vercel), uses http://localhost:3000.
+ * 4. In all production builds and deployments, strictly returns the canonical production domain (https://dronesz.in),
+ *    preventing any Vercel deployment hashes or cross-domain URLs from entering sitemaps or canonical metadata.
  */
 export function getSiteUrl(): string {
   if (process.env.NEXT_PUBLIC_SITE_URL && process.env.NEXT_PUBLIC_SITE_URL.trim()) {
     return process.env.NEXT_PUBLIC_SITE_URL.trim().replace(/\/+$/, "");
   }
-  if (process.env.VERCEL_URL && process.env.VERCEL_URL.trim()) {
+
+  // Only use VERCEL_URL on ephemeral branch previews, never in production
+  if (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL && process.env.VERCEL_URL.trim()) {
     const raw = process.env.VERCEL_URL.trim().replace(/\/+$/, "");
     return raw.startsWith("http://") || raw.startsWith("https://") ? raw : `https://${raw}`;
   }
-  const isDev = process.env.NODE_ENV !== "production";
-  return isDev ? "http://localhost:3000" : "https://dronesz.in";
+
+  // Local development
+  const isDev = process.env.NODE_ENV === "development" && !process.env.VERCEL;
+  if (isDev) {
+    return "http://localhost:3000";
+  }
+
+  // Canonical production domain
+  return CANONICAL_PRODUCTION_DOMAIN;
 }
 
 /**
@@ -65,46 +80,99 @@ export function getAbsoluteImageUrl(imagePath?: string | null, siteUrl: string =
 }
 
 /**
+ * Maps a raw API or DB product row into a typed SeoProduct.
+ */
+function mapToSeoProduct(p: any, fromDb = false): SeoProduct {
+  return {
+    id: Number(fromDb ? p.id : p.id),
+    name: String(p.name || ""),
+    description: p.description ? String(p.description) : null,
+    price: Number(p.price || 0),
+    quantity: Number(p.quantity || 0),
+    status: (fromDb ? p.status : p.status) as ProductStatus || "AVAILABLE",
+    productType: (fromDb ? p.product_type : p.productType) as ProductType || "STANDALONE",
+    parentId: fromDb
+      ? (p.parent_id ? Number(p.parent_id) : null)
+      : (p.parentId ? Number(p.parentId) : null),
+    image: p.image || null,
+    images: Array.isArray(p.images) ? p.images : [],
+    updatedAt: fromDb
+      ? (p.updated_at ? new Date(p.updated_at).toISOString() : undefined)
+      : p.updatedAt,
+    createdAt: fromDb
+      ? (p.created_at ? new Date(p.created_at).toISOString() : undefined)
+      : p.createdAt,
+  };
+}
+
+/**
  * Resiliently fetches all non-archived products for SEO, sitemap, and category indexation.
- * Tries the Spring Boot REST API first; if unavailable, falls back to direct PostgreSQL query.
- * Never throws, returning [] on total failure so sitemap / pages never break.
+ *
+ * The backend's public /api/products endpoint returns only top-level (PARENT) products.
+ * Child products are only accessible via /api/products/{parentId}/children.
+ * This function fetches parents first, then fetches children for each parent in parallel,
+ * and merges all results so the sitemap contains every publicly accessible product page.
+ *
+ * Falls back to a direct PostgreSQL query (which returns all products in one query) when
+ * the REST API is unavailable. Never throws — returns [] on total failure.
  */
 export async function getProductsForSeo(): Promise<SeoProduct[]> {
   // Strategy 1: Try backend REST API
   try {
     const backendUrl = getBackendApiUrl();
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-    const res = await fetch(`${backendUrl}/api/products?size=1000`, {
+    // 1a. Fetch all top-level (parent) products
+    const parentController = new AbortController();
+    const parentTimeout = setTimeout(() => parentController.abort(), 5000);
+
+    const parentRes = await fetch(`${backendUrl}/api/products?size=1000`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
+      signal: parentController.signal,
       next: { revalidate: 300 }, // 5 minutes cache in Next.js
     });
-    clearTimeout(timeoutId);
+    clearTimeout(parentTimeout);
 
-    if (res.ok) {
-      const data = await res.json();
-      const items = Array.isArray(data) ? data : data?.content || [];
-      if (Array.isArray(items) && items.length > 0) {
-        return items
-          .filter((p: any) => p && p.status !== "ARCHIVED")
-          .map((p: any) => ({
-            id: Number(p.id),
-            name: String(p.name || ""),
-            description: p.description ? String(p.description) : null,
-            price: Number(p.price || 0),
-            quantity: Number(p.quantity || 0),
-            status: (p.status as ProductStatus) || "AVAILABLE",
-            productType: (p.productType as ProductType) || "STANDALONE",
-            parentId: p.parentId ? Number(p.parentId) : null,
-            image: p.image || null,
-            images: Array.isArray(p.images) ? p.images : [],
-            updatedAt: p.updatedAt,
-            createdAt: p.createdAt,
-          }));
-      }
+    if (parentRes.ok) {
+      const data = await parentRes.json();
+      const parentItems: any[] = Array.isArray(data) ? data : data?.content || [];
+      const nonArchivedParents = parentItems.filter((p: any) => p && p.status !== "ARCHIVED");
+
+      // 1b. For every parent, fetch its children via the dedicated children endpoint.
+      //     The public /api/products listing only returns top-level products; child
+      //     products only appear under /api/products/{parentId}/children.
+      const childFetches = nonArchivedParents.map(async (parent: any) => {
+        try {
+          const childController = new AbortController();
+          const childTimeout = setTimeout(() => childController.abort(), 5000);
+          const childRes = await fetch(`${backendUrl}/api/products/${parent.id}/children`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            signal: childController.signal,
+            next: { revalidate: 300 },
+          });
+          clearTimeout(childTimeout);
+          if (childRes.ok) {
+            const children: any[] = await childRes.json();
+            return Array.isArray(children)
+              ? children.filter((c: any) => c && c.status !== "ARCHIVED")
+              : [];
+          }
+        } catch {
+          // Individual child fetch failed — skip this parent's children
+        }
+        return [];
+      });
+
+      const childArrays = await Promise.all(childFetches);
+      const allChildren = childArrays.flat();
+
+      const allProducts = [
+        ...nonArchivedParents.map((p: any) => mapToSeoProduct(p)),
+        ...allChildren.map((p: any) => mapToSeoProduct(p)),
+      ];
+
+      if (allProducts.length > 0) return allProducts;
     }
   } catch {
     // Backend API unreachable or timed out; proceed to PostgreSQL direct fallback
@@ -144,20 +212,7 @@ export async function getProductsForSeo(): Promise<SeoProduct[]> {
     `;
     const res = await pool.query(query);
     if (res && Array.isArray(res.rows)) {
-      return res.rows.map((r: any) => ({
-        id: Number(r.id),
-        name: String(r.name || ""),
-        description: r.description ? String(r.description) : null,
-        price: Number(r.price || 0),
-        quantity: Number(r.quantity || 0),
-        status: (r.status as ProductStatus) || "AVAILABLE",
-        productType: (r.product_type as ProductType) || "STANDALONE",
-        parentId: r.parent_id ? Number(r.parent_id) : null,
-        image: r.image || null,
-        images: Array.isArray(r.images) ? r.images : [],
-        updatedAt: r.updated_at ? new Date(r.updated_at).toISOString() : undefined,
-        createdAt: r.created_at ? new Date(r.created_at).toISOString() : undefined,
-      }));
+      return res.rows.map((r: any) => mapToSeoProduct(r, true));
     }
   } catch {
     // Database direct connection unavailable (e.g. offline sandbox or missing DB credentials)
